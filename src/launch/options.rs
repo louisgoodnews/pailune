@@ -50,11 +50,18 @@ pub fn parse(text: &str) -> LaunchSpec {
         None => (&tokens, &[]),
     };
     let env = before.iter().filter_map(|t| as_env(t)).collect();
-    let loose = before.iter().filter(|t| as_env(t).is_none()).cloned();
-    LaunchSpec {
-        env,
-        args: loose.chain(after.iter().cloned()).collect(),
-    }
+    let loose: Vec<String> = before
+        .iter()
+        .filter(|t| as_env(t).is_none())
+        .cloned()
+        .collect();
+    // With `%command%`, non-assignments before it are wrapper commands;
+    // without it, Steam treats every token as a game argument.
+    let (wrapper, args) = match split {
+        Some(_) => (loose, after.to_vec()),
+        None => (Vec::new(), loose),
+    };
+    LaunchSpec { env, wrapper, args }
 }
 
 #[cfg(test)]
@@ -72,6 +79,9 @@ mod tests {
             ]
         );
         assert_eq!(spec.args, ["-dx12", "--name=a b"]);
+        let wrapped = parse("PROTON_LOG=1 gamemoderun mangohud %command% -windowed");
+        assert_eq!(wrapped.wrapper, ["gamemoderun", "mangohud"]);
+        assert_eq!(wrapped.args, ["-windowed"]);
         assert_eq!(parse("-windowed").args, ["-windowed"]);
         assert_eq!(parse("   "), LaunchSpec::default());
     }

@@ -52,6 +52,11 @@ fn installed_in(library: &Path, app_id: u32) -> Option<PathBuf> {
 
 /// Searches every Steam library for the game; returns its install directory.
 pub fn find_game(app_id: u32) -> Option<PathBuf> {
+    find_app(app_id)
+}
+
+/// Install directory of any Steam app or tool (e.g. a Steam Linux Runtime).
+pub fn find_app(app_id: u32) -> Option<PathBuf> {
     steam_roots()
         .iter()
         .flat_map(|root| libraries(root))

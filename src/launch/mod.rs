@@ -32,6 +32,8 @@ pub enum GameProcess {
 pub struct LaunchSpec {
     /// `KEY=VALUE` pairs placed before `%command%`.
     pub env: Vec<(String, String)>,
+    /// Wrapper commands before `%command%`, e.g. `gamemoderun` or `mangohud`.
+    pub wrapper: Vec<String>,
     /// Arguments passed to the game executable.
     pub args: Vec<String>,
 }
@@ -45,4 +47,7 @@ pub struct ProtonSetup {
     pub steam_dir: std::path::PathBuf,
     /// `steamapps/compatdata/<id>`.
     pub compat_data: std::path::PathBuf,
+    /// The tool chain Steam would run, outermost first, e.g.
+    /// `[<SLR>/_v2-entry-point, --verb=waitforexitandrun, --, <Proton>/proton, waitforexitandrun]`.
+    pub command: Vec<String>,
 }
