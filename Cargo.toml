@@ -10,6 +10,7 @@ chacha20 = "0.10"
 directories = "6.0.0"
 eframe = "0.37.0"
 lz4_flex = "0.11"
+md-5 = "0.11.0"
 rfd = "0.17.2"
 rusqlite = { version = "0.41.0", features = ["bundled"] }
 serde = { version = "1.0.229", features = ["derive"] }

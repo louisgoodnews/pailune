@@ -9,7 +9,7 @@ use crate::logging::{Event, EventKind, Severity};
 use crate::mod_engine::install;
 use crate::mod_engine::model::NexusRef;
 use crate::nexus::api::Client;
-use crate::nexus::download::{self, DownloadJob};
+use crate::nexus::download::{self, DownloadJob, Integrity};
 use crate::nexus::{FileSummary, key, updates};
 use std::fs;
 use std::thread;
@@ -87,6 +87,11 @@ pub fn download(ctx: &JobContext, job: &DownloadJob) -> Result<JobOutput> {
         "nexus:{}/mods/{}/files/{} ({})",
         ctx.config.nexus.domain, job.mod_id, job.file_id, fetched.file.file_name
     );
+    let integrity = match fetched.integrity {
+        Integrity::Verified => "MD5 verified",
+        Integrity::Unverified => "size checked; MD5 unknown to Nexus",
+    };
+    let source = format!("{source} [{integrity}]");
     let message = register(ctx, &name, &source, Some(&reference), replace)?;
     if let Some(slug) = &job.collection {
         let conn = ctx.db()?;

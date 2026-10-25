@@ -151,11 +151,41 @@ impl Client {
         ))
     }
 
-    /// Opens a streaming download, returning `(content length, reader)`.
-    pub fn open_download(&self, uri: &str) -> Result<(Option<u64>, impl std::io::Read + use<>)> {
-        let response = self.downloads.get(uri).call().map_err(explain)?;
+    /// Opens a streaming download from byte `offset` (resume when > 0).
+    /// Returns the remaining length, whether the server honoured the range
+    /// (HTTP 206), and the body reader.
+    pub fn open_download(
+        &self,
+        uri: &str,
+        offset: u64,
+    ) -> Result<(Option<u64>, bool, impl std::io::Read + use<>)> {
+        let request = self.downloads.get(uri);
+        let request = match offset {
+            0 => request,
+            from => request.header("Range", format!("bytes={from}-")),
+        };
+        let response = request.call().map_err(explain)?;
+        let partial = response.status() == 206;
         let length = response.body().content_length();
-        Ok((length, response.into_body().into_reader()))
+        Ok((length, partial, response.into_body().into_reader()))
+    }
+
+    /// Files whose content has this MD5, as `(mod id, file id)` pairs; an
+    /// unknown hash gives an empty list.
+    pub fn md5_search(&self, md5: &str) -> Result<Vec<(u64, u64)>> {
+        let path = format!("/games/{}/mods/md5_search/{md5}.json", self.domain);
+        let hits: Vec<serde_json::Value> = match self.get_json(&path) {
+            Ok(hits) => hits,
+            Err(PyluneError::Invalid(msg)) if msg.contains("not found") => return Ok(Vec::new()),
+            Err(err) => return Err(err),
+        };
+        Ok(hits
+            .iter()
+            .filter_map(|h| {
+                let mod_id = h.get("mod")?.get("mod_id")?.as_u64()?;
+                Some((mod_id, h.get("file_details")?.get("file_id")?.as_u64()?))
+            })
+            .collect())
     }
 
     /// Fetches a collection revision (latest when `revision` is `None`)

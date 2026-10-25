@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] A-24 (rest) MD5 verification, resumable downloads — *S*
 - [ ] B-06 Recoverable deletes (mod trash) — *S*
 - [ ] B-01 Backup and restore (mods, profiles, mod lists, settings) — *M*
 - [ ] B-02 Full settings menu — *M*
@@ -60,6 +59,8 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-24 downloads resume with HTTP ranges (up to 4 attempts) and are verified with Nexus'
+  `md5_search` (a hash registered for another file fails; an unknown hash is noted).
 - [x] A-32 rustdoc on every function and constant outside the UI views (views follow in B-04);
   deepest non-UI nesting (parallel update check) flattened.
 - [x] A-28 (part) multi-variant mods: option folders detected (≥ 2 sibling folders with game

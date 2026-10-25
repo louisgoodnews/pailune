@@ -25,12 +25,23 @@ fn mod_archive() -> Vec<u8> {
     buf.into_inner()
 }
 
-/// Serves canned answers until the test ends; returns the API root.
-fn mock_api(archive: Vec<u8>) -> String {
+/// Serves canned answers until the test ends; returns the API root and
+/// the number of download (CDN) requests served.
+fn mock_api(archive: Vec<u8>) -> (String, Arc<std::sync::atomic::AtomicUsize>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let root = format!("http://{}", listener.local_addr().unwrap());
     let cdn = format!("{root}/cdn/test.zip");
     let size = archive.len();
+    let md5: String = {
+        use md5::Digest;
+        md5::Md5::digest(&archive)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect()
+    };
+    let md5_path = format!("/v1/games/crimsondesert/mods/md5_search/{md5}.json");
+    let cdn_hits = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let served = Arc::clone(&cdn_hits);
     std::thread::spawn(move || {
         listener.incoming().filter_map(|s| s.ok()).for_each(|mut stream| {
             let mut reader = BufReader::new(stream.try_clone().unwrap());
@@ -44,6 +55,23 @@ fn mock_api(archive: Vec<u8>) -> String {
             .collect();
             let keyed = headers.iter().any(|h| h.starts_with("apikey: secret"));
             let path = request.split_whitespace().nth(1).unwrap_or_default().to_string();
+            let range: Option<usize> = headers
+                .iter()
+                .find_map(|h| h.strip_prefix("range: bytes="))
+                .and_then(|r| r.trim().trim_end_matches('-').parse().ok());
+            // The first download breaks off halfway; a resumed one gets the rest.
+            if path == "/cdn/test.zip" {
+                let first = cdn_hits.fetch_add(1, std::sync::atomic::Ordering::SeqCst) == 0;
+                let (status, body) = match (first, range) {
+                    (true, _) => ("200 OK", &archive[..size / 2]),
+                    (false, Some(from)) => ("206 Partial Content", &archive[from..]),
+                    (false, None) => ("200 OK", &archive[..]),
+                };
+                let declared = if first { size } else { body.len() };
+                let head = format!("HTTP/1.1 {status}\r\nContent-Length: {declared}\r\nConnection: close\r\n\r\n");
+                let _ = stream.write_all(head.as_bytes()).and_then(|()| stream.write_all(body));
+                return;
+            }
             let (status, body): (&str, Vec<u8>) = match path.as_str() {
                 _ if path.starts_with("/v1") && !keyed => ("401 Unauthorized", b"{}".to_vec()),
                 "/v1/games/crimsondesert/mods/5.json" => ("200 OK", br#"{"mod_id":5,"name":"Test Mod","version":"1.0"}"#.to_vec()),
@@ -52,7 +80,7 @@ fn mock_api(archive: Vec<u8>) -> String {
                        "file_updates":[{{"old_file_id":50,"new_file_id":51,"new_file_name":"test-1.1.zip"}}]}}"#
                 ).into_bytes()),
                 "/v1/games/crimsondesert/mods/5/files/50/download_link.json" => ("200 OK", format!(r#"[{{"short_name":"local","URI":"{cdn}"}}]"#).into_bytes()),
-                "/cdn/test.zip" => ("200 OK", archive.clone()),
+                p if p == md5_path => ("200 OK", br#"[{"mod":{"mod_id":5},"file_details":{"file_id":50}}]"#.to_vec()),
                 _ => ("404 Not Found", b"{}".to_vec()),
             };
             let head = format!(
@@ -63,7 +91,7 @@ fn mock_api(archive: Vec<u8>) -> String {
             let _ = reader.read(&mut [0u8; 0]);
         });
     });
-    root
+    (root, served)
 }
 
 #[test]
@@ -73,7 +101,8 @@ fn downloads_installs_and_finds_updates_through_the_api() {
         .unwrap_or_else(|p| p.into_inner());
     let fx = fixture();
     let mut config = fx.config.clone();
-    config.nexus.api_url = Some(mock_api(mod_archive()));
+    let (api, cdn_hits) = mock_api(mod_archive());
+    config.nexus.api_url = Some(api);
     let root = fx.staging.parent().unwrap().to_path_buf();
     let paths = DataPaths::under(&root, &root);
     paths.create_dirs().unwrap();
@@ -101,6 +130,12 @@ fn downloads_installs_and_finds_updates_through_the_api() {
         .into_iter()
         .find(|m| m.name == "Test Mod")
         .unwrap();
+    assert!(entry.source.contains("MD5 verified"), "{}", entry.source);
+    assert_eq!(
+        cdn_hits.load(std::sync::atomic::Ordering::SeqCst),
+        2,
+        "interrupted once, then resumed"
+    );
     let origin = entry.nexus.expect("nexus origin recorded");
     assert_eq!((origin.mod_id, origin.file_id), (5, 50));
     assert_eq!(
