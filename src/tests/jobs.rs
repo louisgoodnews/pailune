@@ -208,3 +208,24 @@ fn pending_state_and_deleting_a_disabled_but_deployed_mod() {
     assert!(wait_all(&pool, &[unlink])[0].is_ok());
     assert!(!pending(&conn), "unlinked with nothing enabled");
 }
+
+#[test]
+fn apply_refuses_after_a_game_update() {
+    use crate::backup::snapshot;
+    use crate::config::paths::DataPaths;
+    use crate::jobs::pool::JobPool;
+    use crate::jobs::{JobKind, tasks};
+    use std::sync::Arc;
+
+    let fx = super::fixture();
+    let root = fx.staging.parent().unwrap().to_path_buf();
+    let paths = DataPaths::under(&root, &root);
+    paths.create_dirs().unwrap();
+    let info = crate::steam::locate::resolve(&fx.config);
+    snapshot::ensure_meta_backup(&info).unwrap();
+    fs::write(info.meta_dir.join("0.paver"), "v2").unwrap();
+    let pool = JobPool::spawn(1, paths, Arc::new(tasks::run), Arc::new(|| {}));
+    let apply = pool.submit(JobKind::Apply, &fx.config);
+    let error = wait_all(&pool, &[apply]).remove(0).unwrap_err();
+    assert!(error.contains("updated"), "{error}");
+}

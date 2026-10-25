@@ -1,7 +1,7 @@
 //! Exclusive jobs touching the game directory.
 
 use super::require_game;
-use crate::backup::{reset, snapshot};
+use crate::backup::{MetaBackup, reset, snapshot};
 use crate::db;
 use crate::db::links::DbJournal;
 use crate::error::{PyluneError, Result};
@@ -38,6 +38,13 @@ fn summarise(
 pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String> {
     let info = ctx.steam();
     require_game(&info)?;
+    if snapshot::meta_backup_state(&info) == MetaBackup::Outdated {
+        return Err(PyluneError::Invalid(
+            "the game was updated since the metadata backup — follow the steps in the \
+             yellow banner (unlink, verify in Steam, refresh backup) before applying"
+                .into(),
+        ));
+    }
     let mut manifest = db::links::load(conn)?;
     let mut journal = DbJournal { conn };
     undeploy::undeploy(&mut manifest, &mut journal)?;

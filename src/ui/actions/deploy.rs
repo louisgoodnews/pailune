@@ -10,6 +10,13 @@ impl PyluneApp {
     pub(super) fn deploy_action(&mut self, action: DeployAction) -> Result<Option<StatusLine>> {
         let (kind, text) = match action {
             DeployAction::Launch => return self.launch().map(Some),
+            DeployAction::VerifyGame => {
+                run::verify_files(self.config.game.app_id)?;
+                return Ok(Some(StatusLine::new(
+                    Level::Info,
+                    "Steam is verifying the game files — then press \"Refresh backup\"",
+                )));
+            }
             DeployAction::Apply => (JobKind::Apply, "Applying mods…"),
             DeployAction::UnlinkAll => (JobKind::UnlinkAll, "Unlinking…"),
             DeployAction::CleanSlate => {

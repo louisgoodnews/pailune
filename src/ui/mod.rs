@@ -96,6 +96,8 @@ pub enum DeployAction {
     RestoreOverlays,
     RefreshBackup,
     Launch,
+    /// Ask Steam to verify the game files (after a game update).
+    VerifyGame,
 }
 
 /// Profile page intents.

@@ -70,17 +70,34 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         });
         actions.extend(clicked(tabs));
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let reset = theme::filled_button(ui, "⚠ CLEAN SLATE", DANGER).on_hover_text(
-                "Remove all links, restore .bak originals and set foreign overlays aside",
-            );
-            let unlink = ui.button("Unlink all");
+            // Game-folder actions wait while the game runs or one is queued (A-22).
+            let blocked = match (app.process, app.game_job_active()) {
+                (GameProcess::Running, _) => Some("Close Crimson Desert first"),
+                (_, true) => Some("A game-folder job is already running"),
+                _ => None,
+            };
+            let free = blocked.is_none();
+            let why = blocked.unwrap_or_default();
+            let reset = ui
+                .add_enabled_ui(free, |ui| theme::filled_button(ui, "⚠ CLEAN SLATE", DANGER))
+                .inner
+                .on_hover_text(
+                    "Remove all links, restore .bak originals and set foreign overlays aside",
+                )
+                .on_disabled_hover_text(why);
+            let unlink = ui
+                .add_enabled(free, egui::Button::new("Unlink all"))
+                .on_disabled_hover_text(why);
             let fill = if app.dirty {
                 ACCENT
             } else {
                 ACCENT.linear_multiply(0.45)
             };
-            let apply = theme::filled_button(ui, "✔ Apply", fill)
-                .on_hover_text("Symlink all enabled mods into the game");
+            let apply = ui
+                .add_enabled_ui(free, |ui| theme::filled_button(ui, "✔ Apply", fill))
+                .inner
+                .on_hover_text("Symlink all enabled mods into the game")
+                .on_disabled_hover_text(why);
             actions.extend(clicked([
                 (reset.clicked(), Action::Ask(Confirm::CleanSlate)),
                 (unlink.clicked(), Action::Deploy(DeployAction::UnlinkAll)),
@@ -88,6 +105,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             ]));
         });
     });
+    actions.extend(super::banner::show(ui, app));
     ui.add_space(6.0);
     actions
 }

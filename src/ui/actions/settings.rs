@@ -22,9 +22,14 @@ impl PyluneApp {
 
     pub(super) fn save_settings(&mut self) -> Result<StatusLine> {
         let next = self.draft.to_config()?;
-        if next.game.dir != self.config.game.dir && self.deployed_links > 0 {
+        // Queued jobs carry the old configuration; never let them run
+        // against a different game folder (A-26).
+        if next.game.dir != self.config.game.dir
+            && (self.deployed_links > 0 || self.game_job_active())
+        {
             return Err(PyluneError::Invalid(
-                "unlink all mods before changing the game directory".into(),
+                "unlink all mods and wait for running jobs before changing the game directory"
+                    .into(),
             ));
         }
         file::save(&self.paths.config_file, &next)?;

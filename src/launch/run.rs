@@ -39,6 +39,18 @@ fn via_steam(info: &SteamInfo, spec: &LaunchSpec) -> Result<LaunchMethod> {
         .map_err(|e| PyluneError::Invalid(format!("could not start Steam: {e}")))
 }
 
+/// Asks Steam to verify (repair) the game files (`steam://validate/<id>`).
+pub fn verify_files(app_id: u32) -> Result<()> {
+    let url = format!("steam://validate/{app_id}");
+    let mut steam = Command::new("steam");
+    steam.arg(&url);
+    let mut xdg = Command::new("xdg-open");
+    xdg.arg(&url);
+    spawn(steam)
+        .or_else(|_| spawn(xdg))
+        .map_err(|e| PyluneError::Invalid(format!("could not start Steam: {e}")))
+}
+
 /// Directly through Proton with the extra environment from `spec`.
 fn via_proton(info: &SteamInfo, setup: &ProtonSetup, spec: &LaunchSpec) -> Result<LaunchMethod> {
     let app_id = info.app_id.to_string();
