@@ -15,24 +15,13 @@ the large reworks that build on them. Day-to-day status lives in [board.md](boar
 6. **Launch** — Steam Linux Runtime chain, wrappers, detection (A-10, A-11, A-27).
 7. **Quality** — job lanes, UI tests, packaging, CI, license, logs (A-19, A-22, A-29…A-31, A-33).
 
-## Phase 8 — Small items (S)
+8. **Small items** — style fixes, MD5 + resumable downloads, recoverable deletes (A-32, A-24, B-06).
+9. **Medium features** — backups, settings menu, onboarding, save-game backups, AppImage
+   (B-01, B-02, B-03, A-28 part, A-29).
+10. **Reworks** — evidence-based UI/UX rework, full documentation (B-04, B-05).
 
-- A-32 Spec style fixes (rustdoc gaps, deep nesting, `match` on bool).
-- A-24 MD5 verification and resumable downloads.
-- B-06 Recoverable deletes (mod trash).
+## Phase 11 — Remaining large items (L)
 
-## Phase 9 — Medium features (M)
-
-- B-01 Backup and restore (manual and automatic).
-- B-02 Full settings menu (categories, validation, reset).
-- B-03 Onboarding: guided first run and built-in guide.
-- A-28 Save-game backup.
-- A-29 AppImage packaging.
-
-## Phase 10 — Large reworks (L)
-
-- B-04 Evidence-based UI/UX rework (principles in `ux-principles.md`).
-- B-05 Full documentation (vision, architecture, extension guides, decisions).
 - A-01 rest: XML/HTML patches, new texture ids, table inserts, field-name JSON (format 3).
 - A-28 FOMOD-style installer scripts.
 

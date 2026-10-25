@@ -31,6 +31,9 @@
 - New options: confirm deletes, update check at start, enable new mods, trash size, automatic
   backups and how many to keep, days of logs kept.
 
+### Documentation
+- User guide, vision, architecture, data model, extension guide and decision records in `docs/`.
+
 ### Interface
 - Reworked against documented UX principles: Clean slate in a *More* menu, dialogs name their
   action, larger text and checkboxes, consistent wording, contrast-checked colours.

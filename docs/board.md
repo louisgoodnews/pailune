@@ -42,7 +42,6 @@ Move a line between columns when its status changes.
 
 ## Backlog (large)
 
-- [ ] B-05 Full documentation: vision, architecture, code, extension guides — *L*
 - [ ] A-01 (rest) XML/HTML patches, new texture ids, table inserts, field-name JSON — *L*
 - [ ] A-28 (rest) FOMOD-style installer scripts — *L*
 
@@ -52,6 +51,11 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-05 documentation: `docs/README.md` (index), `vision.md`, `architecture.md` (layers,
+  modules, threads, flows, testing), `data-model.md` (files, every `config.toml` key, SQLite
+  schema, backup formats), `extending.md` (conventions and recipes), `decisions.md` (D-01 … D-10),
+  `user-guide.md`; rustdoc on every item. Writing it surfaced a gap — R-01 promised a pending-
+  changes banner that only existed as status-bar text — now a banner with *Apply now*.
 - [x] B-04 UI/UX rework against `docs/ux-principles.md` (every main screen rendered and reviewed
   in both themes): Clean slate moved into a *More* menu (R-06); confirmation buttons name their
   action and texts are plain language (R-05, R-08); Apply is the filled primary only while changes

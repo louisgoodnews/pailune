@@ -68,6 +68,8 @@ fn screens() {
                 ("nexus", Tab::Nexus),
                 ("log", Tab::Log),
             ];
+            h.state_mut()
+                .dispatch(Action::Mod(ModAction::SetEnabled("Cool Mod".into(), true)));
             pages.into_iter().for_each(|(name, tab)| {
                 let app = h.state_mut();
                 app.dispatch(Action::SwitchTab(tab));

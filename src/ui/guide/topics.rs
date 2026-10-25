@@ -95,7 +95,7 @@ pub const TOPICS: &[Topic] = &[
         title: "Switch between mod setups",
         keywords: "profile setup preset save load launch options",
         body: &[
-            "Profiles tab › type a name › Save current as stores which mods are enabled, their order and options.",
+            "Profiles tab › type a name › Save current as stores which mods are enabled and their order.",
             "Load switches to a profile; press Apply afterwards. Each profile can have its own launch options.",
         ],
     },
