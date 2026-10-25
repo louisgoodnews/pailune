@@ -22,6 +22,13 @@ fn describe(confirm: &Confirm) -> (String, String, Action) {
                 .into(),
             Action::Mod(ModAction::Delete(name.clone())),
         ),
+        Confirm::UninstallCollection(slug) => (
+            format!("Uninstall collection {slug}?"),
+            "Its mods are deleted from staging, except those another collection also uses. \
+             Deployed mods are redeployed without them."
+                .into(),
+            Action::Nexus(crate::ui::NexusAction::UninstallCollection(slug.clone())),
+        ),
         Confirm::DeleteProfile(name) => (
             format!("Delete profile '{name}'?"),
             "Only the profile is deleted; staged mods stay untouched.".into(),

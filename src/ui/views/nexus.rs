@@ -132,6 +132,8 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     ui.separator();
     let mut actions = account(ui, app);
     ui.separator();
+    actions.extend(super::collections::show(ui, app));
+    ui.separator();
     actions.extend(lookup(ui, app));
     ui.add_space(6.0);
     let browsing = app.nexus.browsing.clone();

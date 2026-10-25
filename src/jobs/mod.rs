@@ -9,6 +9,7 @@ pub mod pool;
 pub mod tasks;
 
 use crate::mod_engine::conflicts::ConflictReport;
+use crate::nexus::collection::Collection;
 use crate::nexus::download::DownloadJob;
 use crate::nexus::{FileSummary, NexusFile, NexusMod, NexusUser};
 use std::path::PathBuf;
@@ -35,6 +36,11 @@ pub enum JobKind {
     Remove(String),
     ValidateKey,
     FetchMod(u64),
+    /// Fetch a collection revision (latest when `revision` is `None`).
+    FetchCollection {
+        slug: String,
+        revision: Option<u32>,
+    },
     /// Look up names for an incoming `nxm://` download.
     DescribeFile {
         mod_id: u64,
@@ -65,6 +71,7 @@ pub enum JobOutput {
         failed: usize,
     },
     Described(FileSummary),
+    Collection(Collection),
     Conflicts(u64, ConflictReport),
 }
 
@@ -122,6 +129,7 @@ impl JobKind {
             JobKind::ValidateKey => "Validate Nexus key".into(),
             JobKind::FetchMod(id) => format!("Fetch Nexus mod {id}"),
             JobKind::DescribeFile { file_id, .. } => format!("Look up Nexus file {file_id}"),
+            JobKind::FetchCollection { slug, .. } => format!("Fetch collection {slug}"),
             JobKind::CheckUpdates => "Check updates".into(),
             JobKind::AnalyzeConflicts(_) => "Analyze conflicts".into(),
         }

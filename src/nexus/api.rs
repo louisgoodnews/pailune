@@ -6,6 +6,11 @@ use serde::de::DeserializeOwned;
 use std::time::Duration;
 
 const BASE: &str = "https://api.nexusmods.com/v1";
+const GRAPHQL: &str = "https://api.nexusmods.com/v2/graphql";
+const COLLECTION_QUERY: &str = "query Rev($slug: String!, $domain: String, $revision: Int) { \
+    collectionRevision(slug: $slug, domainName: $domain, revision: $revision) { revisionNumber \
+    collection { name slug } modFiles { fileId optional file { modId name version sizeInBytes \
+    mod { name } } } } }";
 const APP_NAME: &str = "Pylune";
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -138,5 +143,36 @@ impl Client {
         let response = self.downloads.get(uri).call().map_err(explain)?;
         let length = response.body().content_length();
         Ok((length, response.into_body().into_reader()))
+    }
+
+    /// Fetches a collection revision (latest when `revision` is `None`)
+    /// through the v2 GraphQL API.
+    pub fn collection(
+        &self,
+        slug: &str,
+        revision: Option<u32>,
+    ) -> Result<super::collection::Collection> {
+        let body = serde_json::json!({
+            "query": COLLECTION_QUERY,
+            "variables": { "slug": slug, "domain": self.domain, "revision": revision },
+        });
+        let response: serde_json::Value = self
+            .agent
+            .post(GRAPHQL)
+            .header("apikey", &self.key)
+            .header("Application-Name", APP_NAME)
+            .header("Application-Version", APP_VERSION)
+            .send_json(&body)
+            .map_err(explain)?
+            .body_mut()
+            .read_json()
+            .map_err(explain)?;
+        super::collection::from_graphql(slug, &response).ok_or_else(|| {
+            let detail = response
+                .get("errors")
+                .map(|e| e.to_string())
+                .unwrap_or_else(|| "no such collection".into());
+            PyluneError::Invalid(format!("collection {slug}: {detail}"))
+        })
     }
 }

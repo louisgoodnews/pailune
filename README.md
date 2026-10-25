@@ -70,7 +70,13 @@ If the active profile has no options, `[launch] default_options` is used.
    "Mod Manager Download" button. Pylune asks for confirmation before every download, and
    accepts only links carrying the website's download key. Links for other games are passed
    to the handler Pylune replaced (e.g. MO2 or Vortex).
-4. *Check updates* compares installed Nexus mods with their current version (several requests in
+4. **Collections:** enter a collection slug or URL (or use the website's collection install
+   button) and review the mod list; optional mods can be ticked. Premium accounts download all
+   members in parallel; free accounts get a list of pending mods with links to their Nexus file
+   pages, and the "Mod Manager Download" links are picked up automatically. Members are placed
+   in the curator's load order; *Update* fetches the newest revision and changes only what
+   changed; *Uninstall* keeps mods another collection still uses.
+5. *Check updates* compares installed Nexus mods with their current version (several requests in
    parallel).
 
 ## File placement

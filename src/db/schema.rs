@@ -4,7 +4,7 @@ use crate::error::Result;
 use rusqlite::{Connection, TransactionBehavior};
 
 /// Migration `n` upgrades the schema from version `n` to `n + 1`.
-const MIGRATIONS: [&str; 2] = [
+const MIGRATIONS: [&str; 3] = [
     r#"
     CREATE TABLE mods (
         name          TEXT PRIMARY KEY,
@@ -55,6 +55,26 @@ const MIGRATIONS: [&str; 2] = [
 "#,
     r#"
     ALTER TABLE mods ADD COLUMN paz_files INTEGER NOT NULL DEFAULT 0;
+"#,
+    r#"
+    CREATE TABLE collections (
+        slug         TEXT PRIMARY KEY,
+        name         TEXT NOT NULL,
+        revision     INTEGER NOT NULL,
+        installed_at INTEGER NOT NULL
+    );
+    CREATE TABLE collection_members (
+        slug     TEXT NOT NULL REFERENCES collections(slug) ON DELETE CASCADE,
+        position INTEGER NOT NULL,
+        mod_id   INTEGER NOT NULL,
+        file_id  INTEGER NOT NULL,
+        optional INTEGER NOT NULL,
+        selected INTEGER NOT NULL,
+        title    TEXT NOT NULL,
+        size     INTEGER NOT NULL DEFAULT 0,
+        mod_name TEXT,
+        PRIMARY KEY (slug, position)
+    );
 "#,
 ];
 

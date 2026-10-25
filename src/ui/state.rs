@@ -4,6 +4,7 @@ use crate::jobs::{JobId, JobKind};
 use crate::logging::Event;
 use crate::mod_engine::conflicts::ConflictReport;
 use crate::mod_engine::model::ModDetails;
+use crate::nexus::collection::Collection;
 use crate::nexus::{FileSummary, NexusFile, NexusMod, NexusUser, NxmLink};
 use crate::profiles::ProfileBook;
 use std::collections::BTreeMap;
@@ -60,6 +61,12 @@ pub struct NexusState {
     pub handler_registered: bool,
     /// `nxm://` downloads waiting for the user's confirmation.
     pub incoming: Vec<Incoming>,
+    /// Collection slug or URL being typed.
+    pub collection_draft: String,
+    /// A fetched collection under review, with the user's member choices.
+    pub preview: Option<Collection>,
+    /// Installed collections (from the database).
+    pub collections: Vec<Collection>,
 }
 
 /// An `nxm://` download request from the browser, not yet confirmed.

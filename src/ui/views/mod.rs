@@ -3,6 +3,8 @@
 //! [`Action`](super::Action)s the user triggered.
 
 pub mod banner;
+pub mod collection_preview;
+pub mod collections;
 pub mod confirm;
 pub mod header;
 pub mod incoming;

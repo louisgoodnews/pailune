@@ -157,6 +157,42 @@ pub fn moved(registry: &Registry, name: &str, to: MoveTo) -> Registry {
     Registry { mods }
 }
 
+/// Places the named mods (as far as staged) together in the given order,
+/// starting where the first of them was, and enables them. Used for the
+/// curator's load order of a collection.
+pub fn arranged(registry: &Registry, names: &[String]) -> Registry {
+    let listed = |m: &&ModEntry| names.contains(&m.name);
+    let start = registry
+        .mods
+        .iter()
+        .position(|m| names.contains(&m.name))
+        .unwrap_or(registry.mods.len());
+    let group = names
+        .iter()
+        .filter_map(|n| registry.mods.iter().find(|m| &m.name == n))
+        .map(|m| ModEntry {
+            enabled: true,
+            ..m.clone()
+        });
+    let rest: Vec<ModEntry> = registry
+        .mods
+        .iter()
+        .filter(|m| !listed(m))
+        .cloned()
+        .collect();
+    let before = registry.mods[..start]
+        .iter()
+        .filter(|m| !names.contains(&m.name))
+        .count();
+    let mods = rest[..before]
+        .iter()
+        .cloned()
+        .chain(group)
+        .chain(rest[before..].iter().cloned())
+        .collect();
+    Registry { mods }
+}
+
 /// The registry without the mod called `name`.
 pub fn without(registry: &Registry, name: &str) -> Registry {
     Registry {
@@ -193,5 +229,10 @@ mod tests {
         assert_eq!(order(&without(&r, "b")), ["a", "c"]);
         assert!(with_all(&r, true).mods.iter().all(|m| m.enabled));
         assert!(with_enabled(&r, "b", true).mods[1].enabled);
+        let names = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let r5 = reg(&["x", "c2", "y", "c1", "z"]);
+        let arranged = arranged(&r5, &names(&["c1", "c2", "gone"]));
+        assert_eq!(order(&arranged), ["x", "c1", "c2", "y", "z"]);
+        assert!(arranged.mods[1].enabled && arranged.mods[2].enabled && !arranged.mods[0].enabled);
     }
 }

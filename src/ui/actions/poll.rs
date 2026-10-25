@@ -87,6 +87,7 @@ impl PyluneApp {
             self.request_conflicts();
         }
         match (&kind, output) {
+            (_, JobOutput::Collection(fetched)) => self.status = self.on_collection(fetched),
             (_, JobOutput::Conflicts(generation, report)) => {
                 if generation == self.mods.conflict_generation {
                     self.mods.conflicts = report;
@@ -154,6 +155,11 @@ impl PyluneApp {
             JobKind::Download(job) => {
                 if let Some(name) = job.replace.clone() {
                     self.mark_updated(name);
+                }
+                if let Some(slug) = job.collection.clone()
+                    && let Err(err) = self.after_member_installed(&slug)
+                {
+                    self.status = StatusLine::new(Level::Error, err.to_string());
                 }
             }
             _ => {}

@@ -35,7 +35,6 @@ Move a line between columns when its status changes.
 
 ## Next
 
-- [ ] A-17 Nexus collections — *Phase 5* (needs A-01 to be useful)
 - [ ] A-21 Rate limits + AUP registration — *Phase 5*
 - [ ] A-24 Download size/MD5 verification, resume — *Phase 2*
 
@@ -50,6 +49,12 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-17 Nexus collections: v2 GraphQL fetch (slug, URL or `nxm://…/collections/<slug>/revisions/<n>`),
+  review dialog with optional members, install in the curator's load order (Premium: parallel
+  downloads; free: pending list with links, matching `nxm://` downloads accepted automatically),
+  enable/disable/uninstall (keeps mods shared with other collections), revision updates that
+  touch only changed members. Not yet: the collection archive (curator rules, installer choices,
+  bundled files) — needs an API key to download and is unverified.
 - [x] A-02 Write-ahead link journal; stale links adopted; close refused once during
   game-folder jobs. Tested by interrupting a deploy before/after every journal write.
 - [x] A-03 `flock` single-instance lock; atomic request spool; second start focuses.

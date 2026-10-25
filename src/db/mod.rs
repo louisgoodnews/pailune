@@ -3,6 +3,7 @@
 //! Every thread opens its own [`Connection`]; WAL mode and a busy timeout let
 //! background jobs and the UI read and write concurrently.
 
+pub mod collections;
 pub mod events;
 pub mod links;
 pub mod mods;

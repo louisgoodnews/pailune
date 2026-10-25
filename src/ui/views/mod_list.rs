@@ -9,8 +9,15 @@ use eframe::egui::{self, RichText};
 /// Badges after the name: Nexus origin, update available, conflicts.
 fn status_cell(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) {
     ui.horizontal(|ui| {
-        if entry.nexus.is_some() {
-            theme::badge(ui, "NEXUS", MUTED);
+        let collection = app.nexus.collections.iter().find(|c| {
+            c.members
+                .iter()
+                .any(|m| m.mod_name.as_ref() == Some(&entry.name))
+        });
+        match collection {
+            Some(c) => drop(theme::badge(ui, &format!("📚 {}", c.name), ACCENT)),
+            None if entry.nexus.is_some() => drop(theme::badge(ui, "NEXUS", MUTED)),
+            None => {}
         }
         if let Some(version) = app.nexus.updates.get(&entry.name) {
             theme::badge(ui, &format!("⬆ {version}"), WARNING);

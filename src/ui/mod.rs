@@ -67,6 +67,7 @@ pub enum Confirm {
     CleanSlate,
     DeleteMod(String),
     DeleteProfile(String),
+    UninstallCollection(String),
 }
 
 /// Mod management intents.
@@ -125,6 +126,20 @@ pub enum NexusAction {
     AcceptIncoming(usize),
     /// Drop the incoming download at this index.
     RejectIncoming(usize),
+    /// Look up the collection in the draft field.
+    FetchCollection,
+    /// Flip whether an optional member of the previewed collection is installed.
+    ToggleMember(usize),
+    /// Install (or update to) the previewed collection.
+    InstallCollection,
+    ClosePreview,
+    /// Fetch the newest revision of an installed collection for review.
+    UpdateCollection(String),
+    /// Enable or disable every installed member.
+    CollectionEnabled(String, bool),
+    UninstallCollection(String),
+    /// Open a member's file page on Nexus (free accounts download there).
+    OpenMemberPage(u64, u64),
 }
 
 /// First-run setup dialog intents.

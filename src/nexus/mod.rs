@@ -6,6 +6,7 @@
 //! website's "Mod Manager Download" button hands to Pylune.
 
 pub mod api;
+pub mod collection;
 pub mod download;
 pub mod handler;
 pub mod key;

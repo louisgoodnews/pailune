@@ -1,5 +1,6 @@
 //! State transitions triggered by [`Action`]s, grouped by feature.
 
+mod collections;
 mod deploy;
 mod mods;
 mod nexus;

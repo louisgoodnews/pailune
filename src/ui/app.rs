@@ -44,6 +44,7 @@ impl PyluneApp {
             ),
         };
         let book = db::profiles::load(&conn).unwrap_or_default();
+        let collections = db::collections::load(&conn).unwrap_or_default();
         let notice = notice.map(|n| StatusLine::new(Level::Warning, n));
         let notice = notice.or(scan_error.map(|e| StatusLine::new(Level::Error, e)));
         let ctx = cc.egui_ctx.clone();
@@ -73,6 +74,7 @@ impl PyluneApp {
             },
             nexus: NexusState {
                 handler_registered: handler::is_registered(),
+                collections,
                 ..NexusState::default()
             },
             log: LogState::default(),
@@ -174,6 +176,16 @@ impl eframe::App for PyluneApp {
         actions.extend(views::readme::show(ui.ctx(), self.mods.readme.as_ref()));
         actions.extend(views::confirm::show(ui.ctx(), self.confirm.as_ref()));
         actions.extend(views::incoming::show(ui.ctx(), &self.nexus.incoming));
+        let installed = self
+            .nexus
+            .preview
+            .as_ref()
+            .and_then(|p| self.nexus.collections.iter().find(|c| c.slug == p.slug));
+        actions.extend(views::collection_preview::show(
+            ui.ctx(),
+            self.nexus.preview.as_ref(),
+            installed,
+        ));
         if self.setup_open {
             actions.extend(views::setup::show(ui.ctx(), self));
         }

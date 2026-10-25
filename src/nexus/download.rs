@@ -17,6 +17,8 @@ pub struct DownloadJob {
     pub nxm: Option<NxmLink>,
     /// Existing staged mod to replace (update), if any.
     pub replace: Option<String>,
+    /// Slug of the collection this file is installed for, if any.
+    pub collection: Option<String>,
 }
 
 /// A downloaded archive with the metadata needed to stage it.

@@ -44,6 +44,34 @@ pub fn validate(link: &NxmLink, domain: &str) -> Result<()> {
     }
 }
 
+/// A collection link: `nxm://<domain>/collections/<slug>/revisions/<n>`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CollectionLink {
+    pub domain: String,
+    pub slug: String,
+    pub revision: Option<u32>,
+}
+
+/// Parses a collection link, if `url` is one.
+pub fn parse_collection(url: &str) -> Option<CollectionLink> {
+    let rest = url.trim().strip_prefix("nxm://")?;
+    let path = rest.split('?').next()?.trim_end_matches('/');
+    match path.split('/').collect::<Vec<_>>().as_slice() {
+        [domain, "collections", slug] => Some(CollectionLink {
+            domain: domain.to_lowercase(),
+            slug: slug.to_lowercase(),
+            revision: None,
+        }),
+        [domain, "collections", slug, "revisions", rev] => Some(CollectionLink {
+            domain: domain.to_lowercase(),
+            slug: slug.to_lowercase(),
+            revision: rev.parse().ok(),
+        }),
+        _ => None,
+    }
+    .filter(|link| link.slug.chars().all(|c| c.is_ascii_alphanumeric()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

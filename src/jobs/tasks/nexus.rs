@@ -71,7 +71,19 @@ pub fn download(ctx: &JobContext, job: &DownloadJob) -> Result<JobOutput> {
         "nexus:{}/mods/{}/files/{} ({})",
         ctx.config.nexus.domain, job.mod_id, job.file_id, fetched.file.file_name
     );
-    register(ctx, &name, &source, Some(&reference), replace).map(JobOutput::Done)
+    let message = register(ctx, &name, &source, Some(&reference), replace)?;
+    if let Some(slug) = &job.collection {
+        let conn = ctx.db()?;
+        db::collections::link_member(&conn, slug, job.mod_id, job.file_id, &name)?;
+        let event = Event::new(
+            Severity::Info,
+            EventKind::Install,
+            Some(&name),
+            format!("member of collection {slug}"),
+        );
+        ctx.journal(&conn, event);
+    }
+    Ok(JobOutput::Done(message))
 }
 
 /// Result of checking one mod: `Some(label)` when a newer file exists.
@@ -163,4 +175,13 @@ pub fn describe_file(ctx: &JobContext, mod_id: u64, file_id: u64) -> Result<JobO
         version: file.as_ref().map(|f| f.version.clone()).unwrap_or_default(),
         size_kb: file.map_or(0, |f| f.size_kb),
     }))
+}
+
+/// Fetches a collection revision from the v2 GraphQL API.
+pub fn fetch_collection(ctx: &JobContext, slug: &str, revision: Option<u32>) -> Result<JobOutput> {
+    // Collection listings are public; a key is sent when one is stored.
+    let key = key::load(&ctx.paths.nexus_key).unwrap_or_default();
+    Client::new(&key, &ctx.config.nexus.domain)
+        .collection(slug, revision)
+        .map(JobOutput::Collection)
 }

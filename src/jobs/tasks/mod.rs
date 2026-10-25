@@ -25,6 +25,9 @@ pub fn run(ctx: &JobContext, kind: JobKind) -> Result<JobOutput> {
         JobKind::ValidateKey => nexus::validate(ctx),
         JobKind::FetchMod(id) => nexus::fetch_mod(ctx, id),
         JobKind::DescribeFile { mod_id, file_id } => nexus::describe_file(ctx, mod_id, file_id),
+        JobKind::FetchCollection { slug, revision } => {
+            nexus::fetch_collection(ctx, &slug, revision)
+        }
         JobKind::CheckUpdates => nexus::check_updates(ctx),
         JobKind::AnalyzeConflicts(generation) => analyze::conflicts(ctx, generation),
     }

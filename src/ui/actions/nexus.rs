@@ -27,6 +27,14 @@ fn info(text: impl Into<String>) -> Option<StatusLine> {
 impl PyluneApp {
     pub(super) fn nexus_action(&mut self, action: NexusAction) -> Result<Option<StatusLine>> {
         match action {
+            NexusAction::FetchCollection
+            | NexusAction::ToggleMember(_)
+            | NexusAction::InstallCollection
+            | NexusAction::ClosePreview
+            | NexusAction::UpdateCollection(_)
+            | NexusAction::CollectionEnabled(..)
+            | NexusAction::UninstallCollection(_)
+            | NexusAction::OpenMemberPage(..) => self.collection_action(action),
             NexusAction::SaveKey => {
                 key::save(&self.paths.nexus_key, &self.nexus.key_draft)?;
                 self.nexus.key_draft.clear();
@@ -117,19 +125,48 @@ impl PyluneApp {
             file_id,
             nxm: None,
             replace,
+            collection: None,
         }));
         Ok(StatusLine::new(Level::Info, "Download started…"))
     }
 
     /// Holds an `nxm://` link for confirmation and looks up its names.
     pub(super) fn handle_nxm(&mut self, url: &str) -> StatusLine {
-        let foreign = nxm::parse(url).is_ok_and(|link| link.domain != self.config.nexus.domain);
+        let domain = &self.config.nexus.domain;
+        let collection = nxm::parse_collection(url);
+        let foreign = nxm::parse(url).is_ok_and(|link| &link.domain != domain)
+            || collection.as_ref().is_some_and(|c| &c.domain != domain);
         if foreign {
             return self.forward_nxm(url);
+        }
+        // A collection link only fetches the list; installing needs a click.
+        if let Some(link) = collection {
+            self.submit(JobKind::FetchCollection {
+                slug: link.slug,
+                revision: link.revision,
+            });
+            self.focus_requested = true;
+            return StatusLine::new(
+                Level::Info,
+                "Collection link from the browser — review it in the dialog",
+            );
         }
         let checked = nxm::parse(url)
             .and_then(|link| nxm::validate(&link, &self.config.nexus.domain).map(|()| link));
         match checked {
+            // The user already chose this file by installing its collection.
+            Ok(link) if self.pending_member(&link).is_some() => {
+                let slug = self.pending_member(&link);
+                let job = DownloadJob {
+                    mod_id: link.mod_id,
+                    file_id: link.file_id,
+                    nxm: Some(link),
+                    replace: None,
+                    collection: slug,
+                };
+                self.submit(JobKind::Download(job));
+                StatusLine::new(Level::Info, "Downloading a collection member…")
+            }
             Ok(link) => {
                 self.submit(JobKind::DescribeFile {
                     mod_id: link.mod_id,
@@ -189,6 +226,7 @@ impl PyluneApp {
             file_id: link.file_id,
             nxm: Some(link),
             replace,
+            collection: None,
         };
         self.submit(JobKind::Download(job));
         Ok(Some(StatusLine::new(Level::Info, "Download started…")))
