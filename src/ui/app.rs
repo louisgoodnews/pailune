@@ -82,6 +82,7 @@ impl PyluneApp {
             close_refused: false,
             focus_requested: false,
             setup_open: discovery == Discovery::NotFound,
+            archives: Default::default(),
             pool,
             paths,
             config,

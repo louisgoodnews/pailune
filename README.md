@@ -2,6 +2,12 @@
 
 Native Linux mod manager for **Crimson Desert** (Steam / Proton), written in Rust with egui.
 
+## First start
+
+Pylune finds Crimson Desert through Steam's library configuration. If that fails, a setup
+dialog asks for the game folder. After a game update, a banner guides you through
+unlink → verify files in Steam → refresh backup before mods can be applied again.
+
 ## Where things live
 
 | What | Path |
@@ -48,9 +54,10 @@ Click a mod to open its details panel:
 A profile stores which mods are enabled, their load order and **its own launch options**
 (Steam syntax, e.g. `WINEDLLOVERRIDES="winmm=n,b" %command% -dx12`).
 
-- Without environment variables the game starts via `steam -applaunch 3321460 <args>`.
-- With `KEY=value` variables Pylune starts the game through Proton directly (using the Proton
-  version from `compatdata/3321460/config_info`); the Steam client must be running.
+- Plain arguments: the game starts via `steam -applaunch 3321460 <args>`.
+- Environment variables (`KEY=value`) or wrappers (`gamemoderun %command%`): Pylune starts
+  the game itself through the same tool chain Steam uses (Steam Linux Runtime → Proton,
+  read from `toolmanifest.vdf`). The Steam client must be running.
 
 If the active profile has no options, `[launch] default_options` is used.
 
@@ -60,18 +67,24 @@ If the active profile has no options, `[launch] default_options` is used.
    *Nexus* page.
 2. **Premium:** enter a mod id or URL, *Fetch*, and download any file directly.
 3. **Free accounts:** click *Make Pylune the nxm:// handler*, then use the website's
-   "Mod Manager Download" button. A running Pylune window receives the link.
+   "Mod Manager Download" button. Pylune asks for confirmation before every download, and
+   accepts only links carrying the website's download key. Links for other games are passed
+   to the handler Pylune replaced (e.g. MO2 or Vortex).
 4. *Check updates* compares installed Nexus mods with their current version (several requests in
    parallel).
 
 ## File placement
 
-| Mod contains                          | Linked to                          |
-|---------------------------------------|------------------------------------|
-| `bin64/…`, `meta/…`, `0036/…` (NNNN)  | same path inside the game folder   |
-| `*.asi`, `*.dll`, `*.ini` elsewhere   | `bin64/<file name>`                |
-| `*.json` elsewhere                    | `<JSON mod folder>/<relative path>` (default `bin64/mods`) |
-| anything else (readmes, images)       | not linked (visible in the details panel) |
+| Mod contains                                   | Result                                   |
+|------------------------------------------------|------------------------------------------|
+| `bin64/…`, `meta/…`                            | linked at the same path                  |
+| prebuilt archive groups `NNNN/*.paz`, `*.pamt` | linked at the same path                  |
+| `*.asi`, `*.dll`, `*.ini` elsewhere            | linked into `bin64/`                     |
+| JSON patches, RAW `files/NNNN/…`, loose game files (`.xml`, `.dds`, …) | **needs PAZ support** — not deployed yet, flagged in the UI |
+| readmes, images, `manifest.json`               | not deployed (shown in the details panel) |
+
+The game reads content only from its PAZ archives, so JSON/RAW/loose mods need Pylune's
+upcoming PAZ pipeline ([docs/paz-format.md](docs/paz-format.md)).
 
 ASI mods need a loader (`winmm.dll`, `version.dll` or `dinput8.dll`) in `bin64/` plus
 `WINEDLLOVERRIDES="<loader>=n,b"` in Steam's launch options or a profile's launch options.

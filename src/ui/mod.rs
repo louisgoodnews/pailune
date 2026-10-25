@@ -191,4 +191,6 @@ pub struct PyluneApp {
     pub focus_requested: bool,
     /// The first-run dialog for choosing the game folder is open.
     pub setup_open: bool,
+    /// Version and pack groups of the installed archives.
+    pub archives: crate::paz::status::ArchiveStatus,
 }

@@ -63,6 +63,7 @@ impl PyluneApp {
         self.dirty =
             db::mods::pending(&self.conn, &self.registry, self.deployed_links).unwrap_or(true);
         self.backup = snapshot::status(&self.info, &manifest);
+        self.archives = crate::paz::status::inspect(&self.info.game_dir);
     }
 
     fn ask(&mut self, confirm: Option<Confirm>) -> Option<StatusLine> {

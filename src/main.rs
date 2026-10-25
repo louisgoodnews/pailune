@@ -14,6 +14,7 @@ mod launch;
 mod logging;
 mod mod_engine;
 mod nexus;
+mod paz;
 mod profiles;
 mod steam;
 mod symlink;

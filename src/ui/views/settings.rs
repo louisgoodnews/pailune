@@ -91,7 +91,39 @@ fn settings_section(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     ])
 }
 
+fn archive_section(ui: &mut egui::Ui, app: &PyluneApp) {
+    ui.heading("Game archives");
+    let status = &app.archives;
+    let version = status.version.as_deref().unwrap_or("unknown");
+    ui.label(
+        RichText::new(format!(
+            "Game version {version} · {} pack groups registered",
+            status.registered
+        ))
+        .small(),
+    );
+    if let Some(err) = &status.error {
+        ui.label(
+            RichText::new(format!("Cannot read meta/0.papgt: {err}"))
+                .small()
+                .color(DANGER),
+        );
+    }
+    if !status.unregistered.is_empty() {
+        ui.label(
+            RichText::new(format!(
+                "Inactive archive folders (not loaded by the game, e.g. left by another mod manager): {}",
+                status.unregistered.join(", ")
+            ))
+            .small()
+            .color(WARNING),
+        );
+    }
+}
+
 fn proton_section(ui: &mut egui::Ui, app: &PyluneApp) {
+    archive_section(ui, app);
+    ui.separator();
     ui.heading("Proton");
     let prefix = app
         .info
