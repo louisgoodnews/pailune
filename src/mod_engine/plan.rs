@@ -33,9 +33,11 @@ fn destination(config: &Config, rel: &Path, place: Placement) -> Option<PathBuf>
         Placement::Mirror => Some(rel.to_path_buf()),
         Placement::Bin64 => rel.file_name().map(|name| Path::new("bin64").join(name)),
         // Packed and prebuilt content reaches the game through the overlay.
-        Placement::Pack | Placement::PrebuiltGroup | Placement::NeedsPaz(_) | Placement::Skip => {
-            None
-        }
+        Placement::Pack
+        | Placement::PrebuiltGroup
+        | Placement::JsonPatch
+        | Placement::NeedsPaz(_)
+        | Placement::Skip => None,
     };
     inside.map(|inside| resolve_case(game, &inside))
 }

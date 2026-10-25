@@ -8,7 +8,7 @@ use crate::paz::write::{self, Packed};
 use crate::paz::{encode, pamt, papgt, vanilla};
 use crate::steam::SteamInfo;
 use crate::symlink::bak_path;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -33,13 +33,20 @@ fn free_names(game_dir: &Path, taken: &BTreeSet<String>, count: usize) -> Vec<St
 /// textures are also registered in `textures` (the PATHC being rebuilt).
 fn pack(
     input: &OverlayInput,
+    patched: &BTreeMap<String, Vec<u8>>,
     base: &vanilla::Vanilla,
     textures: &mut Pathc,
 ) -> Result<(Vec<Packed>, Vec<String>)> {
-    input.packs.iter().try_fold(
+    // Patched content replaces a mod's shipped file of the same path.
+    let vpaths: BTreeSet<&String> = input.packs.keys().chain(patched.keys()).collect();
+    vpaths.into_iter().try_fold(
         (Vec::new(), Vec::new()),
-        |(mut packed, mut skipped), (vpath, source)| {
-            let data = fs::read(source).at(source)?;
+        |(mut packed, mut skipped), vpath| {
+            let data = match (patched.get(vpath), input.packs.get(vpath)) {
+                (Some(bytes), _) => bytes.clone(),
+                (None, Some(source)) => fs::read(source).at(source)?,
+                (None, None) => return Ok((packed, skipped)),
+            };
             let flags = base.flags_for(vpath);
             let result = match is_texture(vpath) {
                 true => super::textures::pack(vpath, &data, flags, textures),
@@ -113,10 +120,14 @@ pub fn build_from(
     input: &OverlayInput,
     out_dir: &Path,
 ) -> Result<OverlayPlan> {
-    let wanted: BTreeSet<String> = input.packs.keys().cloned().collect();
+    let patch_mods = super::patches::read_all(&input.patches);
+    let mut wanted = super::patches::wanted(&patch_mods);
+    wanted.paths.extend(input.packs.keys().cloned());
     let base = vanilla::load(&info.game_dir, vanilla_bytes, &wanted)?;
     let _ = fs::remove_dir_all(out_dir);
-    let own = !input.packs.is_empty();
+    let (patched, patch_notes) =
+        super::patches::apply_all(&info.game_dir, &base, &patch_mods, &input.packs);
+    let own = !input.packs.is_empty() || !patched.is_empty();
     let names = free_names(
         &info.game_dir,
         &base.group_names(),
@@ -127,7 +138,7 @@ pub fn build_from(
         None => Pathc::empty(),
     };
     let (packed, skipped) = match own {
-        true => pack(input, &base, &mut textures)?,
+        true => pack(input, &patched, &base, &mut textures)?,
         false => (Vec::new(), Vec::new()),
     };
     let texture_count = packed.iter().filter(|p| is_texture(&p.vpath)).count();
@@ -189,5 +200,6 @@ pub fn build_from(
         replaced,
         groups: groups.into_iter().map(|(n, _, _)| n).collect(),
         skipped,
+        patch_notes,
     })
 }

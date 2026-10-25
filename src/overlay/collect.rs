@@ -23,6 +23,7 @@ pub fn collect(staging: &Path, registry: &Registry) -> Result<OverlayInput> {
                             input.conflicts += usize::from(replaced.is_some());
                         }
                     }
+                    Placement::JsonPatch => input.patches.push((m.name.clone(), root.join(&rel))),
                     Placement::PrebuiltGroup => {
                         let group = rel.components().next().map(|c| root.join(c));
                         if let Some(group) = group.filter(|g| !input.prebuilt.contains(g)) {

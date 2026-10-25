@@ -23,7 +23,14 @@ Move a line between columns when its status changes.
     from the vanilla backup and deployed with the overlay. Verified read-only on 302 real
     textures (templates and chunk sizes match PATHC; 253 re-encode byte for byte; PATHC
     round-trips byte for byte). Optional in-game check: `local/Pylune Texture Test`.
-  - next: JSON byte patches; new texture ids (need the UI texture id table);
+  - done: byte-patch JSON (`src/patch/`): dialect-tolerant parser, table index reader
+    (`.pabgh`/`.staticinfoheader`, verified on the real item table: 6 816 records),
+    entry and offset anchors, signature anchors, original-byte verification, strict vs.
+    `allow_partial_apply`, later mods win; game files resolved by path, renamed extension
+    or unique file name; patched files packed with vanilla flags; results journaled per
+    mod. Dry run on the real item table changes exactly the targeted byte.
+  - not yet: field-name JSON (format 3, needs per-table schemas — reported as
+    unsupported), inserts into tables, XML/HTML/CSS patch files, new texture ids,
     pack-level conflict reporting.
 
 ## Next

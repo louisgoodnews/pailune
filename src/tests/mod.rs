@@ -3,6 +3,7 @@
 mod crash;
 mod deployment;
 mod jobs;
+mod json_patches;
 mod overlay;
 mod staging;
 mod storage;
@@ -44,7 +45,6 @@ pub(super) fn fixture() -> Fixture {
     // A zipped-style mod with a wrapper folder, an ASI and a readme.
     write(&sources.join("Cool Mod/Cool Mod v1/CoolMod.asi"), "asi");
     write(&sources.join("Cool Mod/Cool Mod v1/readme.txt"), "docs");
-    write(&sources.join("Cool Mod/Cool Mod v1/patch.json"), "{}");
     // A mod replacing the ASI loader and adding a plugin folder.
     write(&sources.join("Overlay/bin64/winmm.dll"), "modded-loader");
     write(

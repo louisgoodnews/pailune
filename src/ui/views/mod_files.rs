@@ -19,6 +19,7 @@ pub fn show(ui: &mut egui::Ui, details: &ModDetails) -> Vec<Action> {
                 Placement::Mirror
                 | Placement::Bin64
                 | Placement::Pack
+                | Placement::JsonPatch
                 | Placement::PrebuiltGroup => ui.visuals().text_color(),
                 Placement::NeedsPaz(_) => WARNING,
                 Placement::Skip => MUTED,

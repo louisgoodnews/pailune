@@ -15,6 +15,7 @@ mod logging;
 mod mod_engine;
 mod nexus;
 mod overlay;
+mod patch;
 mod paz;
 mod profiles;
 mod steam;

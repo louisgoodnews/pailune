@@ -16,7 +16,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 /// Writes a pack group with the given (vpath, content, flags) files.
-fn write_group(dir: &Path, files: &[(&str, &str, u16)]) -> u32 {
+pub(super) fn write_group(dir: &Path, files: &[(&str, &str, u16)]) -> u32 {
     let packed = files
         .iter()
         .map(|(vpath, data, flags)| Packed {
@@ -47,15 +47,19 @@ fn dds(fill: u8) -> Vec<u8> {
 }
 
 /// Looks a file up the way the game does: first registered group wins.
-fn game_lookup(game: &Path, vpath: &str) -> Option<String> {
+pub(super) fn game_lookup_bytes(game: &Path, vpath: &str) -> Option<Vec<u8>> {
     let table = papgt::parse(&fs::read(game.join("meta/0.papgt")).ok()?).ok()?;
     table.groups.iter().find_map(|g| {
         let dir = game.join(&g.name);
         let index = pamt::parse(&fs::read(dir.join("0.pamt")).ok()?).ok()?;
         let record = index.files.get(vpath)?;
-        let data = extract::extract(&dir, vpath, record).ok()?;
-        Some(String::from_utf8_lossy(&data).into_owned())
+        extract::extract(&dir, vpath, record).ok()
     })
+}
+
+/// [`game_lookup_bytes`] as text.
+pub(super) fn game_lookup(game: &Path, vpath: &str) -> Option<String> {
+    game_lookup_bytes(game, vpath).map(|d| String::from_utf8_lossy(&d).into_owned())
 }
 
 #[test]

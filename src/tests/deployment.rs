@@ -28,7 +28,9 @@ fn placement_rules() {
     assert_eq!(at("Mod/files/0012/ui/a.xml"), Placement::Pack);
     assert_eq!(at("0012/ui/a.xml"), Placement::Pack);
     assert_eq!(at("Mod/files/0012/ui/a.dds"), Placement::Pack);
-    assert_eq!(at("cfg/a.json"), Placement::NeedsPaz(PazFormat::JsonPatch));
+    assert_eq!(at("cfg/a.json"), Placement::JsonPatch);
+    assert_eq!(at("Mod/mod.json"), Placement::Skip);
+    assert_eq!(at("tex/x.bin"), Placement::NeedsPaz(PazFormat::Unplaced));
     assert_eq!(at("Mod/manifest.json"), Placement::Skip);
     assert_eq!(at("tex/hair.dds"), Placement::NeedsPaz(PazFormat::Unplaced));
     assert_eq!(at("readme.md"), Placement::Skip);
@@ -61,7 +63,7 @@ fn full_cycle_is_non_destructive() {
 
     let reg = enabled_registry(&fx);
     let kinds: Vec<ModKind> = reg.mods.iter().map(|m| m.kind).collect();
-    assert_eq!(kinds, vec![ModKind::Mixed, ModKind::Asi]);
+    assert_eq!(kinds, vec![ModKind::Asi, ModKind::Asi]);
     assert_eq!(b, "Overlay");
 
     let link_plan = plan::build(&fx.config, &fx.staging, &reg).unwrap();
@@ -82,7 +84,6 @@ fn full_cycle_is_non_destructive() {
         path_state(&game.join("bin64/CoolMod.asi")),
         PathState::Symlink(_)
     ));
-    assert!(!game.join("bin64/mods/patch.json").exists());
     assert_eq!(
         fs::read_to_string(game.join("bin64/winmm.dll")).unwrap(),
         "modded-loader"

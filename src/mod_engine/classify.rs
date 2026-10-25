@@ -17,7 +17,7 @@ fn kind_of(place: Placement) -> Option<ModKind> {
         Placement::Mirror | Placement::Bin64 => Some(ModKind::Asi),
         Placement::PrebuiltGroup => Some(ModKind::Overlay),
         Placement::Pack | Placement::NeedsPaz(PazFormat::Unplaced) => Some(ModKind::Raw),
-        Placement::NeedsPaz(PazFormat::JsonPatch) => Some(ModKind::Json),
+        Placement::JsonPatch => Some(ModKind::Json),
         Placement::Skip => None,
     }
 }
@@ -39,10 +39,7 @@ mod tests {
     fn classifies_by_placement() {
         assert_eq!(classify([]), ModKind::Empty);
         assert_eq!(classify([Placement::Bin64, Placement::Skip]), ModKind::Asi);
-        assert_eq!(
-            classify([Placement::NeedsPaz(PazFormat::JsonPatch); 3]),
-            ModKind::Json
-        );
+        assert_eq!(classify([Placement::JsonPatch; 3]), ModKind::Json);
         assert_eq!(
             classify([Placement::PrebuiltGroup, Placement::Pack]),
             ModKind::Mixed

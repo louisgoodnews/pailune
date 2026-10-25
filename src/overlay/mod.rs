@@ -9,6 +9,7 @@
 
 pub mod build;
 pub mod collect;
+pub mod patches;
 pub mod textures;
 
 #[cfg(test)]
@@ -25,6 +26,8 @@ pub struct OverlayInput {
     pub packs: BTreeMap<String, PathBuf>,
     /// Prebuilt group folders, in load order.
     pub prebuilt: Vec<PathBuf>,
+    /// Byte-patch JSON files `(mod name, file)`, in load order.
+    pub patches: Vec<(String, PathBuf)>,
     /// Virtual paths provided by more than one mod.
     pub conflicts: usize,
 }
@@ -42,10 +45,12 @@ pub struct OverlayPlan {
     pub groups: Vec<String>,
     /// Files left out, with the reason.
     pub skipped: Vec<String>,
+    /// Results of JSON patches, per mod.
+    pub patch_notes: Vec<patches::PatchNote>,
 }
 
 impl OverlayInput {
     pub fn is_empty(&self) -> bool {
-        self.packs.is_empty() && self.prebuilt.is_empty()
+        self.packs.is_empty() && self.prebuilt.is_empty() && self.patches.is_empty()
     }
 }

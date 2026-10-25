@@ -5,8 +5,6 @@ use std::path::{Component, Path};
 /// Mod content Pylune cannot deploy yet.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PazFormat {
-    /// Byte-patch or field-name JSON applied to archived game data.
-    JsonPatch,
     /// Game files whose location inside the archives is unknown.
     Unplaced,
 }
@@ -22,6 +20,8 @@ pub enum Placement {
     Pack,
     /// Part of a prebuilt archive group (`NNNN/*.pamt`, `*.paz`) shipped by the mod.
     PrebuiltGroup,
+    /// A byte-patch JSON mod applied to game data inside the archives.
+    JsonPatch,
     /// Not deployable yet.
     NeedsPaz(PazFormat),
     /// Documentation, screenshots and mod metadata.
@@ -35,7 +35,7 @@ impl Placement {
             Placement::Mirror | Placement::Bin64 => "linked",
             Placement::Pack => "packed into Pylune's archive group",
             Placement::PrebuiltGroup => "prebuilt archive group, registered by Pylune",
-            Placement::NeedsPaz(PazFormat::JsonPatch) => "JSON patch — needs JSON patch support",
+            Placement::JsonPatch => "JSON patch, applied into Pylune's archive group",
             Placement::NeedsPaz(PazFormat::Unplaced) => {
                 "game file with unknown location — not deployed"
             }
@@ -48,6 +48,9 @@ impl Placement {
 pub fn is_archive_dir(name: &str) -> bool {
     name.len() == 4 && name.bytes().all(|b| b.is_ascii_digit())
 }
+
+/// Mod metadata files of the community formats; never deployed.
+const MANIFESTS: [&str; 3] = ["manifest.json", "mod.json", "modinfo.json"];
 
 /// Extensions of documentation and preview files that are never deployed.
 const DOCS: [&str; 11] = [
@@ -95,9 +98,9 @@ pub fn placement(rel: &Path) -> Placement {
             Placement::PrebuiltGroup
         }
         (_, _, Some(_)) => Placement::Pack,
-        _ if name == "manifest.json" => Placement::Skip,
+        _ if MANIFESTS.contains(&name.as_str()) => Placement::Skip,
         (_, "asi" | "dll" | "ini", None) => Placement::Bin64,
-        (_, "json", None) => Placement::NeedsPaz(PazFormat::JsonPatch),
+        (_, "json", None) => Placement::JsonPatch,
         (_, ext, None) if DOCS.contains(&ext) => Placement::Skip,
         _ => Placement::NeedsPaz(PazFormat::Unplaced),
     }

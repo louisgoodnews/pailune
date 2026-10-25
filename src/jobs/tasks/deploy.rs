@@ -95,6 +95,29 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
                 n => format!(", {n} skipped (see Log)"),
             }
         ));
+        o.patch_notes.iter().for_each(|n| {
+            let severity = if n.ok { Severity::Info } else { Severity::Warn };
+            ctx.journal(
+                conn,
+                Event::new(
+                    severity,
+                    EventKind::Deploy,
+                    Some(&n.mod_name),
+                    n.message.clone(),
+                ),
+            );
+        });
+        let failed = o.patch_notes.iter().filter(|n| !n.ok).count();
+        if !o.patch_notes.is_empty() {
+            text.push_str(&format!(
+                " — JSON patches: {} file(s) patched{}",
+                o.patch_notes.len() - failed,
+                match failed {
+                    0 => String::new(),
+                    n => format!(", {n} with problems (see Log)"),
+                }
+            ));
+        }
     }
     if link_plan.conflicts > 0 {
         text.push_str(&format!(

@@ -81,8 +81,9 @@ If the active profile has no options, `[launch] default_options` is used.
 | `*.asi`, `*.dll`, `*.ini` elsewhere            | linked into `bin64/`                     |
 | RAW `files/NNNN/<path>` or `NNNN/<path>` game files, including `.dds` textures | packed into **Pylune's archive group** (encrypted/compressed like the game file they replace; textures are also registered in a rebuilt `0.pathc`) |
 | prebuilt groups `NNNN/0.pamt` + `*.paz`        | registered under a free group number     |
+| byte-patch JSON mods (`"patches": [{ "game_file", "changes" }]`) | applied to the game file, packed into Pylune's archive group; every change is checked against the original bytes, results per mod in the Log tab |
 | `meta/*` shipped by a mod                      | ignored — Pylune generates `0.papgt` from your vanilla backup |
-| JSON patches, game files with unknown location | not supported yet — flagged in the UI |
+| field-name JSON (format 3), game files with unknown location | not supported yet — reported in the UI/Log |
 | readmes, images, `manifest.json`               | not deployed (shown in the details panel) |
 
 ### The archive overlay
