@@ -7,6 +7,7 @@ use super::{
 use super::{theme, views};
 use crate::backup::snapshot;
 use crate::config::Config;
+use crate::config::detect::{self, Discovery};
 use crate::config::paths::DataPaths;
 use crate::db;
 use crate::jobs::{JobKind, pool::JobPool, tasks};
@@ -20,15 +21,31 @@ use std::time::{Duration, Instant};
 
 impl PyluneApp {
     /// Opens the database, starts the job pool and takes the first backup.
-    pub fn new(cc: &eframe::CreationContext<'_>, paths: DataPaths, config: Config) -> Self {
+    pub fn new(
+        cc: &eframe::CreationContext<'_>,
+        paths: DataPaths,
+        config: Config,
+        mut conn: rusqlite::Connection,
+        notice: Option<String>,
+    ) -> Self {
         theme::apply(&cc.egui_ctx);
-        let mut conn = db::open(&paths.database).expect("Pylune needs a working database");
+        let (config, discovery) = detect::resolve_game(config, &paths.config_file);
         let now = db::now();
         let staging = paths.staging.clone();
-        let registry = registry::scan(&staging)
-            .and_then(|scan| db::mods::update(&mut conn, |r| Ok(registry::merge(r, &scan, now))))
-            .unwrap_or_default();
+        // Startup problems are shown, never swallowed: a failed rescan falls
+        // back to the stored list and reports the error.
+        let synced = registry::scan(&staging)
+            .and_then(|scan| db::mods::update(&mut conn, |r| Ok(registry::merge(r, &scan, now))));
+        let (registry, scan_error) = match synced {
+            Ok(registry) => (registry, None),
+            Err(err) => (
+                db::mods::load(&conn).unwrap_or_default(),
+                Some(format!("Rescan failed: {err}")),
+            ),
+        };
         let book = db::profiles::load(&conn).unwrap_or_default();
+        let notice = notice.map(|n| StatusLine::new(Level::Warning, n));
+        let notice = notice.or(scan_error.map(|e| StatusLine::new(Level::Error, e)));
         let ctx = cc.egui_ctx.clone();
         let pool = JobPool::spawn(
             config.jobs.max_parallel,
@@ -43,7 +60,7 @@ impl PyluneApp {
             game: locate::game_status(&info),
             loader: locate::detect_loader(&info),
             backup: snapshot::status(&info, &Default::default()),
-            status: initial_status(&info),
+            status: notice.unwrap_or_else(|| initial_status(&info, &discovery)),
             deployed_links: 0,
             confirm: None,
             dirty: false,
@@ -64,6 +81,7 @@ impl PyluneApp {
             last_poll: Instant::now(),
             close_refused: false,
             focus_requested: false,
+            setup_open: discovery == Discovery::NotFound,
             pool,
             paths,
             config,
@@ -90,16 +108,23 @@ fn spawn_ticker(ctx: egui::Context) {
 }
 
 /// Takes the first-run `.bak` snapshot when the game is present.
-fn initial_status(info: &SteamInfo) -> StatusLine {
+fn initial_status(info: &SteamInfo, discovery: &Discovery) -> StatusLine {
     let ready = locate::game_status(info) == GameStatus::Ready;
-    match ready.then(|| snapshot::ensure_meta_backup(info)) {
-        None => StatusLine::new(Level::Warning, "Game not found — check the Settings tab"),
-        Some(Ok(0)) => StatusLine::new(Level::Info, "Ready"),
-        Some(Ok(n)) => StatusLine::new(
+    match (ready.then(|| snapshot::ensure_meta_backup(info)), discovery) {
+        (None, _) => StatusLine::new(
+            Level::Warning,
+            "Choose the Crimson Desert folder to get started",
+        ),
+        (Some(Ok(_)), Discovery::Detected(dir)) => StatusLine::new(
+            Level::Success,
+            format!("Found Crimson Desert via Steam: {}", dir.display()),
+        ),
+        (Some(Ok(0)), _) => StatusLine::new(Level::Info, "Ready"),
+        (Some(Ok(n)), _) => StatusLine::new(
             Level::Success,
             format!("Backed up {n} metadata file(s) to .bak"),
         ),
-        Some(Err(err)) => StatusLine::new(Level::Error, format!("Backup failed: {err}")),
+        (Some(Err(err)), _) => StatusLine::new(Level::Error, format!("Backup failed: {err}")),
     }
 }
 
@@ -147,6 +172,9 @@ impl eframe::App for PyluneApp {
         actions.extend(page);
         actions.extend(views::readme::show(ui.ctx(), self.mods.readme.as_ref()));
         actions.extend(views::confirm::show(ui.ctx(), self.confirm.as_ref()));
+        if self.setup_open {
+            actions.extend(views::setup::show(ui.ctx(), self));
+        }
         actions.into_iter().for_each(|action| self.dispatch(action));
     }
 }

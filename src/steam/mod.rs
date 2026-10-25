@@ -1,6 +1,8 @@
 //! Steam / Proton path resolution for the configured game installation.
 
+pub mod library;
 pub mod locate;
+pub mod vdf;
 
 use std::path::PathBuf;
 

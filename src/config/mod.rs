@@ -1,5 +1,6 @@
 //! User configuration, stored as TOML in `~/.config/pylune/config.toml`.
 
+pub mod detect;
 pub mod file;
 pub mod paths;
 
@@ -11,10 +12,6 @@ pub const CRIMSON_DESERT_APP_ID: u32 = 3_321_460;
 
 /// Nexus Mods game domain of *Crimson Desert*.
 pub const NEXUS_DOMAIN: &str = "crimsondesert";
-
-/// Default install location on this machine.
-const DEFAULT_GAME_DIR: &str =
-    "/mnt/nvme0n1/nvme0n1p1/louisgoodnews/steamapps/common/Crimson Desert";
 
 /// `[game]` — where and what the game is.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -74,7 +71,8 @@ pub struct Config {
 impl Default for GameConfig {
     fn default() -> Self {
         Self {
-            dir: PathBuf::from(DEFAULT_GAME_DIR),
+            // Empty until detected from Steam or chosen in the setup dialog.
+            dir: PathBuf::new(),
             app_id: CRIMSON_DESERT_APP_ID,
         }
     }

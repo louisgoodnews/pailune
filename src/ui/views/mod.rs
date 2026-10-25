@@ -12,6 +12,7 @@ pub mod nexus;
 pub mod profiles;
 pub mod readme;
 pub mod settings;
+pub mod setup;
 pub mod status_bar;
 
 use super::Action;

@@ -18,6 +18,29 @@ pub fn load_or_create(path: &Path) -> Result<Config> {
     }
 }
 
+/// Like [`load_or_create`], but never loses the user's file: an invalid
+/// `config.toml` is moved aside to `config.toml.invalid` and defaults are
+/// used. Returns a notice for the UI when that happened.
+pub fn load_or_recover(path: &Path) -> (Config, Option<String>) {
+    match load_or_create(path) {
+        Ok(config) => (config, None),
+        Err(err) => {
+            let aside = path.with_extension("toml.invalid");
+            let moved = fs::rename(path, &aside).is_ok();
+            let config = Config::default();
+            let _ = save(path, &config);
+            let notice = match moved {
+                true => format!(
+                    "{err} — your file was kept as {}; defaults are in use",
+                    aside.display()
+                ),
+                false => format!("{err} — defaults are in use"),
+            };
+            (config, Some(notice))
+        }
+    }
+}
+
 /// Writes the configuration atomically via a temporary sibling file.
 pub fn save(path: &Path, config: &Config) -> Result<()> {
     if let Some(dir) = path.parent() {
@@ -46,5 +69,13 @@ mod tests {
         let partial = load_or_create(&path).unwrap();
         assert_eq!(partial.game.app_id, 7);
         assert_eq!(partial.nexus.domain, Config::default().nexus.domain);
+        fs::write(&path, "[game\nbroken").unwrap();
+        let (recovered, notice) = load_or_recover(&path);
+        assert_eq!(recovered, Config::default());
+        assert!(notice.is_some());
+        assert_eq!(
+            fs::read_to_string(path.with_extension("toml.invalid")).unwrap(),
+            "[game\nbroken"
+        );
     }
 }

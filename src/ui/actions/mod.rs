@@ -33,6 +33,7 @@ impl PyluneApp {
             Action::Deploy(action) => self.deploy_action(action),
             Action::Profile(action) => self.profile_action(action).map(Some),
             Action::Nexus(action) => self.nexus_action(action),
+            Action::Setup(action) => self.setup_action(action),
             Action::SwitchTab(tab) => {
                 self.tab = tab;
                 self.refresh_log().map(|()| None)

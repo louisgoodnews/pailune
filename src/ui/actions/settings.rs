@@ -1,9 +1,11 @@
 //! Settings page actions.
 
+use crate::backup::snapshot;
 use crate::config::file;
 use crate::error::{PyluneError, Result};
 use crate::logging::{Event, EventKind, Severity};
-use crate::ui::{Level, PyluneApp, StatusLine};
+use crate::steam::{GameStatus, library};
+use crate::ui::{Level, PyluneApp, SetupAction, StatusLine};
 use std::path::Path;
 
 impl PyluneApp {
@@ -41,5 +43,47 @@ impl PyluneApp {
             ),
             false => StatusLine::new(Level::Success, "Settings saved"),
         })
+    }
+}
+
+impl PyluneApp {
+    /// Handles the first-run dialog.
+    pub(super) fn setup_action(&mut self, action: SetupAction) -> Result<Option<StatusLine>> {
+        match action {
+            SetupAction::Later => {
+                self.setup_open = false;
+                Ok(Some(StatusLine::new(
+                    Level::Warning,
+                    "No game folder set — see the Settings tab",
+                )))
+            }
+            SetupAction::Detect => match library::find_game(self.config.game.app_id) {
+                Some(dir) => {
+                    self.draft.game_dir = dir.display().to_string();
+                    Ok(Some(StatusLine::new(
+                        Level::Success,
+                        "Found it — press \"Use this folder\"",
+                    )))
+                }
+                None => Err(PyluneError::Invalid(
+                    "Crimson Desert is not in any Steam library".into(),
+                )),
+            },
+            SetupAction::Confirm => {
+                let line = self.save_settings()?;
+                self.refresh_environment();
+                match self.game {
+                    GameStatus::Ready => {
+                        self.setup_open = false;
+                        snapshot::ensure_meta_backup(&self.info)?;
+                        Ok(Some(line))
+                    }
+                    _ => Err(PyluneError::Invalid(
+                        "that folder does not contain bin64/CrimsonDesert.exe and meta/0.papgt"
+                            .into(),
+                    )),
+                }
+            }
+        }
     }
 }

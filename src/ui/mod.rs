@@ -4,8 +4,12 @@
 mod actions;
 mod app;
 mod draft;
+pub mod fatal;
+mod state;
 mod theme;
 mod views;
+
+pub use state::{JobState, JobView, LogState, ModsState, NexusState, ProfilesState};
 
 use crate::backup::BackupStatus;
 use crate::config::Config;
@@ -13,14 +17,9 @@ use crate::config::paths::DataPaths;
 use crate::jobs::JobId;
 use crate::jobs::pool::JobPool;
 use crate::launch::GameProcess;
-use crate::logging::Event;
-use crate::mod_engine::conflicts::ConflictReport;
-use crate::mod_engine::model::{ModDetails, MoveTo, Registry};
-use crate::nexus::{NexusFile, NexusMod, NexusUser};
-use crate::profiles::ProfileBook;
+use crate::mod_engine::model::{MoveTo, Registry};
 use crate::steam::{AsiLoader, GameStatus, SteamInfo};
 use rusqlite::Connection;
-use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -122,6 +121,17 @@ pub enum NexusAction {
     RegisterHandler,
 }
 
+/// First-run setup dialog intents.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SetupAction {
+    /// Search Steam's libraries again.
+    Detect,
+    /// Save the chosen folder and close the dialog if it is valid.
+    Confirm,
+    /// Close the dialog without a valid game folder.
+    Later,
+}
+
 /// Every user intent the views can emit.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
@@ -129,6 +139,7 @@ pub enum Action {
     Deploy(DeployAction),
     Profile(ProfileAction),
     Nexus(NexusAction),
+    Setup(SetupAction),
     SwitchTab(Tab),
     BrowseGameDir,
     SaveSettings,
@@ -136,71 +147,6 @@ pub enum Action {
     OpenLogFolder,
     Ask(Confirm),
     Dismiss,
-}
-
-/// Lifecycle of a job as shown in the jobs panel.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum JobState {
-    Queued,
-    Running,
-    Succeeded,
-    Failed,
-}
-
-/// One row of the jobs panel.
-#[derive(Debug, Clone, PartialEq)]
-pub struct JobView {
-    pub id: JobId,
-    pub kind: crate::jobs::JobKind,
-    pub title: String,
-    pub state: JobState,
-    pub progress: Option<(u64, Option<u64>)>,
-    pub finished_at: Option<Instant>,
-}
-
-/// Mods page state.
-#[derive(Debug, Clone, Default)]
-pub struct ModsState {
-    pub selected: Option<String>,
-    /// Details of the selected mod (name, details).
-    pub details: Option<(String, ModDetails)>,
-    /// Open readme (path, text).
-    pub readme: Option<(PathBuf, String)>,
-    pub conflicts: ConflictReport,
-    /// Generation of the newest requested analysis.
-    pub conflict_generation: u64,
-}
-
-/// Nexus page state.
-#[derive(Debug, Clone, Default)]
-pub struct NexusState {
-    pub key_draft: String,
-    pub mod_id_draft: String,
-    pub user: Option<NexusUser>,
-    /// Mod page currently shown, with its files.
-    pub browsing: Option<(NexusMod, Vec<NexusFile>)>,
-    /// Staged mod that the next download from `browsing` replaces.
-    pub replace_target: Option<String>,
-    /// Staged mod name → newer version available on Nexus.
-    pub updates: BTreeMap<String, String>,
-    pub handler_registered: bool,
-}
-
-/// Profile page state.
-#[derive(Debug, Clone, Default)]
-pub struct ProfilesState {
-    pub book: ProfileBook,
-    pub name_draft: String,
-    /// Profile name → launch options being edited.
-    pub option_drafts: BTreeMap<String, String>,
-}
-
-/// Log page state.
-#[derive(Debug, Clone, Default)]
-pub struct LogState {
-    pub events: Vec<Event>,
-    /// Show only events of the selected mod.
-    pub only_selected: bool,
 }
 
 /// Complete application state.
@@ -237,4 +183,6 @@ pub struct PyluneApp {
     pub close_refused: bool,
     /// A second start asked this window to come to the front.
     pub focus_requested: bool,
+    /// The first-run dialog for choosing the game folder is open.
+    pub setup_open: bool,
 }

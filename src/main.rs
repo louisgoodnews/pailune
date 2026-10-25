@@ -31,10 +31,7 @@ fn main() -> eframe::Result<()> {
             std::process::exit(1);
         }
     };
-    let config = config::file::load_or_create(&paths.config_file).unwrap_or_else(|err| {
-        eprintln!("pylune: {err}; using defaults");
-        config::Config::default()
-    });
+    let (config, notice) = config::file::load_or_recover(&paths.config_file);
     let _log_guard = logging::init::init(&paths.logs, &config.logging.level);
     // The lock must live until the window closes.
     let _instance = match instance::bootstrap(&paths, &args) {
@@ -59,9 +56,16 @@ fn main() -> eframe::Result<()> {
             .with_min_inner_size([860.0, 500.0]),
         ..Default::default()
     };
+    // A broken database gets an explanatory window instead of a crash.
+    let startup = db::open(&paths.database).map_err(|err| err.to_string());
     eframe::run_native(
         "Pylune",
         options,
-        Box::new(move |cc| Ok(Box::new(ui::PyluneApp::new(cc, paths, config)))),
+        Box::new(move |cc| match startup {
+            Ok(conn) => Ok(Box::new(ui::PyluneApp::new(
+                cc, paths, config, conn, notice,
+            ))),
+            Err(err) => Ok(Box::new(ui::fatal::FatalApp::new(err, &paths))),
+        }),
     )
 }
