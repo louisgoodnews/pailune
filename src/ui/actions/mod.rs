@@ -1,5 +1,6 @@
 //! State transitions triggered by [`Action`]s, grouped by feature.
 
+mod backups;
 mod collections;
 mod deploy;
 mod mods;
@@ -36,6 +37,7 @@ impl PyluneApp {
             Action::Profile(action) => self.profile_action(action).map(Some),
             Action::Nexus(action) => self.nexus_action(action),
             Action::Setup(action) => self.setup_action(action),
+            Action::Backup(action) => self.backup_action(action),
             Action::SwitchTab(tab) => {
                 self.tab = tab;
                 self.refresh_log().map(|()| None)
@@ -125,6 +127,7 @@ impl PyluneApp {
         self.registry = db::mods::load(&self.conn)?;
         self.profiles.book = db::profiles::load(&self.conn)?;
         self.mods.trash = crate::mod_engine::trash::list(&self.paths.trash);
+        self.backups = crate::app_backup::create::list(&self.paths.backups);
         let selected_gone = self
             .mods
             .selected

@@ -4,6 +4,7 @@
 //! game directory exclusively through symbolic links. Original files that a
 //! mod would shadow are renamed to `.bak` and restored on revert.
 
+mod app_backup;
 mod backup;
 mod config;
 mod db;

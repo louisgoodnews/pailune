@@ -2,6 +2,7 @@
 //! state (or mutates only its own input widgets) and returns the
 //! [`Action`](super::Action)s the user triggered.
 
+pub mod backups;
 pub mod banner;
 pub mod collection_preview;
 pub mod collections;

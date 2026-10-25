@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] B-01 Backup and restore (mods, profiles, mod lists, settings) — *M*
 - [ ] B-02 Full settings menu — *M*
 - [ ] B-03 Onboarding: guided first run + built-in guide — *M*
 - [ ] A-28 (rest) Save-game backup — *M*
@@ -58,6 +57,11 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-01 backups (`src/app_backup/`): one `.zip` with manifest, `config.toml` and an online
+  SQLite snapshot (mod list, load order, flags, variants, profiles, collections, journal), full
+  backups add the mod files; daily automatic backup (newest 10 kept); restore needs nothing
+  deployed, takes a safety backup first, restores the database online, keeps the replaced
+  staging folder aside; Settings page lists, restores and deletes backups.
 - [x] B-06 deleted mods move to a trash with their metadata (origin, source, variant); Undo in
   the status bar and a "Recently deleted" list restore them; the newest 20 are kept.
 - [x] A-24 downloads resume with HTTP ranges (up to 4 attempts) and are verified with Nexus'

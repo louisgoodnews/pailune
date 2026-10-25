@@ -1,6 +1,7 @@
 //! Job implementations. Each runs on a pool thread with its own DB connection.
 
 mod analyze;
+mod backups;
 mod deploy;
 mod nexus;
 mod staging;
@@ -24,6 +25,9 @@ pub fn run(ctx: &JobContext, kind: JobKind) -> Result<JobOutput> {
         JobKind::Remove(name) => staging::remove(ctx, &name),
         JobKind::RestoreDeleted(id) => staging::restore_deleted(ctx, &id),
         JobKind::PurgeDeleted(id) => staging::purge_deleted(ctx, &id),
+        JobKind::CreateBackup { full, label } => backups::create(ctx, full, &label),
+        JobKind::RestoreBackup(path) => backups::restore(ctx, &path),
+        JobKind::DeleteBackup(path) => backups::delete(&path),
         JobKind::ValidateKey => nexus::validate(ctx),
         JobKind::FetchMod(id) => nexus::fetch_mod(ctx, id),
         JobKind::DescribeFile { mod_id, file_id } => nexus::describe_file(ctx, mod_id, file_id),

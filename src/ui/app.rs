@@ -99,6 +99,7 @@ impl PyluneApp {
             focus_requested: false,
             setup_open: discovery == Discovery::NotFound,
             archives: Default::default(),
+            backups: Vec::new(),
             pool,
             paths,
             config,
@@ -107,6 +108,8 @@ impl PyluneApp {
             info,
         };
         app.refresh_environment();
+        app.backups = crate::app_backup::create::list(&app.paths.backups);
+        app.schedule_auto_backup();
         app.request_conflicts();
         if key::load(&app.paths.nexus_key).is_some() {
             app.submit(JobKind::ValidateKey);

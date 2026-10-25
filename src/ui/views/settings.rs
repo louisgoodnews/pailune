@@ -210,6 +210,8 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
             ui.separator();
             proton_section(ui, app);
             ui.separator();
+            actions.extend(super::backups::show(ui, app));
+            ui.separator();
             actions.extend(backup_section(ui, app));
             ui.separator();
             ui.label(

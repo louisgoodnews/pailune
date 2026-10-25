@@ -34,6 +34,11 @@ pub fn open(path: &Path) -> Result<Connection> {
     Ok(conn)
 }
 
+/// Brings a (restored) database to the current schema.
+pub fn schema_upgrade(conn: &mut Connection) -> Result<()> {
+    schema::migrate(conn)
+}
+
 /// Reads a value from the key/value table.
 pub fn get_value(conn: &Connection, key: &str) -> Result<Option<String>> {
     Ok(conn

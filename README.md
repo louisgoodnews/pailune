@@ -81,6 +81,15 @@ If the active profile has no options, `[launch] default_options` is used.
 5. *Check updates* compares installed Nexus mods with their current version (several requests in
    parallel).
 
+## Backups
+
+*Settings → Pylune backups* saves your settings, mod list (order, enabled flags, chosen options),
+profiles and collections into one `.zip` in `~/.local/share/pylune/backups/`; a **full backup**
+also contains every mod file. One automatic backup is taken per day (the newest 10 are kept).
+Restoring needs the mods to be unlinked, takes a safety backup first and keeps the replaced mod
+folder aside. Deleted mods go to *Recently deleted* on the Mods page and can be restored (or
+undone right away from the status bar). The Nexus API key is never part of a backup.
+
 ## File placement
 
 | Mod contains                                   | Result                                   |

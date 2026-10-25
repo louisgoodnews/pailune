@@ -38,6 +38,14 @@ pub enum JobKind {
     RestoreDeleted(String),
     /// Delete a trash entry for good.
     PurgeDeleted(String),
+    /// Back up settings and the mod list (`full`: with mod files).
+    CreateBackup {
+        full: bool,
+        label: String,
+    },
+    /// Restore a backup archive (needs nothing deployed).
+    RestoreBackup(PathBuf),
+    DeleteBackup(PathBuf),
     ValidateKey,
     FetchMod(u64),
     /// Fetch a collection revision (latest when `revision` is `None`).
@@ -107,7 +115,9 @@ impl JobKind {
             | JobKind::CleanSlate
             | JobKind::RestoreOverlays
             | JobKind::RefreshBackup
-            | JobKind::Remove(_) => Access::Exclusive,
+            | JobKind::Remove(_)
+            | JobKind::CreateBackup { .. }
+            | JobKind::RestoreBackup(_) => Access::Exclusive,
             _ => Access::Shared,
         }
     }
@@ -132,6 +142,10 @@ impl JobKind {
             JobKind::Remove(name) => format!("Delete {name}"),
             JobKind::RestoreDeleted(_) => "Restore deleted mod".into(),
             JobKind::PurgeDeleted(_) => "Empty trash entry".into(),
+            JobKind::CreateBackup { full: true, .. } => "Full backup".into(),
+            JobKind::CreateBackup { .. } => "Back up settings and mod list".into(),
+            JobKind::RestoreBackup(_) => "Restore backup".into(),
+            JobKind::DeleteBackup(_) => "Delete backup".into(),
             JobKind::ValidateKey => "Validate Nexus key".into(),
             JobKind::FetchMod(id) => format!("Fetch Nexus mod {id}"),
             JobKind::DescribeFile { file_id, .. } => format!("Look up Nexus file {file_id}"),

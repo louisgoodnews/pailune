@@ -15,7 +15,7 @@ fn severity_color(ui: &egui::Ui, severity: Severity) -> egui::Color32 {
 }
 
 /// Formats a Unix timestamp as `YYYY-MM-DD HH:MM:SS` (UTC).
-fn timestamp(ts: i64) -> String {
+pub fn timestamp(ts: i64) -> String {
     let (days, secs) = (ts.div_euclid(86_400), ts.rem_euclid(86_400));
     // Civil-from-days (Howard Hinnant's algorithm).
     let z = days + 719_468;

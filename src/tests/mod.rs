@@ -1,5 +1,6 @@
 //! End-to-end tests against a throw-away fake game directory.
 
+mod backups;
 mod crash;
 mod deployment;
 mod jobs;

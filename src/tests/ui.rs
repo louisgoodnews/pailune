@@ -204,3 +204,43 @@ fn app_spool(fx: &Fixture) -> std::path::PathBuf {
     fs::create_dir_all(&spool).unwrap();
     spool
 }
+
+#[test]
+fn backups_restore_the_mod_list_and_settings() {
+    use crate::ui::BackupAction;
+    let fx = fixture();
+    let mut app = app(&fx);
+    settle(&mut app);
+    assert_eq!(app.backups.len(), 1, "an automatic backup on first start");
+    app.dispatch(Action::Mod(ModAction::ImportPaths(vec![
+        fx.sources.join("Overlay"),
+    ])));
+    settle(&mut app);
+    app.dispatch(Action::Mod(ModAction::SetAll(true)));
+    app.dispatch(Action::Backup(BackupAction::Create { full: true }));
+    settle(&mut app);
+    let backup = app
+        .backups
+        .iter()
+        .find(|b| b.label == "manual")
+        .expect("manual backup")
+        .path
+        .clone();
+    app.dispatch(Action::Mod(ModAction::Delete("Overlay".into())));
+    settle(&mut app);
+    assert!(app.registry.mods.is_empty());
+    app.dispatch(Action::Backup(BackupAction::Restore(backup)));
+    settle(&mut app);
+    assert_eq!(app.status.level, Level::Success, "{:?}", app.status);
+    let names: Vec<_> = app
+        .registry
+        .mods
+        .iter()
+        .map(|m| (m.name.as_str(), m.enabled))
+        .collect();
+    assert_eq!(names, [("Overlay", true)]);
+    assert!(
+        app.backups.iter().any(|b| b.label == "before restore"),
+        "safety backup taken"
+    );
+}

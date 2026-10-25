@@ -29,6 +29,18 @@ fn describe(confirm: &Confirm) -> (String, String, Action) {
                 .into(),
             Action::Nexus(crate::ui::NexusAction::UninstallCollection(slug.clone())),
         ),
+        Confirm::RestoreBackup(path) => (
+            "Restore this backup?".into(),
+            format!(
+                "The mod list, profiles and settings are replaced with the backup's (mod files too, \
+                 if it contains them; the current ones are kept aside). A safety backup of the \
+                 current state is taken first.\n\n{}",
+                path.file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_default()
+            ),
+            Action::Backup(crate::ui::BackupAction::Restore(path.clone())),
+        ),
         Confirm::DeleteProfile(name) => (
             format!("Delete profile '{name}'?"),
             "Only the profile is deleted; staged mods stay untouched.".into(),

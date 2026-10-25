@@ -6,11 +6,16 @@ mod app;
 mod draft;
 pub mod fatal;
 pub mod icon;
+mod intent;
 mod shortcuts;
 mod state;
 mod theme;
 mod views;
 
+pub use intent::{
+    Action, BackupAction, Confirm, DeployAction, ModAction, NexusAction, ProfileAction,
+    SetupAction, Tab,
+};
 pub use state::{Incoming, JobState, JobView, LogState, ModsState, NexusState, ProfilesState};
 
 use crate::backup::BackupStatus;
@@ -19,10 +24,9 @@ use crate::config::paths::DataPaths;
 use crate::jobs::JobId;
 use crate::jobs::pool::JobPool;
 use crate::launch::GameProcess;
-use crate::mod_engine::model::{MoveTo, Registry};
+use crate::mod_engine::model::Registry;
 use crate::steam::{AsiLoader, GameStatus, SteamInfo};
 use rusqlite::Connection;
-use std::path::PathBuf;
 use std::time::Instant;
 
 /// Severity of the message in the status bar.
@@ -51,137 +55,6 @@ pub struct SettingsDraft {
     pub default_options: String,
     pub max_parallel: String,
     pub log_level: String,
-}
-
-/// Main-area page.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Tab {
-    Mods,
-    Profiles,
-    Nexus,
-    Log,
-    Settings,
-}
-
-/// Destructive actions that need an explicit confirmation.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Confirm {
-    CleanSlate,
-    DeleteMod(String),
-    DeleteProfile(String),
-    UninstallCollection(String),
-}
-
-/// Mod management intents.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ModAction {
-    Select(String),
-    SetEnabled(String, bool),
-    SetAll(bool),
-    Move(String, MoveTo),
-    Delete(String),
-    /// Nexus mods: pick a newer file; others: pick a replacement archive.
-    Update(String),
-    OpenFolder(String),
-    ShowReadme(PathBuf),
-    CloseReadme,
-    ImportFolder,
-    ImportFiles,
-    /// Files or folders dropped onto the window.
-    ImportPaths(Vec<PathBuf>),
-    /// Choose the option folder of a multi-variant mod.
-    SetVariant(String, String),
-    /// Bring a deleted mod back from the trash.
-    RestoreDeleted(String),
-    /// Delete a trash entry for good.
-    PurgeDeleted(String),
-    Rescan,
-}
-
-/// Game-directory intents.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum DeployAction {
-    Apply,
-    UnlinkAll,
-    CleanSlate,
-    RestoreOverlays,
-    RefreshBackup,
-    Launch,
-    /// Ask Steam to verify the game files (after a game update).
-    VerifyGame,
-}
-
-/// Profile page intents.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ProfileAction {
-    /// Save the current selection under this name (new or overwrite).
-    Save(String),
-    Load(String),
-    Delete(String),
-    /// Store the edited launch options of this profile.
-    SaveOptions(String),
-    /// Write a profile to a JSON file chosen by the user.
-    Export(String),
-    /// Read a profile from a JSON file.
-    Import,
-}
-
-/// Nexus page intents.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum NexusAction {
-    SaveKey,
-    Validate,
-    Fetch,
-    Download(u64),
-    CheckUpdates,
-    OpenPage,
-    RegisterHandler,
-    /// Start the confirmed incoming download at this index.
-    AcceptIncoming(usize),
-    /// Drop the incoming download at this index.
-    RejectIncoming(usize),
-    /// Look up the collection in the draft field.
-    FetchCollection,
-    /// Flip whether an optional member of the previewed collection is installed.
-    ToggleMember(usize),
-    /// Install (or update to) the previewed collection.
-    InstallCollection,
-    ClosePreview,
-    /// Fetch the newest revision of an installed collection for review.
-    UpdateCollection(String),
-    /// Enable or disable every installed member.
-    CollectionEnabled(String, bool),
-    UninstallCollection(String),
-    /// Open a member's file page on Nexus (free accounts download there).
-    OpenMemberPage(u64, u64),
-}
-
-/// First-run setup dialog intents.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SetupAction {
-    /// Search Steam's libraries again.
-    Detect,
-    /// Save the chosen folder and close the dialog if it is valid.
-    Confirm,
-    /// Close the dialog without a valid game folder.
-    Later,
-}
-
-/// Every user intent the views can emit.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Action {
-    Mod(ModAction),
-    Deploy(DeployAction),
-    Profile(ProfileAction),
-    Nexus(NexusAction),
-    Setup(SetupAction),
-    SwitchTab(Tab),
-    BrowseGameDir,
-    SaveSettings,
-    RefreshLog,
-    OpenLogFolder,
-    Ask(Confirm),
-    Dismiss,
 }
 
 /// Complete application state.
@@ -220,6 +93,8 @@ pub struct PyluneApp {
     pub focus_requested: bool,
     /// The first-run dialog for choosing the game folder is open.
     pub setup_open: bool,
+    /// Backups of Pylune's state, newest first.
+    pub backups: Vec<crate::app_backup::BackupInfo>,
     /// Version and pack groups of the installed archives.
     pub archives: crate::paz::status::ArchiveStatus,
 }

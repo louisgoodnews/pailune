@@ -12,7 +12,7 @@ eframe = "0.37.0"
 lz4_flex = "0.11"
 md-5 = "0.11.0"
 rfd = "0.17.2"
-rusqlite = { version = "0.41.0", features = ["bundled"] }
+rusqlite = { version = "0.41.0", features = ["backup", "bundled"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 sevenz-rust2 = "0.24.1"

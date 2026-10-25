@@ -20,6 +20,8 @@ pub struct DataPaths {
     pub overlay: PathBuf,
     /// Deleted mods, restorable until pruned.
     pub trash: PathBuf,
+    /// Backups of Pylune's settings, database and mod files.
+    pub backups: PathBuf,
     /// Rolling application log files.
     pub logs: PathBuf,
     /// One log file per mod.
@@ -42,6 +44,7 @@ impl DataPaths {
             downloads: data.join("downloads"),
             overlay: data.join("overlay"),
             trash: data.join("trash"),
+            backups: data.join("backups"),
             logs: data.join("logs"),
             mod_logs: data.join("logs").join("mods"),
             nexus_key: data.join("nexus_api_key"),
