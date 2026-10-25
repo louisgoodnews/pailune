@@ -1,7 +1,7 @@
 //! Per-mod file conflict analysis for the enabled mods.
 
 use super::model::Registry;
-use super::plan::mod_ops;
+use super::plan::{Placement, deployable_files, mod_ops, virtual_path};
 use crate::config::Config;
 use crate::error::Result;
 use std::collections::BTreeMap;
@@ -28,23 +28,37 @@ pub struct ModConflicts {
 /// Conflicts for every enabled mod that has any.
 pub type ConflictReport = BTreeMap<String, ModConflicts>;
 
+/// Shown in front of archive paths in conflict lists.
+pub const ARCHIVE_PREFIX: &str = "[archive]";
+
 /// Analyses which enabled mods provide the same game files.
 pub fn analyze(config: &Config, staging: &Path, registry: &Registry) -> Result<ConflictReport> {
+    // Linked files are keyed by their game path, packed files by their
+    // archive path, so both kinds of override show up.
+    let game = &config.game.dir;
+    let provided = |m: &crate::mod_engine::model::ModEntry| -> Result<Vec<PathBuf>> {
+        let links = mod_ops(config, staging, &m.name, m.variant.as_deref())?
+            .into_iter()
+            .map(|op| op.target);
+        let packed = deployable_files(&staging.join(&m.name), m.variant.as_deref())?
+            .into_iter()
+            .filter(|f| f.place == Placement::Pack)
+            .filter_map(|f| virtual_path(&f.rel))
+            .map(|v| game.join(ARCHIVE_PREFIX).join(v));
+        Ok(links.chain(packed).collect())
+    };
     let providers: BTreeMap<PathBuf, Vec<String>> = registry
         .mods
         .iter()
         .filter(|m| m.enabled)
-        .map(|m| {
-            mod_ops(config, staging, &m.name, m.variant.as_deref()).map(|ops| (m.name.clone(), ops))
-        })
+        .map(|m| provided(m).map(|targets| (m.name.clone(), targets)))
         .collect::<Result<Vec<_>>>()?
         .into_iter()
-        .flat_map(|(name, ops)| ops.into_iter().map(move |op| (op.target, name.clone())))
+        .flat_map(|(name, targets)| targets.into_iter().map(move |t| (t, name.clone())))
         .fold(BTreeMap::new(), |mut acc, (target, name)| {
             acc.entry(target).or_insert_with(Vec::new).push(name);
             acc
         });
-    let game = &config.game.dir;
     Ok(providers
         .into_iter()
         .filter(|(_, mods)| mods.len() > 1)

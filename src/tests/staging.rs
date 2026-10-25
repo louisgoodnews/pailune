@@ -109,3 +109,21 @@ fn only_the_chosen_variant_is_deployed() {
         Some("Human")
     );
 }
+
+#[test]
+fn packed_files_report_conflicts_too() {
+    let fx = fixture();
+    write(&fx.sources.join("Blue UI/files/0012/ui/menu.css"), "blue");
+    write(&fx.sources.join("Red UI/0012/ui/menu.css"), "red");
+    install::import(&fx.sources.join("Blue UI"), &fx.staging).unwrap();
+    install::import(&fx.sources.join("Red UI"), &fx.staging).unwrap();
+    let report =
+        crate::mod_engine::conflicts::analyze(&fx.config, &fx.staging, &enabled_registry(&fx))
+            .unwrap();
+    let lost = &report["Blue UI"].loses[0];
+    assert_eq!(
+        (lost.file.to_string_lossy().as_ref(), lost.other.as_str()),
+        ("[archive]/ui/menu.css", "Red UI")
+    );
+    assert_eq!(report["Red UI"].wins.len(), 1);
+}

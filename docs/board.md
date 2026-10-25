@@ -30,8 +30,9 @@ Move a line between columns when its status changes.
     or unique file name; patched files packed with vanilla flags; results journaled per
     mod. Dry run on the real item table changes exactly the targeted byte.
   - not yet: field-name JSON (format 3, needs per-table schemas — reported as
-    unsupported), inserts into tables, XML/HTML/CSS patch files, new texture ids,
-    pack-level conflict reporting.
+    unsupported), inserts into tables, XML/HTML/CSS patch files, new texture ids.
+  - done: conflicts between packed archive files are reported like linked ones
+    (`[archive]/<path>` in the details panel).
 
 ## Next
 
