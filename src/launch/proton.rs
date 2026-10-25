@@ -75,7 +75,7 @@ pub fn tool_chain(
         .and_then(Vdf::as_str)
         .and_then(|id| id.parse().ok())
         .filter(|_| depth > 0)
-        .and_then(|id| find_tool(id))
+        .and_then(find_tool)
         .map(|dir| tool_chain(&dir, find_tool, depth - 1))
         .unwrap_or_default();
     outer.into_iter().chain(own).collect()
