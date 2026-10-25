@@ -1,64 +1,15 @@
-//! End-to-end tests against a throw-away fake game directory.
+//! Staging, deployment, conflicts and reset.
 
+use super::{enabled_registry, fixture, write};
 use crate::backup::{MetaBackup, reset, snapshot};
-use crate::config::Config;
-use crate::mod_engine::model::{ModKind, Registry};
+use crate::mod_engine::conflicts;
+use crate::mod_engine::model::ModKind;
 use crate::mod_engine::plan::{self, Placement};
 use crate::mod_engine::{install, registry};
 use crate::steam::{AsiLoader, GameStatus, locate};
 use crate::symlink::{Manifest, PathState, deploy, path_state, undeploy};
 use std::fs;
-use std::path::{Path, PathBuf};
-
-/// A fake installation plus staging folder inside a temp dir.
-struct Fixture {
-    _tmp: tempfile::TempDir,
-    config: Config,
-    staging: PathBuf,
-    sources: PathBuf,
-}
-
-fn write(path: &Path, contents: &str) {
-    fs::create_dir_all(path.parent().unwrap()).unwrap();
-    fs::write(path, contents).unwrap();
-}
-
-fn fixture() -> Fixture {
-    let tmp = tempfile::tempdir().unwrap();
-    let game = tmp.path().join("steamapps/common/Crimson Desert");
-    write(&game.join("bin64/CrimsonDesert.exe"), "exe");
-    write(&game.join("bin64/winmm.dll"), "loader");
-    write(&game.join("meta/0.papgt"), "vanilla-papgt");
-    write(&game.join("meta/0.paver"), "v1");
-    write(&game.join("0000/0.paz"), "vanilla-archive");
-    write(&game.join("0036/0.paz"), "foreign-overlay");
-    fs::create_dir_all(tmp.path().join("steamapps/compatdata/3321460/pfx")).unwrap();
-    let staging = tmp.path().join("staging");
-    let sources = tmp.path().join("downloads");
-    fs::create_dir_all(&staging).unwrap();
-    // A zipped-style mod with a wrapper folder, an ASI and a readme.
-    write(&sources.join("Cool Mod/Cool Mod v1/CoolMod.asi"), "asi");
-    write(&sources.join("Cool Mod/Cool Mod v1/readme.txt"), "docs");
-    write(&sources.join("Cool Mod/Cool Mod v1/patch.json"), "{}");
-    // An overlay mod replacing the papgt and adding an archive folder.
-    write(&sources.join("Overlay/meta/0.papgt"), "modded-papgt");
-    write(&sources.join("Overlay/0037/0.paz"), "mod-archive");
-    let config = Config {
-        game_dir: game,
-        ..Config::default()
-    };
-    Fixture {
-        _tmp: tmp,
-        config,
-        staging,
-        sources,
-    }
-}
-
-fn enabled_registry(fx: &Fixture) -> Registry {
-    let reg = registry::sync(&Registry::default(), &fx.staging).unwrap();
-    (0..reg.mods.len()).fold(reg, |r, i| registry::toggled(&r, i))
-}
+use std::path::Path;
 
 #[test]
 fn placement_rules() {
@@ -85,7 +36,7 @@ fn locate_detects_game_prefix_and_loader() {
 fn full_cycle_is_non_destructive() {
     let fx = fixture();
     let info = locate::resolve(&fx.config);
-    let game = &fx.config.game_dir;
+    let game = &fx.config.game.dir;
     assert_eq!(snapshot::ensure_meta_backup(&info).unwrap(), 2);
     assert_eq!(snapshot::meta_backup_state(&info), MetaBackup::Current);
 
@@ -162,7 +113,7 @@ fn undeploy_leaves_foreign_replacements_alone() {
     let link_plan = plan::build(&fx.config, &fx.staging, &reg).unwrap();
     let mut manifest = Manifest::default();
     deploy::deploy(&link_plan, &mut manifest).unwrap();
-    let papgt = fx.config.game_dir.join("meta/0.papgt");
+    let papgt = fx.config.game.dir.join("meta/0.papgt");
     fs::remove_file(&papgt).unwrap();
     fs::write(&papgt, "steam-update").unwrap();
     let report = undeploy::undeploy(&mut manifest).unwrap();
@@ -181,14 +132,6 @@ fn outdated_meta_backup_blocks_restore() {
 }
 
 #[test]
-#[ignore = "talks to api.nexusmods.com"]
-fn nexus_rejects_bad_key() {
-    let client = crate::nexus::api::Client::new("not-a-real-key", "crimsondesert");
-    let err = client.validate().unwrap_err().to_string();
-    assert!(err.contains("rejected"), "{err}");
-}
-
-#[test]
 fn import_as_replaces_only_when_asked() {
     let fx = fixture();
     let v1 = fx.sources.join("v1.asi");
@@ -203,6 +146,34 @@ fn import_as_replaces_only_when_asked() {
     let archive = fx.sources.join("mod.7z");
     write(&archive, "7z");
     assert!(install::import(&archive, &fx.staging).is_err());
-    assert!(!fx.staging.join("mod").exists(), "failed import leaves nothing behind");
+    assert!(
+        !fx.staging.join("mod").exists(),
+        "failed import leaves nothing behind"
+    );
     assert_eq!(install::sanitize_name("../A: B?"), "_A_ B_");
+}
+
+#[test]
+fn conflicts_report_winners_and_losers() {
+    let fx = fixture();
+    write(&fx.sources.join("A/bin64/shared.asi"), "a");
+    write(&fx.sources.join("B/bin64/shared.asi"), "b");
+    write(&fx.sources.join("B/only_b.asi"), "b");
+    install::import(&fx.sources.join("A"), &fx.staging).unwrap();
+    install::import(&fx.sources.join("B"), &fx.staging).unwrap();
+    let reg = enabled_registry(&fx);
+    let report = conflicts::analyze(&fx.config, &fx.staging, &reg).unwrap();
+    let (a, b) = (&report["A"], &report["B"]);
+    assert_eq!(
+        (a.wins.len(), a.loses.len(), b.wins.len(), b.loses.len()),
+        (0, 1, 1, 0)
+    );
+    assert_eq!(a.loses[0].file, Path::new("bin64/shared.asi"));
+    assert_eq!(a.loses[0].other, "B");
+    let only_a = registry::with_enabled(&reg, "B", false);
+    assert!(
+        conflicts::analyze(&fx.config, &fx.staging, &only_a)
+            .unwrap()
+            .is_empty()
+    );
 }

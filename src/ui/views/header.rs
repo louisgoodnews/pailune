@@ -1,10 +1,19 @@
 //! Top bar: title, indicators, page tabs and the main action buttons.
 
+use super::clicked;
 use crate::launch::GameProcess;
 use crate::steam::{AsiLoader, GameStatus};
 use crate::ui::theme::{self, ACCENT, DANGER, MUTED, SUCCESS, WARNING};
-use crate::ui::{Action, Confirm, PyluneApp, Tab};
+use crate::ui::{Action, Confirm, DeployAction, PyluneApp, Tab};
 use eframe::egui::{self, Color32, RichText};
+
+const TABS: [(Tab, &str); 5] = [
+    (Tab::Mods, "Mods"),
+    (Tab::Profiles, "Profiles"),
+    (Tab::Nexus, "Nexus"),
+    (Tab::Log, "Log"),
+    (Tab::Settings, "Settings"),
+];
 
 fn game_badge(status: GameStatus, process: GameProcess) -> (&'static str, Color32) {
     match (status, process) {
@@ -24,27 +33,6 @@ fn loader_badge(loader: AsiLoader) -> (&'static str, Color32) {
     }
 }
 
-/// Keeps only the actions whose button was clicked.
-fn clicked(pairs: impl IntoIterator<Item = (bool, Action)>) -> impl Iterator<Item = Action> {
-    pairs.into_iter().filter(|(c, _)| *c).map(|(_, a)| a)
-}
-
-fn tabs(ui: &mut egui::Ui, current: Tab) -> Vec<Action> {
-    let tab = |ui: &mut egui::Ui, tab: Tab, label: &str| {
-        let text = RichText::new(label).strong().size(15.0);
-        (
-            ui.selectable_label(current == tab, text).clicked(),
-            Action::SwitchTab(tab),
-        )
-    };
-    let pairs = [
-        tab(ui, Tab::Mods, "Mods"),
-        tab(ui, Tab::Profiles, "Profiles"),
-        tab(ui, Tab::Nexus, "Nexus"),
-    ];
-    clicked(pairs).collect()
-}
-
 /// Renders the header and returns triggered actions.
 pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
     let mut actions = Vec::new();
@@ -57,33 +45,30 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         theme::badge(ui, text, color);
         let (text, color) = loader_badge(app.loader);
         theme::badge(ui, text, color);
+        if let Some(profile) = &app.profiles.book.active {
+            theme::badge(ui, &format!("PROFILE: {profile}"), ACCENT);
+        }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let running = app.process == GameProcess::Running;
+            let ready = app.process == GameProcess::Stopped && app.game == GameStatus::Ready;
             let play = ui
-                .add_enabled_ui(!running && app.game == GameStatus::Ready, |ui| {
+                .add_enabled_ui(ready && app.launch_after.is_none(), |ui| {
                     theme::filled_button(ui, "▶  PLAY", SUCCESS.linear_multiply(0.85))
                 })
                 .inner
-                .on_hover_text("Launch through Steam (applies pending changes first if enabled)");
-            actions.extend(clicked([(play.clicked(), Action::Launch)]));
+                .on_hover_text("Launch with the active profile's options (applies pending changes first if enabled)");
+            actions.extend(clicked([(play.clicked(), Action::Deploy(DeployAction::Launch))]));
         });
     });
     ui.add_space(4.0);
     ui.horizontal(|ui| {
-        actions.extend(tabs(ui, app.tab));
-        ui.separator();
-        let pairs = [
+        let tabs = TABS.map(|(tab, label)| {
+            let text = RichText::new(label).strong().size(15.0);
             (
-                ui.button("📁 Import folder…").clicked(),
-                Action::ImportFolder,
-            ),
-            (
-                ui.button("📦 Import file / zip…").clicked(),
-                Action::ImportFile,
-            ),
-            (ui.button("⟳ Rescan").clicked(), Action::Rescan),
-        ];
-        actions.extend(clicked(pairs));
+                ui.selectable_label(app.tab == tab, text).clicked(),
+                Action::SwitchTab(tab),
+            )
+        });
+        actions.extend(clicked(tabs));
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             let reset = theme::filled_button(ui, "⚠ CLEAN SLATE", DANGER).on_hover_text(
                 "Remove all links, restore .bak originals and set foreign overlays aside",
@@ -96,12 +81,11 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             };
             let apply = theme::filled_button(ui, "✔ Apply", fill)
                 .on_hover_text("Symlink all enabled mods into the game");
-            let pairs = [
+            actions.extend(clicked([
                 (reset.clicked(), Action::Ask(Confirm::CleanSlate)),
-                (unlink.clicked(), Action::UnlinkAll),
-                (apply.clicked(), Action::Apply),
-            ];
-            actions.extend(clicked(pairs));
+                (unlink.clicked(), Action::Deploy(DeployAction::UnlinkAll)),
+                (apply.clicked(), Action::Deploy(DeployAction::Apply)),
+            ]));
         });
     });
     ui.add_space(6.0);

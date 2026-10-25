@@ -5,9 +5,10 @@ use crate::error::{PyluneError, Result};
 use crate::mod_engine::model::{ModEntry, Registry};
 
 /// Captures the registry's current selection and order as a profile.
-pub fn capture(name: &str, registry: &Registry) -> Profile {
+pub fn capture(name: &str, registry: &Registry, launch_options: &str) -> Profile {
     Profile {
         name: name.trim().to_string(),
+        launch_options: launch_options.to_string(),
         slots: registry
             .mods
             .iter()
@@ -16,38 +17,6 @@ pub fn capture(name: &str, registry: &Registry) -> Profile {
                 enabled: m.enabled,
             })
             .collect(),
-    }
-}
-
-/// Inserts or replaces `profile` (matched by name) and marks it active.
-pub fn upsert(book: &ProfileBook, profile: Profile) -> Result<ProfileBook> {
-    if profile.name.is_empty() {
-        return Err(PyluneError::Invalid(
-            "profile name must not be empty".into(),
-        ));
-    }
-    let active = Some(profile.name.clone());
-    let mut profiles: Vec<Profile> = book
-        .profiles
-        .iter()
-        .filter(|p| Some(&p.name) != active.as_ref())
-        .cloned()
-        .chain(std::iter::once(profile))
-        .collect();
-    profiles.sort_by_key(|p| p.name.to_lowercase());
-    Ok(ProfileBook { profiles, active })
-}
-
-/// Removes the profile called `name`.
-pub fn delete(book: &ProfileBook, name: &str) -> ProfileBook {
-    ProfileBook {
-        profiles: book
-            .profiles
-            .iter()
-            .filter(|p| p.name != name)
-            .cloned()
-            .collect(),
-        active: book.active.clone().filter(|a| a != name),
     }
 }
 
@@ -104,6 +73,9 @@ mod tests {
             kind: ModKind::Asi,
             enabled,
             file_count: 1,
+            installed_at: 0,
+            source: String::new(),
+            nexus: None,
         }
     }
 
@@ -112,13 +84,16 @@ mod tests {
         let reg = Registry {
             mods: vec![entry("a", true), entry("b", false), entry("c", true)],
         };
-        let mut profile = capture("Main", &reg);
+        let mut profile = capture("Main", &reg, "");
         profile.slots.reverse();
         profile.slots.push(ProfileSlot {
             name: "gone".into(),
             enabled: true,
         });
-        let book = upsert(&ProfileBook::default(), profile).unwrap();
+        let book = ProfileBook {
+            profiles: vec![profile],
+            active: None,
+        };
         let (next, outcome) = apply(find(&book, "Main").unwrap(), &reg);
         let order: Vec<_> = next
             .mods
@@ -127,7 +102,6 @@ mod tests {
             .collect();
         assert_eq!(order, [("c", true), ("b", false), ("a", true)]);
         assert_eq!(outcome.missing, ["gone"]);
-        assert!(delete(&book, "Main").profiles.is_empty());
-        assert!(upsert(&book, capture("  ", &reg)).is_err());
+        assert!(find(&book, "Other").is_err());
     }
 }

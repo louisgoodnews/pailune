@@ -11,10 +11,15 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         ui.label(&app.status.text);
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             let enabled = app.registry.mods.iter().filter(|m| m.enabled).count();
+            let pending = if app.dirty {
+                " · changes not applied"
+            } else {
+                ""
+            };
             ui.label(
                 RichText::new(format!(
-                    "{} link(s) deployed · {enabled}/{} mod(s) enabled",
-                    app.manifest.links.len(),
+                    "{} link(s) deployed · {enabled}/{} mod(s) enabled{pending}",
+                    app.deployed_links,
                     app.registry.mods.len()
                 ))
                 .color(MUTED),

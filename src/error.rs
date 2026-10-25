@@ -12,9 +12,18 @@ pub enum PyluneError {
     /// A JSON document could not be read or written.
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
+    /// The configuration file is malformed.
+    #[error("config.toml: {0}")]
+    TomlRead(#[from] toml::de::Error),
+    /// The configuration could not be serialised.
+    #[error("config.toml: {0}")]
+    TomlWrite(#[from] toml::ser::Error),
+    /// The SQLite database failed.
+    #[error("database error: {0}")]
+    Db(#[from] rusqlite::Error),
     /// A mod archive could not be extracted.
     #[error("archive error: {0}")]
-    Zip(#[from] zip::result::ZipError),
+    Archive(String),
     /// Directory traversal failed.
     #[error("walk error: {0}")]
     Walk(#[from] walkdir::Error),
@@ -24,6 +33,24 @@ pub enum PyluneError {
     /// A precondition was not met (bad input, missing game, ...).
     #[error("{0}")]
     Invalid(String),
+}
+
+impl From<zip::result::ZipError> for PyluneError {
+    fn from(err: zip::result::ZipError) -> Self {
+        Self::Archive(err.to_string())
+    }
+}
+
+impl From<sevenz_rust2::Error> for PyluneError {
+    fn from(err: sevenz_rust2::Error) -> Self {
+        Self::Archive(err.to_string())
+    }
+}
+
+impl From<unrar::error::UnrarError> for PyluneError {
+    fn from(err: unrar::error::UnrarError) -> Self {
+        Self::Archive(err.to_string())
+    }
 }
 
 /// Shorthand result type used throughout Pylune.

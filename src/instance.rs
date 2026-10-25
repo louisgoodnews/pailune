@@ -4,7 +4,7 @@
 //! It appends the link to a queue file and exits if a primary instance is
 //! running; the primary polls the queue and downloads the file.
 
-use crate::config::store::DataPaths;
+use crate::config::paths::DataPaths;
 use crate::error::{IoContext, Result};
 use std::fs::{self, OpenOptions};
 use std::io::Write;

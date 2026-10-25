@@ -7,9 +7,16 @@ edition = "2024"
 directories = "6.0.0"
 eframe = "0.37.0"
 rfd = "0.17.2"
+rusqlite = { version = "0.41.0", features = ["bundled"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
+sevenz-rust2 = "0.24.1"
 thiserror = "2.0.21"
+toml = "1.1.8"
+tracing = "0.1.44"
+tracing-appender = "0.2.5"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
+unrar = "0.5.8"
 ureq = { version = "3.5.0", features = ["json"] }
 walkdir = "2.5.0"
 zip = "9.1.0"

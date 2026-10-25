@@ -1,113 +1,150 @@
-//! Staging, deployment and backup actions.
+//! Mod management actions: selection, flags, order, import, update, delete.
 
-use super::report_line;
-use crate::backup::{reset, snapshot};
-use crate::config::store;
 use crate::error::{PyluneError, Result};
-use crate::mod_engine::model::{ModEntry, Registry};
-use crate::mod_engine::{install, plan, registry};
-use crate::symlink::{deploy, undeploy};
-use crate::ui::{Level, PyluneApp, StatusLine};
+use crate::jobs::JobKind;
+use crate::mod_engine::{info, registry};
+use crate::ui::{Level, ModAction, PyluneApp, StatusLine, Tab};
 use std::path::PathBuf;
 
+/// Extensions offered in the import dialogs.
+const MOD_FILES: [&str; 7] = ["zip", "7z", "rar", "asi", "dll", "json", "ini"];
+
 impl PyluneApp {
-    pub(super) fn import(&mut self, picked: Option<PathBuf>) -> Result<StatusLine> {
-        let Some(source) = picked else {
-            return Ok(StatusLine::new(Level::Info, "Import cancelled"));
-        };
-        let name = install::import(&source, &self.paths.staging)?;
-        let next = registry::sync(&self.registry, &self.paths.staging)?;
-        self.set_registry(next, false)?;
-        Ok(StatusLine::new(
-            Level::Success,
-            format!("Staged '{name}' — enable it and press Apply"),
-        ))
-    }
-
-    pub(super) fn remove(&mut self, index: usize) -> Result<StatusLine> {
-        self.confirm = None;
-        let entry = self.registry.mods.get(index).cloned();
-        let next = registry::removed(&self.registry, &self.paths.staging, index)?;
-        self.set_registry(next, false)?;
-        if let Some(name) = entry.as_ref().map(|m| &m.name) {
-            self.nexus.meta.refs.remove(name);
-            self.nexus.updates.remove(name);
-            store::save(&self.paths.nexus_meta, &self.nexus.meta)?;
-        }
-        match entry.is_some_and(|m| m.enabled) && !self.manifest.links.is_empty() {
-            true => self.apply_mods(),
-            false => Ok(StatusLine::new(Level::Success, "Mod removed from staging")),
-        }
-    }
-
-    /// Rebuilds the deployment from scratch: unlink everything, link enabled mods.
-    pub(super) fn apply_mods(&mut self) -> Result<StatusLine> {
-        self.require_game()?;
-        self.require_stopped()?;
-        undeploy::undeploy(&mut self.manifest)?;
-        store::save(&self.paths.manifest, &self.manifest)?;
-        snapshot::ensure_meta_backup(&self.info)?;
-        let link_plan = plan::build(&self.config, &self.paths.staging, &self.registry)?;
-        let result = deploy::deploy(&link_plan, &mut self.manifest);
-        store::save(&self.paths.manifest, &self.manifest)?;
-        let report = result?;
-        self.dirty = false;
-        let line = report_line("Applied", &report);
-        Ok(match link_plan.conflicts {
-            0 => line,
-            n => StatusLine::new(
-                Level::Warning,
-                format!("{} — {n} file conflict(s), later mods won", line.text),
-            ),
-        })
-    }
-
-    pub(super) fn unlink_all(&mut self) -> Result<StatusLine> {
-        self.require_stopped()?;
-        let result = undeploy::undeploy(&mut self.manifest);
-        store::save(&self.paths.manifest, &self.manifest)?;
-        self.dirty = self.registry.mods.iter().any(|m| m.enabled);
-        result.map(|report| report_line("Unlinked", &report))
-    }
-
-    pub(super) fn clean_slate(&mut self) -> Result<StatusLine> {
-        self.confirm = None;
-        self.require_game()?;
-        self.require_stopped()?;
-        let result = reset::clean_slate(&self.info, &mut self.manifest);
-        store::save(&self.paths.manifest, &self.manifest)?;
-        let disabled = self.registry.mods.iter().map(|m| ModEntry {
-            enabled: false,
-            ..m.clone()
-        });
-        self.set_registry(
-            Registry {
-                mods: disabled.collect(),
-            },
-            false,
-        )?;
-        self.dirty = false;
-        result.map(|report| report_line("Clean slate restored", &report))
-    }
-
-    pub(super) fn refresh_backup(&mut self) -> Result<StatusLine> {
-        self.require_game()?;
-        match self.manifest.links.is_empty() {
-            false => Err(PyluneError::Invalid(
-                "unlink all mods before refreshing the backup".into(),
+    pub(super) fn mod_action(&mut self, action: ModAction) -> Result<Option<StatusLine>> {
+        match action {
+            ModAction::Select(name) => self.select(name).map(|()| None),
+            ModAction::SetEnabled(name, enabled) => {
+                self.update_registry(|r| Ok(registry::with_enabled(r, &name, enabled)))?;
+                Ok(Some(changed()))
+            }
+            ModAction::SetAll(enabled) => {
+                self.update_registry(|r| Ok(registry::with_all(r, enabled)))?;
+                Ok(Some(changed()))
+            }
+            ModAction::Move(name, to) => {
+                self.update_registry(|r| Ok(registry::moved(r, &name, to)))?;
+                Ok(Some(changed()))
+            }
+            ModAction::Delete(name) => {
+                self.confirm = None;
+                self.submit(JobKind::Remove(name.clone()));
+                Ok(Some(StatusLine::new(
+                    Level::Info,
+                    format!("Deleting '{name}'…"),
+                )))
+            }
+            ModAction::Update(name) => self.update_mod(name).map(Some),
+            ModAction::OpenFolder(name) => self
+                .open_path(&self.paths.staging.join(name))
+                .map(|()| None),
+            ModAction::ShowReadme(rel) => self.show_readme(rel).map(|()| None),
+            ModAction::CloseReadme => {
+                self.mods.readme = None;
+                Ok(None)
+            }
+            ModAction::ImportFolder => Ok(Some(
+                self.import(rfd::FileDialog::new().pick_folder().into_iter().collect()),
             )),
-            true => snapshot::refresh_meta_backup(&self.info).map(|n| {
-                StatusLine::new(Level::Success, format!("Backed up {n} metadata file(s)"))
-            }),
+            ModAction::ImportFiles => Ok(Some(
+                self.import(
+                    rfd::FileDialog::new()
+                        .add_filter("Mods", &MOD_FILES)
+                        .pick_files()
+                        .unwrap_or_default(),
+                ),
+            )),
+            ModAction::Rescan => {
+                let now = crate::db::now();
+                let staging = self.paths.staging.clone();
+                self.update_registry(|r| registry::sync(r, &staging, now))?;
+                Ok(Some(StatusLine::new(
+                    Level::Info,
+                    format!("{} mod(s) in staging", self.registry.mods.len()),
+                )))
+            }
         }
     }
 
-    pub(super) fn rescan(&mut self) -> Result<StatusLine> {
-        let next = registry::sync(&self.registry, &self.paths.staging)?;
-        self.set_registry(next, false)?;
-        Ok(StatusLine::new(
-            Level::Info,
-            format!("{} mod(s) in staging", self.registry.mods.len()),
-        ))
+    fn select(&mut self, name: String) -> Result<()> {
+        let details = info::details(&self.paths.staging.join(&name))?;
+        self.mods.details = Some((name.clone(), details));
+        self.mods.readme = None;
+        self.mods.selected = Some(name);
+        match self.log.only_selected {
+            true => self.refresh_log(),
+            false => Ok(()),
+        }
     }
+
+    fn show_readme(&mut self, rel: PathBuf) -> Result<()> {
+        let name = self
+            .mods
+            .selected
+            .clone()
+            .ok_or_else(|| PyluneError::Invalid("no mod selected".into()))?;
+        let text = info::read_text(&self.paths.staging.join(name).join(&rel))?;
+        self.mods.readme = Some((rel, text));
+        Ok(())
+    }
+
+    /// Queues one import job per source; they run in parallel.
+    fn import(&mut self, sources: Vec<PathBuf>) -> StatusLine {
+        let count = sources.len();
+        sources.into_iter().for_each(|source| {
+            self.submit(JobKind::Import {
+                source,
+                replace: None,
+            });
+        });
+        match count {
+            0 => StatusLine::new(Level::Info, "Import cancelled"),
+            n => StatusLine::new(
+                Level::Info,
+                format!("Importing {n} mod(s) in the background…"),
+            ),
+        }
+    }
+
+    /// Nexus mods open their file list; others ask for a replacement file.
+    fn update_mod(&mut self, name: String) -> Result<StatusLine> {
+        let entry = self
+            .registry
+            .mods
+            .iter()
+            .find(|m| m.name == name)
+            .cloned()
+            .ok_or_else(|| PyluneError::Invalid(format!("no mod named '{name}'")))?;
+        match entry.nexus {
+            Some(origin) => {
+                self.tab = Tab::Nexus;
+                self.nexus.mod_id_draft = origin.mod_id.to_string();
+                self.nexus.replace_target = Some(name.clone());
+                self.submit(JobKind::FetchMod(origin.mod_id));
+                Ok(StatusLine::new(
+                    Level::Info,
+                    format!("Pick the new file for '{name}'"),
+                ))
+            }
+            None => {
+                let picked = rfd::FileDialog::new()
+                    .set_title(format!("Replacement for {name}"))
+                    .add_filter("Mods", &MOD_FILES)
+                    .pick_file();
+                Ok(match picked {
+                    Some(source) => {
+                        self.submit(JobKind::Import {
+                            source,
+                            replace: Some(name.clone()),
+                        });
+                        StatusLine::new(Level::Info, format!("Updating '{name}'…"))
+                    }
+                    None => StatusLine::new(Level::Info, "Update cancelled"),
+                })
+            }
+        }
+    }
+}
+
+fn changed() -> StatusLine {
+    StatusLine::new(Level::Info, "Selection changed — press Apply to deploy")
 }

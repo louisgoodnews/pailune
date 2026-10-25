@@ -1,7 +1,7 @@
-//! Download pipeline: resolve links, stream the archive, stage it as a mod.
+//! Resolving download links and streaming archives to disk.
 
 use super::api::Client;
-use super::{NexusRef, NxmLink};
+use super::{NexusFile, NexusMod, NxmLink};
 use crate::error::{IoContext, PyluneError, Result};
 use crate::mod_engine::install;
 use std::fs;
@@ -19,15 +19,16 @@ pub struct DownloadJob {
     pub replace: Option<String>,
 }
 
-/// A finished download, staged under `name`.
+/// A downloaded archive with the metadata needed to stage it.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Installed {
-    pub name: String,
-    pub reference: NexusRef,
+pub struct Fetched {
+    pub archive: PathBuf,
+    pub info: NexusMod,
+    pub file: NexusFile,
 }
 
-/// Progress callback: `(file name, bytes done, total bytes)`.
-pub type Progress<'a> = &'a dyn Fn(&str, u64, Option<u64>);
+/// Progress callback: `(bytes done, total bytes)`.
+pub type Progress<'a> = &'a dyn Fn(u64, Option<u64>);
 
 /// A reader that reports how many bytes passed through it.
 struct Counting<'a, R> {
@@ -35,7 +36,6 @@ struct Counting<'a, R> {
     done: u64,
     reported: u64,
     total: Option<u64>,
-    label: &'a str,
     progress: Progress<'a>,
 }
 
@@ -46,18 +46,14 @@ impl<R: Read> Read for Counting<'_, R> {
         // Throttle UI updates to roughly every 256 KiB.
         if self.done - self.reported >= 256 * 1024 || n == 0 {
             self.reported = self.done;
-            (self.progress)(self.label, self.done, self.total);
+            (self.progress)(self.done, self.total);
         }
         Ok(n)
     }
 }
 
 /// Streams `uri` into `dest`, via a `.part` file renamed on success.
-fn fetch(client: &Client, uri: &str, dest: &Path, progress: Progress) -> Result<()> {
-    let label = dest
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_default();
+fn stream(client: &Client, uri: &str, dest: &Path, progress: Progress) -> Result<()> {
     let (total, reader) = client.open_download(uri)?;
     let part = dest.with_extension("part");
     let mut file = fs::File::create(&part).at(&part)?;
@@ -66,35 +62,19 @@ fn fetch(client: &Client, uri: &str, dest: &Path, progress: Progress) -> Result<
         done: 0,
         reported: 0,
         total,
-        label: &label,
         progress,
     };
     io::copy(&mut counting, &mut file).at(&part)?;
     fs::rename(&part, dest).at(dest)
 }
 
-/// Picks a staging name that does not clash with unrelated mods.
-fn staging_name(job: &DownloadJob, mod_name: &str, staging: &Path) -> (String, bool) {
-    match &job.replace {
-        Some(existing) => (existing.clone(), true),
-        None => {
-            let base = install::sanitize_name(mod_name);
-            match staging.join(&base).exists() {
-                false => (base, false),
-                true => (format!("{base} ({})", job.file_id), false),
-            }
-        }
-    }
-}
-
-/// Downloads a Nexus file and stages it as a mod.
-pub fn run(
+/// Looks up the file, resolves a mirror and downloads it into `downloads`.
+pub fn fetch(
     client: &Client,
     job: &DownloadJob,
-    staging: &Path,
     downloads: &Path,
     progress: Progress,
-) -> Result<Installed> {
+) -> Result<Fetched> {
     let info = client.mod_info(job.mod_id)?;
     let file = client
         .files(job.mod_id)?
@@ -113,17 +93,15 @@ pub fn run(
         .next()
         .ok_or_else(|| PyluneError::Invalid("Nexus returned no download mirrors".into()))?;
     fs::create_dir_all(downloads).at(downloads)?;
-    let archive: PathBuf = downloads.join(install::sanitize_name(&file.file_name));
-    fetch(client, &link.uri, &archive, progress)?;
-    let (name, replace) = staging_name(job, &info.name, staging);
-    let staged = install::import_as(&archive, staging, &name, replace);
-    let _ = fs::remove_file(&archive);
-    Ok(Installed {
-        name: staged?,
-        reference: NexusRef {
-            mod_id: job.mod_id,
-            file_id: job.file_id,
-            version: info.version,
-        },
+    let archive = downloads.join(format!(
+        "{}-{}",
+        job.file_id,
+        install::sanitize_name(&file.file_name)
+    ));
+    stream(client, &link.uri, &archive, progress)?;
+    Ok(Fetched {
+        archive,
+        info,
+        file,
     })
 }

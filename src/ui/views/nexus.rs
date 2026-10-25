@@ -67,9 +67,6 @@ fn lookup(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         let fetch = ui.button("🔍 Fetch").clicked();
         let open = ui.button("🌐 Open on Nexus").clicked();
         let updates = ui.button("⬆ Check updates").clicked();
-        if app.nexus.pending > 0 {
-            ui.spinner();
-        }
         pick([
             (fetch, NexusAction::Fetch),
             (open, NexusAction::OpenPage),
@@ -77,22 +74,6 @@ fn lookup(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         ])
     })
     .inner
-}
-
-fn progress(ui: &mut egui::Ui, app: &PyluneApp) {
-    if let Some((file, done, total)) = &app.nexus.progress {
-        let mb = |b: u64| b as f32 / 1_048_576.0;
-        let label = match total {
-            Some(t) => format!("{file}: {:.1} / {:.1} MiB", mb(*done), mb(*t)),
-            None => format!("{file}: {:.1} MiB", mb(*done)),
-        };
-        let fraction = total.map_or(0.0, |t| *done as f32 / t.max(1) as f32);
-        ui.add(
-            egui::ProgressBar::new(fraction)
-                .text(label)
-                .animate(total.is_none()),
-        );
-    }
 }
 
 fn file_row(ui: &mut egui::Ui, file: &NexusFile, can_download: bool) -> Option<Action> {
@@ -144,7 +125,7 @@ fn details(
 pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     ui.heading("Nexus Mods");
     ui.label(
-        RichText::new(format!("Game domain: {}", app.config.nexus_domain))
+        RichText::new(format!("Game: nexusmods.com/{}", app.config.nexus.domain))
             .small()
             .color(MUTED),
     );
@@ -152,7 +133,6 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     let mut actions = account(ui, app);
     ui.separator();
     actions.extend(lookup(ui, app));
-    progress(ui, app);
     ui.add_space(6.0);
     let browsing = app.nexus.browsing.clone();
     egui::ScrollArea::vertical()

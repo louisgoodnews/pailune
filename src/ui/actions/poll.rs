@@ -1,103 +1,151 @@
-//! Per-frame housekeeping: worker responses, game process, nxm queue.
+//! Per-frame housekeeping: job events, game process, nxm queue.
 
-use crate::config::store;
 use crate::instance;
+use crate::jobs::{JobEvent, JobKind, JobOutput, JobUpdate};
 use crate::launch::run;
-use crate::mod_engine::registry;
-use crate::nexus::worker::Response;
-use crate::ui::{Level, PyluneApp, StatusLine};
+use crate::ui::{JobState, Level, PyluneApp, StatusLine};
 use std::time::{Duration, Instant};
 
 const POLL_INTERVAL: Duration = Duration::from_secs(1);
+/// How long finished jobs stay visible in the jobs panel.
+const FINISHED_LINGER: Duration = Duration::from_secs(8);
 
 impl PyluneApp {
     /// Handles everything that happened since the last frame.
     pub fn poll(&mut self) {
-        let responses = self.worker.poll();
-        responses.into_iter().for_each(|r| self.on_response(r));
+        let events = self.pool.poll();
+        events.into_iter().for_each(|e| self.on_job_event(e));
+        self.jobs
+            .retain(|j| j.finished_at.is_none_or(|t| t.elapsed() < FINISHED_LINGER));
         if self.last_poll.elapsed() < POLL_INTERVAL {
             return;
         }
         self.last_poll = Instant::now();
         self.process = run::game_process();
-        instance::drain(&self.paths.nxm_queue)
+        let links = instance::drain(&self.paths.nxm_queue);
+        links
             .iter()
             .for_each(|url| self.status = self.handle_nxm(url));
     }
 
-    fn on_response(&mut self, response: Response) {
-        let finished = !matches!(response, Response::Progress { .. });
-        if finished {
-            self.nexus.pending = self.nexus.pending.saturating_sub(1);
+    fn on_job_event(&mut self, event: JobEvent) {
+        let Some(view) = self.jobs.iter_mut().find(|j| j.id == event.id) else {
+            return;
+        };
+        let result = match event.update {
+            JobUpdate::Started => {
+                view.state = JobState::Running;
+                return;
+            }
+            JobUpdate::Progress { done, total } => {
+                view.progress = Some((done, total));
+                return;
+            }
+            JobUpdate::Finished(result) => result,
+        };
+        view.state = if result.is_ok() {
+            JobState::Succeeded
+        } else {
+            JobState::Failed
+        };
+        view.finished_at = Some(Instant::now());
+        let kind = view.kind.clone();
+        match result {
+            Ok(output) => self.on_success(event.id, kind, output),
+            Err(message) => {
+                if self.launch_after == Some(event.id) {
+                    self.launch_after = None;
+                }
+                self.status = StatusLine::new(Level::Error, message);
+            }
         }
-        let line = match response {
-            Response::User(user) => {
+        if let Err(err) = self.reload() {
+            self.status = StatusLine::new(Level::Error, err.to_string());
+        }
+        self.refresh_environment();
+    }
+
+    fn on_success(&mut self, id: u64, kind: JobKind, output: JobOutput) {
+        let changes_mods = matches!(
+            kind,
+            JobKind::Import { .. }
+                | JobKind::Download(_)
+                | JobKind::Remove(_)
+                | JobKind::CleanSlate
+        );
+        if changes_mods {
+            self.request_conflicts();
+        }
+        match (&kind, output) {
+            (_, JobOutput::Conflicts(generation, report)) => {
+                if generation == self.mods.conflict_generation {
+                    self.mods.conflicts = report;
+                }
+            }
+            (_, JobOutput::User(user)) => {
                 let tier = if user.is_premium {
                     "Premium"
                 } else {
                     "free account"
                 };
-                let line = StatusLine::new(
+                self.status = StatusLine::new(
                     Level::Success,
                     format!("Signed in as {} ({tier})", user.name),
                 );
                 self.nexus.user = Some(user);
-                line
             }
-            Response::Mod(info, files) => {
-                let line = StatusLine::new(
+            (_, JobOutput::Mod(mod_info, files)) => {
+                self.status = StatusLine::new(
                     Level::Info,
-                    format!("'{}' — {} file(s)", info.name, files.len()),
+                    format!("'{}' — {} file(s)", mod_info.name, files.len()),
                 );
-                self.nexus.browsing = Some((info, files));
-                line
+                self.nexus.browsing = Some((mod_info, files));
             }
-            Response::Progress { file, done, total } => {
-                self.nexus.progress = Some((file, done, total));
-                return;
-            }
-            Response::Installed(installed) => self.on_installed(installed),
-            Response::Updates(outdated) => {
+            (_, JobOutput::Updates(outdated)) => {
                 self.nexus.updates = outdated.into_iter().collect();
-                match self.nexus.updates.len() {
+                self.status = match self.nexus.updates.len() {
                     0 => StatusLine::new(Level::Success, "All Nexus mods are up to date"),
                     n => StatusLine::new(Level::Warning, format!("{n} mod update(s) available")),
-                }
+                };
             }
-            Response::Failed(message) => StatusLine::new(Level::Error, message),
-        };
-        if finished {
-            self.nexus.progress = None;
+            (kind, JobOutput::Done(message)) => {
+                self.status = StatusLine::new(Level::Success, message);
+                self.after_done(id, kind);
+            }
         }
-        self.status = line;
     }
 
-    fn on_installed(&mut self, installed: crate::nexus::download::Installed) -> StatusLine {
-        let name = installed.name;
-        self.nexus
-            .meta
-            .refs
-            .insert(name.clone(), installed.reference);
+    /// Follow-ups of finished file jobs.
+    fn after_done(&mut self, id: u64, kind: &JobKind) {
+        match kind {
+            JobKind::Apply | JobKind::CleanSlate => self.dirty = false,
+            JobKind::Import {
+                replace: Some(name),
+                ..
+            } => self.mark_updated(name.clone()),
+            JobKind::Download(job) => {
+                if let Some(name) = job.replace.clone() {
+                    self.mark_updated(name);
+                }
+            }
+            _ => {}
+        }
+        if self.launch_after == Some(id) {
+            self.launch_after = None;
+            self.status = self
+                .launch_now()
+                .unwrap_or_else(|e| StatusLine::new(Level::Error, e.to_string()));
+        }
+    }
+
+    /// A replaced mod that is enabled needs a redeploy.
+    fn mark_updated(&mut self, name: String) {
         self.nexus.updates.remove(&name);
         self.nexus.replace_target = None;
-        let saved = store::save(&self.paths.nexus_meta, &self.nexus.meta)
-            .and_then(|()| registry::sync(&self.registry, &self.paths.staging))
-            .and_then(|next| self.set_registry(next, false));
-        let deployed = self
+        self.dirty |= self
             .registry
             .mods
             .iter()
             .any(|m| m.name == name && m.enabled);
-        self.dirty |= deployed;
-        match saved {
-            Ok(_) if deployed => {
-                StatusLine::new(Level::Success, format!("Updated '{name}' — press Apply"))
-            }
-            Ok(_) => StatusLine::new(
-                Level::Success,
-                format!("Installed '{name}' — enable it and press Apply"),
-            ),
-            Err(err) => StatusLine::new(Level::Error, err.to_string()),
-        }
     }
 }

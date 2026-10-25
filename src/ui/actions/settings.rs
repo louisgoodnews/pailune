@@ -1,8 +1,8 @@
-//! Settings panel actions.
+//! Settings page actions.
 
-use crate::config::store;
+use crate::config::file;
 use crate::error::{PyluneError, Result};
-use crate::nexus::worker::Request;
+use crate::logging::{Event, EventKind, Severity};
 use crate::ui::{Level, PyluneApp, StatusLine};
 use std::path::Path;
 
@@ -20,33 +20,26 @@ impl PyluneApp {
 
     pub(super) fn save_settings(&mut self) -> Result<StatusLine> {
         let next = self.draft.to_config()?;
-        if next.game_dir != self.config.game_dir && !self.manifest.links.is_empty() {
+        if next.game.dir != self.config.game.dir && self.deployed_links > 0 {
             return Err(PyluneError::Invalid(
                 "unlink all mods before changing the game directory".into(),
             ));
         }
-        store::save(&self.paths.config, &next)?;
-        let domain_changed = next.nexus_domain != self.config.nexus_domain;
+        file::save(&self.paths.config_file, &next)?;
+        let restart = next.jobs != self.config.jobs || next.logging != self.config.logging;
         self.config = next;
-        if domain_changed {
-            self.configure_worker();
-        }
-        Ok(StatusLine::new(Level::Success, "Settings saved"))
-    }
-
-    /// Sends the current API key and game domain to the Nexus worker.
-    pub(super) fn configure_worker(&self) {
-        let key = crate::nexus::key::load(&self.paths.nexus_key).unwrap_or_default();
-        let domain = self.config.nexus_domain.clone();
-        self.worker.send(Request::Configure { key, domain });
-    }
-
-    /// Configures the worker at start-up and validates a stored key.
-    pub fn connect_nexus(&mut self) {
-        self.configure_worker();
-        if crate::nexus::key::load(&self.paths.nexus_key).is_some() {
-            self.worker.send(Request::Validate);
-            self.nexus.pending += 1;
-        }
+        self.journal(Event::new(
+            Severity::Info,
+            EventKind::Settings,
+            None,
+            "settings saved",
+        ));
+        Ok(match restart {
+            true => StatusLine::new(
+                Level::Warning,
+                "Settings saved — restart Pylune to apply job/log changes",
+            ),
+            false => StatusLine::new(Level::Success, "Settings saved"),
+        })
     }
 }

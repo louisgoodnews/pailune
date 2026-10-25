@@ -20,19 +20,19 @@ const LOADERS: [(&str, AsiLoader); 3] = [
 /// where `<steamapps>` is two levels above the game directory
 /// (`steamapps/common/<game>`).
 pub fn resolve(config: &Config) -> SteamInfo {
-    let game_dir = config.game_dir.clone();
+    let game_dir = config.game.dir.clone();
     let prefix_dir = game_dir
         .parent()
         .and_then(Path::parent)
         .map(|steamapps| {
             steamapps
                 .join("compatdata")
-                .join(config.app_id.to_string())
+                .join(config.game.app_id.to_string())
                 .join("pfx")
         })
         .filter(|pfx| pfx.is_dir());
     SteamInfo {
-        app_id: config.app_id,
+        app_id: config.game.app_id,
         bin64_dir: game_dir.join("bin64"),
         meta_dir: game_dir.join("meta"),
         prefix_dir,

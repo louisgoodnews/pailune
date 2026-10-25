@@ -4,8 +4,23 @@
 
 pub mod confirm;
 pub mod header;
+pub mod jobs;
+pub mod log;
+pub mod mod_details;
 pub mod mod_list;
 pub mod nexus;
 pub mod profiles;
+pub mod readme;
 pub mod settings;
 pub mod status_bar;
+
+use super::Action;
+
+/// Keeps only the actions whose button was clicked.
+pub fn clicked(pairs: impl IntoIterator<Item = (bool, Action)>) -> Vec<Action> {
+    pairs
+        .into_iter()
+        .filter(|(c, _)| *c)
+        .map(|(_, a)| a)
+        .collect()
+}

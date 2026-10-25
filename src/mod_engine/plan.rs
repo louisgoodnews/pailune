@@ -64,11 +64,11 @@ pub fn placement(rel: &Path) -> Placement {
 
 /// Resolves the absolute game path for `rel` under the given placement.
 fn destination(config: &Config, rel: &Path, place: Placement) -> Option<PathBuf> {
-    let game = &config.game_dir;
+    let game = &config.game.dir;
     match place {
         Placement::Mirror => Some(game.join(rel)),
         Placement::Bin64 => rel.file_name().map(|name| game.join("bin64").join(name)),
-        Placement::JsonDir => Some(game.join(&config.json_subdir).join(rel)),
+        Placement::JsonDir => Some(game.join(&config.game.json_subdir).join(rel)),
         Placement::Skip => None,
     }
 }
@@ -89,6 +89,20 @@ pub fn deployable_files(mod_root: &Path) -> Result<Vec<(PathBuf, Placement)>> {
         .collect()
 }
 
+/// Every link one mod would create, before conflict resolution.
+pub fn mod_ops(config: &Config, staging: &Path, name: &str) -> Result<Vec<LinkOp>> {
+    let root = staging.join(name);
+    Ok(deployable_files(&root)?
+        .into_iter()
+        .filter_map(|(rel, place)| {
+            destination(config, &rel, place).map(|target| LinkOp {
+                source: root.join(&rel),
+                target,
+            })
+        })
+        .collect())
+}
+
 /// Builds the link plan for every enabled mod, in load order.
 ///
 /// When two mods provide the same target, the later one wins and the
@@ -98,20 +112,7 @@ pub fn build(config: &Config, staging: &Path, registry: &Registry) -> Result<Lin
         .mods
         .iter()
         .filter(|m| m.enabled)
-        .map(|m| {
-            let root = staging.join(&m.name);
-            deployable_files(&root).map(|files| {
-                files
-                    .into_iter()
-                    .filter_map(|(rel, place)| {
-                        destination(config, &rel, place).map(|target| LinkOp {
-                            source: root.join(&rel),
-                            target,
-                        })
-                    })
-                    .collect::<Vec<_>>()
-            })
-        })
+        .map(|m| mod_ops(config, staging, &m.name))
         .collect::<Result<Vec<_>>>()?;
     let total: usize = candidates.iter().map(Vec::len).sum();
     let merged: BTreeMap<PathBuf, PathBuf> = candidates

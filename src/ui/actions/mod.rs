@@ -1,21 +1,20 @@
 //! State transitions triggered by [`Action`]s, grouped by feature.
 
-mod launch;
+mod deploy;
 mod mods;
 mod nexus;
 mod poll;
 mod profiles;
 mod settings;
 
-use super::{Action, Confirm, Level, PyluneApp, StatusLine};
-use crate::backup::{reset, snapshot};
-use crate::config::store;
-use crate::error::{PyluneError, Result};
-use crate::launch::GameProcess;
+use super::{Action, Confirm, JobState, JobView, Level, PyluneApp, StatusLine};
+use crate::backup::snapshot;
+use crate::db;
+use crate::error::Result;
+use crate::jobs::{JobId, JobKind};
+use crate::logging::{Event, journal};
 use crate::mod_engine::model::Registry;
-use crate::mod_engine::registry;
-use crate::steam::{GameStatus, locate};
-use crate::symlink::Report;
+use crate::steam::locate;
 
 impl StatusLine {
     pub fn new(level: Level, text: impl Into<String>) -> Self {
@@ -26,57 +25,30 @@ impl StatusLine {
     }
 }
 
-/// Turns a deploy/undeploy report into a status line.
-fn report_line(verb: &str, report: &Report) -> StatusLine {
-    let text = format!(
-        "{verb}: {} link(s), {} backup(s) touched",
-        report.linked, report.backed_up
-    );
-    match report.warnings.as_slice() {
-        [] => StatusLine::new(Level::Success, text),
-        [first, rest @ ..] => StatusLine::new(
-            Level::Warning,
-            format!("{text}; {} warning(s): {first}", rest.len() + 1),
-        ),
-    }
-}
-
 impl PyluneApp {
     /// Applies one action and records its outcome in the status bar.
     pub fn dispatch(&mut self, action: Action) {
-        let outcome = match action {
-            Action::Toggle(i) => self.set_registry(registry::toggled(&self.registry, i), true),
-            Action::Move { from, to } => {
-                self.set_registry(registry::swapped(&self.registry, from, to), true)
-            }
-            Action::Remove(i) => self.remove(i),
-            Action::ImportFolder => self.import(rfd::FileDialog::new().pick_folder()),
-            Action::ImportFile => self.import(
-                rfd::FileDialog::new()
-                    .add_filter("Mods", &["zip", "asi", "dll", "json", "ini"])
-                    .pick_file(),
-            ),
-            Action::Apply => self.apply_mods(),
-            Action::UnlinkAll => self.unlink_all(),
-            Action::CleanSlate => self.clean_slate(),
-            Action::RestoreOverlays => reset::restore_overlays(&self.info).map(|n| {
-                StatusLine::new(Level::Success, format!("Restored {n} overlay folder(s)"))
-            }),
-            Action::RefreshBackup => self.refresh_backup(),
-            Action::BrowseGameDir => Ok(self.browse_game_dir()),
-            Action::SaveSettings => self.save_settings(),
-            Action::Rescan => self.rescan(),
-            Action::Launch => self.launch_game(),
+        let outcome: Result<Option<StatusLine>> = match action {
+            Action::Mod(action) => self.mod_action(action),
+            Action::Deploy(action) => self.deploy_action(action),
+            Action::Profile(action) => self.profile_action(action).map(Some),
+            Action::Nexus(action) => self.nexus_action(action),
             Action::SwitchTab(tab) => {
                 self.tab = tab;
-                Ok(self.status.clone())
+                self.refresh_log().map(|()| None)
             }
-            Action::Profile(action) => self.profile_action(action),
-            Action::Nexus(action) => self.nexus_action(action),
+            Action::BrowseGameDir => Ok(Some(self.browse_game_dir())),
+            Action::SaveSettings => self.save_settings().map(Some),
+            Action::RefreshLog => self.refresh_log().map(|()| None),
+            Action::OpenLogFolder => self.open_path(&self.paths.logs.clone()).map(|()| None),
             Action::Ask(confirm) => Ok(self.ask(Some(confirm))),
             Action::Dismiss => Ok(self.ask(None)),
         };
-        self.status = outcome.unwrap_or_else(|err| StatusLine::new(Level::Error, err.to_string()));
+        match outcome {
+            Ok(Some(line)) => self.status = line,
+            Ok(None) => {}
+            Err(err) => self.status = StatusLine::new(Level::Error, err.to_string()),
+        }
         self.refresh_environment();
     }
 
@@ -85,43 +57,87 @@ impl PyluneApp {
         self.info = locate::resolve(&self.config);
         self.game = locate::game_status(&self.info);
         self.loader = locate::detect_loader(&self.info);
-        self.backup = snapshot::status(&self.info, &self.manifest);
+        let manifest = db::links::load(&self.conn).unwrap_or_default();
+        self.deployed_links = manifest.links.len();
+        self.backup = snapshot::status(&self.info, &manifest);
     }
 
-    fn ask(&mut self, confirm: Option<Confirm>) -> StatusLine {
+    fn ask(&mut self, confirm: Option<Confirm>) -> Option<StatusLine> {
         self.confirm = confirm;
-        self.status.clone()
+        None
     }
 
-    /// Persists and installs a new registry.
-    fn set_registry(&mut self, next: Registry, dirty: bool) -> Result<StatusLine> {
-        store::save(&self.paths.registry, &next)?;
-        self.registry = next;
-        self.dirty |= dirty;
-        Ok(StatusLine::new(
-            Level::Info,
-            "Selection changed — press Apply to deploy",
-        ))
+    /// Queues a background job and adds it to the jobs panel.
+    pub(super) fn submit(&mut self, kind: JobKind) -> JobId {
+        let id = self.pool.submit(kind.clone(), &self.config);
+        self.jobs.push(JobView {
+            id,
+            title: kind.title(),
+            kind,
+            state: JobState::Queued,
+            progress: None,
+            finished_at: None,
+        });
+        id
     }
 
-    /// Fails unless the game directory is valid.
-    fn require_game(&self) -> Result<()> {
-        match self.game {
-            GameStatus::Ready => Ok(()),
-            GameStatus::Unrecognised => Err(PyluneError::Invalid(
-                "game directory does not contain bin64/CrimsonDesert.exe and meta/0.papgt".into(),
-            )),
-            GameStatus::Missing => Err(PyluneError::Invalid("game directory not found".into())),
+    /// Starts a conflict analysis; older pending results will be ignored.
+    pub(super) fn request_conflicts(&mut self) {
+        self.mods.conflict_generation += 1;
+        let generation = self.mods.conflict_generation;
+        self.submit(JobKind::AnalyzeConflicts(generation));
+    }
+
+    /// Atomically changes the registry and marks the deployment stale.
+    pub(super) fn update_registry(
+        &mut self,
+        f: impl FnOnce(&Registry) -> Result<Registry>,
+    ) -> Result<()> {
+        self.registry = db::mods::update(&mut self.conn, f)?;
+        self.dirty = true;
+        self.request_conflicts();
+        Ok(())
+    }
+
+    /// Re-reads everything jobs may have changed.
+    pub(super) fn reload(&mut self) -> Result<()> {
+        self.registry = db::mods::load(&self.conn)?;
+        self.profiles.book = db::profiles::load(&self.conn)?;
+        let selected_gone = self
+            .mods
+            .selected
+            .as_ref()
+            .is_some_and(|name| self.registry.mods.iter().all(|m| &m.name != name));
+        if selected_gone {
+            self.mods.selected = None;
+            self.mods.details = None;
+            self.mods.readme = None;
         }
+        self.refresh_log()
     }
 
-    /// Fails while the game runs: its files must not change underneath it.
-    fn require_stopped(&self) -> Result<()> {
-        match self.process {
-            GameProcess::Stopped => Ok(()),
-            GameProcess::Running => Err(PyluneError::Invalid(
-                "Crimson Desert is running — close it first".into(),
-            )),
-        }
+    /// Loads recent journal events for the Log tab.
+    pub(super) fn refresh_log(&mut self) -> Result<()> {
+        let filter = self
+            .mods
+            .selected
+            .as_deref()
+            .filter(|_| self.log.only_selected);
+        self.log.events = db::events::recent(&self.conn, 500, filter)?;
+        Ok(())
+    }
+
+    /// Writes an event to the journal from the UI thread.
+    pub(super) fn journal(&self, event: Event) {
+        journal::record(&self.conn, &self.paths.mod_logs, &event);
+    }
+
+    /// Opens a file or folder with the desktop's default application.
+    pub(super) fn open_path(&self, path: &std::path::Path) -> Result<()> {
+        std::process::Command::new("xdg-open")
+            .arg(path)
+            .spawn()
+            .map(drop)
+            .map_err(|e| crate::error::PyluneError::Invalid(format!("xdg-open failed: {e}")))
     }
 }

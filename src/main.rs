@@ -6,9 +6,12 @@
 
 mod backup;
 mod config;
+mod db;
 mod error;
 mod instance;
+mod jobs;
 mod launch;
+mod logging;
 mod mod_engine;
 mod nexus;
 mod profiles;
@@ -21,22 +24,35 @@ mod ui;
 /// Hands `nxm://` links to a running instance, or starts the GUI.
 fn main() -> eframe::Result<()> {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let startup = config::store::data_paths().and_then(|paths| instance::bootstrap(&paths, &args));
-    match startup {
+    let paths = match config::paths::data_paths() {
+        Ok(paths) => paths,
+        Err(err) => {
+            eprintln!("pylune: {err}");
+            std::process::exit(1);
+        }
+    };
+    let config = config::file::load_or_create(&paths.config_file).unwrap_or_else(|err| {
+        eprintln!("pylune: {err}; using defaults");
+        config::Config::default()
+    });
+    let _log_guard = logging::init::init(&paths.logs, &config.logging.level);
+    match instance::bootstrap(&paths, &args) {
         Ok(instance::Startup::HandedOff) => return Ok(()),
-        Ok(instance::Startup::RunGui) => {}
-        Err(err) => eprintln!("pylune: start-up coordination failed: {err}"),
+        Ok(instance::Startup::RunGui) => {
+            tracing::info!("Pylune {} starting", env!("CARGO_PKG_VERSION"))
+        }
+        Err(err) => tracing::error!(%err, "start-up coordination failed"),
     }
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_title("Pylune — Crimson Desert Mod Manager")
-            .with_inner_size([960.0, 640.0])
-            .with_min_inner_size([720.0, 420.0]),
+            .with_inner_size([1200.0, 760.0])
+            .with_min_inner_size([860.0, 500.0]),
         ..Default::default()
     };
     eframe::run_native(
         "Pylune",
         options,
-        Box::new(|cc| Ok(Box::new(ui::PyluneApp::new(cc)))),
+        Box::new(move |cc| Ok(Box::new(ui::PyluneApp::new(cc, paths, config)))),
     )
 }

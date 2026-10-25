@@ -1,5 +1,6 @@
 //! Importing mods (folders, `.zip` archives, loose files) into staging.
 
+use super::archive::{self, ArchiveKind};
 use super::plan::is_archive_dir;
 use crate::error::{IoContext, PyluneError, Result};
 use std::fs;
@@ -10,9 +11,8 @@ use walkdir::WalkDir;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SourceKind {
     Directory,
-    Zip,
+    Archive(ArchiveKind),
     LooseFile,
-    Unsupported,
 }
 
 /// Copies or extracts `source` into a new folder under `staging`.
@@ -39,12 +39,8 @@ pub fn import_as(source: &Path, staging: &Path, name: &str, replace: bool) -> Re
     fs::create_dir_all(&work).at(&work)?;
     let outcome = match source_kind(source) {
         SourceKind::Directory => copy_tree(source, &work),
-        SourceKind::Zip => extract_zip(source, &work),
+        SourceKind::Archive(kind) => archive::extract(source, kind, &work),
         SourceKind::LooseFile => copy_file(source, &work),
-        SourceKind::Unsupported => Err(PyluneError::Invalid(format!(
-            "{} is a 7z/rar archive — extract it and import the folder",
-            source.display()
-        ))),
     }
     .and_then(|()| hoist_wrapper_dirs(&work))
     .and_then(|()| swap_into_place(&work, &dest));
@@ -79,15 +75,10 @@ pub fn sanitize_name(raw: &str) -> String {
 }
 
 fn source_kind(source: &Path) -> SourceKind {
-    let ext = source
-        .extension()
-        .map(|e| e.to_string_lossy().to_lowercase())
-        .unwrap_or_default();
-    match (source.is_dir(), ext.as_str()) {
+    match (source.is_dir(), archive::kind_of(source)) {
         (true, _) => SourceKind::Directory,
-        (false, "zip") => SourceKind::Zip,
-        (false, "7z" | "rar") => SourceKind::Unsupported,
-        (false, _) => SourceKind::LooseFile,
+        (false, Some(kind)) => SourceKind::Archive(kind),
+        (false, None) => SourceKind::LooseFile,
     }
 }
 
@@ -124,14 +115,6 @@ fn copy_tree(source: &Path, dest: &Path) -> Result<()> {
                 _ => Ok(()),
             }
         })
-}
-
-/// Extracts a zip archive; entries escaping `dest` are rejected by `zip`.
-fn extract_zip(source: &Path, dest: &Path) -> Result<()> {
-    let file = fs::File::open(source).at(source)?;
-    let mut archive = zip::ZipArchive::new(file)?;
-    archive.extract(dest)?;
-    Ok(())
 }
 
 /// Returns the single child directory if `dir` contains nothing else.

@@ -1,36 +1,39 @@
 //! Bootstrapping and the eframe [`App`](eframe::App) implementation.
 
-use super::{Action, Level, NexusState, ProfilesState, PyluneApp, SettingsDraft, StatusLine, Tab};
+use super::{
+    Action, Level, LogState, ModsState, NexusState, ProfilesState, PyluneApp, SettingsDraft,
+    StatusLine, Tab,
+};
 use super::{theme, views};
 use crate::backup::snapshot;
-use crate::config::{Config, store};
+use crate::config::Config;
+use crate::config::paths::DataPaths;
+use crate::db;
+use crate::jobs::{JobKind, pool::JobPool, tasks};
 use crate::launch::run;
-use crate::mod_engine::{model::Registry, registry};
-use crate::nexus::{NexusMeta, handler, worker};
+use crate::mod_engine::registry;
+use crate::nexus::{handler, key};
 use crate::steam::{GameStatus, SteamInfo, locate};
-use crate::symlink::Manifest;
 use eframe::egui;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 impl PyluneApp {
-    /// Loads persisted state, starts the Nexus worker and takes the first backup.
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    /// Opens the database, starts the job pool and takes the first backup.
+    pub fn new(cc: &eframe::CreationContext<'_>, paths: DataPaths, config: Config) -> Self {
         theme::apply(&cc.egui_ctx);
-        let paths = store::data_paths().expect("Pylune needs a writable data directory");
-        let config: Config = store::load_or_default(&paths.config).unwrap_or_default();
-        let manifest: Manifest = store::load_or_default(&paths.manifest).unwrap_or_default();
-        let saved: Registry = store::load_or_default(&paths.registry).unwrap_or_default();
-        let registry = registry::sync(&saved, &paths.staging).unwrap_or(saved);
-        let meta: NexusMeta = store::load_or_default(&paths.nexus_meta).unwrap_or_default();
-        let profiles = ProfilesState {
-            book: store::load_or_default(&paths.profiles).unwrap_or_default(),
-            name_draft: String::new(),
-        };
+        let mut conn = db::open(&paths.database).expect("Pylune needs a working database");
+        let now = db::now();
+        let staging = paths.staging.clone();
+        let registry =
+            db::mods::update(&mut conn, |r| registry::sync(r, &staging, now)).unwrap_or_default();
+        let book = db::profiles::load(&conn).unwrap_or_default();
         let ctx = cc.egui_ctx.clone();
-        let worker = worker::spawn(
-            paths.staging.clone(),
-            paths.downloads.clone(),
-            Box::new(move || ctx.request_repaint()),
+        let pool = JobPool::spawn(
+            config.jobs.max_parallel,
+            paths.clone(),
+            Arc::new(tasks::run),
+            Arc::new(move || ctx.request_repaint()),
         );
         spawn_ticker(cc.egui_ctx.clone());
         let info = locate::resolve(&config);
@@ -38,28 +41,38 @@ impl PyluneApp {
             draft: SettingsDraft::from_config(&config),
             game: locate::game_status(&info),
             loader: locate::detect_loader(&info),
-            backup: snapshot::status(&info, &manifest),
+            backup: snapshot::status(&info, &Default::default()),
             status: initial_status(&info),
+            deployed_links: 0,
             confirm: None,
             dirty: false,
             tab: Tab::Mods,
             process: run::game_process(),
+            mods: ModsState::default(),
+            profiles: ProfilesState {
+                book,
+                ..ProfilesState::default()
+            },
             nexus: NexusState {
-                meta,
                 handler_registered: handler::is_registered(),
                 ..NexusState::default()
             },
+            log: LogState::default(),
+            jobs: Vec::new(),
+            launch_after: None,
             last_poll: Instant::now(),
-            profiles,
-            worker,
+            pool,
             paths,
             config,
+            conn,
             registry,
-            manifest,
             info,
         };
         app.refresh_environment();
-        app.connect_nexus();
+        app.request_conflicts();
+        if key::load(&app.paths.nexus_key).is_some() {
+            app.submit(JobKind::ValidateKey);
+        }
         app
     }
 }
@@ -77,7 +90,7 @@ fn spawn_ticker(ctx: egui::Context) {
 fn initial_status(info: &SteamInfo) -> StatusLine {
     let ready = locate::game_status(info) == GameStatus::Ready;
     match ready.then(|| snapshot::ensure_meta_backup(info)) {
-        None => StatusLine::new(Level::Warning, "Game not found — check the settings panel"),
+        None => StatusLine::new(Level::Warning, "Game not found — check the Settings tab"),
         Some(Ok(0)) => StatusLine::new(Level::Info, "Ready"),
         Some(Ok(n)) => StatusLine::new(
             Level::Success,
@@ -93,30 +106,40 @@ impl eframe::App for PyluneApp {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        let actions: Vec<Action> = [
+        let mut actions: Vec<Action> = Vec::new();
+        actions.extend(
             egui::Panel::top("header")
                 .show(ui, |ui| views::header::show(ui, self))
                 .inner,
+        );
+        actions.extend(
             egui::Panel::bottom("status")
                 .show(ui, |ui| views::status_bar::show(ui, self))
                 .inner,
-            egui::Panel::right("settings")
-                .default_size(320.0)
+        );
+        if !self.jobs.is_empty() {
+            egui::Panel::bottom("jobs").show(ui, |ui| views::jobs::show(ui, self));
+        }
+        if self.tab == Tab::Mods && self.mods.selected.is_some() {
+            let details = egui::Panel::right("details")
+                .default_size(360.0)
                 .resizable(true)
-                .show(ui, |ui| views::settings::show(ui, self))
-                .inner,
-            egui::CentralPanel::default()
-                .show(ui, |ui| match self.tab {
-                    Tab::Mods => views::mod_list::show(ui, self),
-                    Tab::Profiles => views::profiles::show(ui, self),
-                    Tab::Nexus => views::nexus::show(ui, self),
-                })
-                .inner,
-            views::confirm::show(ui.ctx(), self.confirm.as_ref(), &self.registry),
-        ]
-        .into_iter()
-        .flatten()
-        .collect();
+                .show(ui, |ui| views::mod_details::show(ui, self))
+                .inner;
+            actions.extend(details);
+        }
+        let page = egui::CentralPanel::default()
+            .show(ui, |ui| match self.tab {
+                Tab::Mods => views::mod_list::show(ui, self),
+                Tab::Profiles => views::profiles::show(ui, self),
+                Tab::Nexus => views::nexus::show(ui, self),
+                Tab::Log => views::log::show(ui, self),
+                Tab::Settings => views::settings::show(ui, self),
+            })
+            .inner;
+        actions.extend(page);
+        actions.extend(views::readme::show(ui.ctx(), self.mods.readme.as_ref()));
+        actions.extend(views::confirm::show(ui.ctx(), self.confirm.as_ref()));
         actions.into_iter().for_each(|action| self.dispatch(action));
     }
 }

@@ -2,10 +2,8 @@
 
 pub mod ops;
 
-use serde::{Deserialize, Serialize};
-
 /// One mod's slot inside a profile.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProfileSlot {
     /// Staged mod name.
     pub name: String,
@@ -14,17 +12,18 @@ pub struct ProfileSlot {
 }
 
 /// A named snapshot of the mod list.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Profile {
     /// Unique display name.
     pub name: String,
     /// Mods in load order.
     pub slots: Vec<ProfileSlot>,
+    /// Steam-style launch options, e.g. `WINEDLLOVERRIDES="winmm=n,b" %command% -dx12`.
+    pub launch_options: String,
 }
 
-/// All profiles plus the one last loaded, stored as `profiles.json`.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(default)]
+/// All profiles plus the one last loaded.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ProfileBook {
     /// Profiles sorted by name.
     pub profiles: Vec<Profile>,

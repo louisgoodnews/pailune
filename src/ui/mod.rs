@@ -9,15 +9,19 @@ mod views;
 
 use crate::backup::BackupStatus;
 use crate::config::Config;
-use crate::config::store::DataPaths;
+use crate::config::paths::DataPaths;
+use crate::jobs::JobId;
+use crate::jobs::pool::JobPool;
 use crate::launch::GameProcess;
-use crate::mod_engine::model::Registry;
-use crate::nexus::worker::WorkerHandle;
-use crate::nexus::{NexusFile, NexusMeta, NexusMod, NexusUser};
+use crate::logging::Event;
+use crate::mod_engine::conflicts::ConflictReport;
+use crate::mod_engine::model::{ModDetails, MoveTo, Registry};
+use crate::nexus::{NexusFile, NexusMod, NexusUser};
 use crate::profiles::ProfileBook;
 use crate::steam::{AsiLoader, GameStatus, SteamInfo};
-use crate::symlink::Manifest;
+use rusqlite::Connection;
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::time::Instant;
 
 /// Severity of the message in the status bar.
@@ -44,6 +48,9 @@ pub struct SettingsDraft {
     pub json_subdir: String,
     pub nexus_domain: String,
     pub apply_before_launch: bool,
+    pub default_options: String,
+    pub max_parallel: String,
+    pub log_level: String,
 }
 
 /// Main-area page.
@@ -52,14 +59,45 @@ pub enum Tab {
     Mods,
     Profiles,
     Nexus,
+    Log,
+    Settings,
 }
 
 /// Destructive actions that need an explicit confirmation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Confirm {
     CleanSlate,
-    Remove(usize),
+    DeleteMod(String),
     DeleteProfile(String),
+}
+
+/// Mod management intents.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ModAction {
+    Select(String),
+    SetEnabled(String, bool),
+    SetAll(bool),
+    Move(String, MoveTo),
+    Delete(String),
+    /// Nexus mods: pick a newer file; others: pick a replacement archive.
+    Update(String),
+    OpenFolder(String),
+    ShowReadme(PathBuf),
+    CloseReadme,
+    ImportFolder,
+    ImportFiles,
+    Rescan,
+}
+
+/// Game-directory intents.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DeployAction {
+    Apply,
+    UnlinkAll,
+    CleanSlate,
+    RestoreOverlays,
+    RefreshBackup,
+    Launch,
 }
 
 /// Profile page intents.
@@ -69,6 +107,8 @@ pub enum ProfileAction {
     Save(String),
     Load(String),
     Delete(String),
+    /// Store the edited launch options of this profile.
+    SaveOptions(String),
 }
 
 /// Nexus page intents.
@@ -79,8 +119,6 @@ pub enum NexusAction {
     Fetch,
     Download(u64),
     CheckUpdates,
-    /// Open the file list of a staged mod's Nexus page to update it.
-    Update(String),
     OpenPage,
     RegisterHandler,
 }
@@ -88,25 +126,50 @@ pub enum NexusAction {
 /// Every user intent the views can emit.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
-    Toggle(usize),
-    Move { from: usize, to: usize },
-    Remove(usize),
-    ImportFolder,
-    ImportFile,
-    Apply,
-    UnlinkAll,
-    CleanSlate,
-    RestoreOverlays,
-    RefreshBackup,
-    BrowseGameDir,
-    SaveSettings,
-    Rescan,
-    Launch,
-    SwitchTab(Tab),
+    Mod(ModAction),
+    Deploy(DeployAction),
     Profile(ProfileAction),
     Nexus(NexusAction),
+    SwitchTab(Tab),
+    BrowseGameDir,
+    SaveSettings,
+    RefreshLog,
+    OpenLogFolder,
     Ask(Confirm),
     Dismiss,
+}
+
+/// Lifecycle of a job as shown in the jobs panel.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum JobState {
+    Queued,
+    Running,
+    Succeeded,
+    Failed,
+}
+
+/// One row of the jobs panel.
+#[derive(Debug, Clone, PartialEq)]
+pub struct JobView {
+    pub id: JobId,
+    pub kind: crate::jobs::JobKind,
+    pub title: String,
+    pub state: JobState,
+    pub progress: Option<(u64, Option<u64>)>,
+    pub finished_at: Option<Instant>,
+}
+
+/// Mods page state.
+#[derive(Debug, Clone, Default)]
+pub struct ModsState {
+    pub selected: Option<String>,
+    /// Details of the selected mod (name, details).
+    pub details: Option<(String, ModDetails)>,
+    /// Open readme (path, text).
+    pub readme: Option<(PathBuf, String)>,
+    pub conflicts: ConflictReport,
+    /// Generation of the newest requested analysis.
+    pub conflict_generation: u64,
 }
 
 /// Nexus page state.
@@ -119,13 +182,8 @@ pub struct NexusState {
     pub browsing: Option<(NexusMod, Vec<NexusFile>)>,
     /// Staged mod that the next download from `browsing` replaces.
     pub replace_target: Option<String>,
-    /// `(file, bytes done, total)` of the running download.
-    pub progress: Option<(String, u64, Option<u64>)>,
-    /// Requests sent but not yet answered.
-    pub pending: usize,
     /// Staged mod name → newer version available on Nexus.
     pub updates: BTreeMap<String, String>,
-    pub meta: NexusMeta,
     pub handler_registered: bool,
 }
 
@@ -134,6 +192,16 @@ pub struct NexusState {
 pub struct ProfilesState {
     pub book: ProfileBook,
     pub name_draft: String,
+    /// Profile name → launch options being edited.
+    pub option_drafts: BTreeMap<String, String>,
+}
+
+/// Log page state.
+#[derive(Debug, Clone, Default)]
+pub struct LogState {
+    pub events: Vec<Event>,
+    /// Show only events of the selected mod.
+    pub only_selected: bool,
 }
 
 /// Complete application state.
@@ -141,8 +209,10 @@ pub struct PyluneApp {
     pub paths: DataPaths,
     pub config: Config,
     pub draft: SettingsDraft,
+    /// The UI thread's own database connection.
+    pub conn: Connection,
     pub registry: Registry,
-    pub manifest: Manifest,
+    pub deployed_links: usize,
     pub info: SteamInfo,
     pub game: GameStatus,
     pub loader: AsiLoader,
@@ -153,9 +223,14 @@ pub struct PyluneApp {
     pub dirty: bool,
     pub tab: Tab,
     pub process: GameProcess,
+    pub mods: ModsState,
     pub profiles: ProfilesState,
     pub nexus: NexusState,
-    pub worker: WorkerHandle,
+    pub log: LogState,
+    pub pool: JobPool,
+    pub jobs: Vec<JobView>,
+    /// Apply job after which the game should be launched.
+    pub launch_after: Option<JobId>,
     /// Last time the game process and nxm queue were polled.
     pub last_poll: Instant,
 }

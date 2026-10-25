@@ -10,10 +10,8 @@ pub mod download;
 pub mod handler;
 pub mod key;
 pub mod nxm;
-pub mod worker;
 
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use serde::Deserialize;
 
 /// The account behind the API key (`/users/validate.json`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -78,20 +76,4 @@ pub struct NxmLink {
     pub file_id: u64,
     pub key: Option<String>,
     pub expires: Option<u64>,
-}
-
-/// Where a staged mod came from on Nexus, used for update checks.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct NexusRef {
-    pub mod_id: u64,
-    pub file_id: u64,
-    /// Mod version at download time.
-    pub version: String,
-}
-
-/// Staged mod name → Nexus origin, stored as `nexus_meta.json`.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(default)]
-pub struct NexusMeta {
-    pub refs: BTreeMap<String, NexusRef>,
 }
