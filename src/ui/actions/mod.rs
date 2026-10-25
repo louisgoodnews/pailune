@@ -134,10 +134,22 @@ impl PyluneApp {
         }
         // Keep the details panel in step with updates and re-imports (A-22).
         if let Some(name) = self.mods.selected.clone() {
-            let details = crate::mod_engine::info::details(&self.paths.staging.join(&name))?;
+            let details = crate::mod_engine::info::details(
+                &self.paths.staging.join(&name),
+                self.variant_of(&name).as_deref(),
+            )?;
             self.mods.details = Some((name, details));
         }
         self.refresh_log()
+    }
+
+    /// The chosen variant of a staged mod.
+    pub(super) fn variant_of(&self, name: &str) -> Option<String> {
+        self.registry
+            .mods
+            .iter()
+            .find(|m| m.name == name)
+            .and_then(|m| m.variant.clone())
     }
 
     /// Loads recent journal events for the Log tab.

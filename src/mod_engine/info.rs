@@ -1,11 +1,13 @@
 //! Mod details: file listing, sizes and readme discovery.
 
 use super::model::{ModDetails, StagedFile};
-use super::plan::placement;
+use super::plan::{Placement, deployable_files};
 use crate::error::{IoContext, Result};
+use std::collections::HashMap;
 use std::fs;
 use std::io::Read;
 use std::path::Path;
+use std::path::PathBuf;
 use walkdir::WalkDir;
 
 /// Largest readme shown in the viewer.
@@ -28,7 +30,13 @@ fn is_readme(rel: &Path) -> bool {
 }
 
 /// Collects files, sizes and readmes of the mod in `mod_root`.
-pub fn details(mod_root: &Path) -> Result<ModDetails> {
+/// For multi-variant mods, files of the other variants are listed as not
+/// deployed.
+pub fn details(mod_root: &Path, variant: Option<&str>) -> Result<ModDetails> {
+    let deployed: HashMap<PathBuf, Placement> = deployable_files(mod_root, variant)?
+        .into_iter()
+        .map(|f| (f.source, f.place))
+        .collect();
     let files = WalkDir::new(mod_root)
         .sort_by_file_name()
         .into_iter()
@@ -41,7 +49,10 @@ pub fn details(mod_root: &Path) -> Result<ModDetails> {
                 .unwrap_or(entry.path())
                 .to_path_buf();
             let bytes = entry.metadata().map(|m| m.len()).unwrap_or(0);
-            let placement = placement(&rel);
+            let placement = deployed
+                .get(entry.path())
+                .copied()
+                .unwrap_or(Placement::Skip);
             Ok(StagedFile {
                 rel,
                 bytes,
@@ -57,6 +68,7 @@ pub fn details(mod_root: &Path) -> Result<ModDetails> {
             .map(|f| f.rel.clone())
             .collect(),
         files,
+        variants: super::variants::variants(mod_root),
     })
 }
 

@@ -47,6 +47,8 @@ Click a mod to open its details panel:
 - **Delete** (redeploys the remaining mods when needed), **Open folder**
 - **File conflicts**: which files this mod overrides and which are overridden, and by whom.
   The list shows `⚔ won/lost` badges.
+- **Options**: archives with several alternative folders (e.g. `Human Female/0009/…` and
+  `Dwarf Female/0009/…`) show an option picker; only the chosen option is deployed.
 - **Readme viewer** for `readme`, `changelog`, `.txt`, `.md` and `.nfo` files, plus the full file list.
 
 ## Profiles

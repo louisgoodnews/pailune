@@ -55,3 +55,57 @@ fn concurrent_same_name_imports_never_clobber() {
         .count();
     assert_eq!(leftovers, 0, "no temp folders left behind");
 }
+
+#[test]
+fn only_the_chosen_variant_is_deployed() {
+    use crate::mod_engine::registry;
+    let fx = fixture();
+    write(
+        &fx.sources.join("Creator/Human/0009/character/look.xml"),
+        "human",
+    );
+    write(
+        &fx.sources.join("Creator/Dwarf/0009/character/look.xml"),
+        "dwarf",
+    );
+    write(&fx.sources.join("Creator/Creator.asi"), "shared");
+    install::import(&fx.sources.join("Creator"), &fx.staging).unwrap();
+    let reg = enabled_registry(&fx);
+    let packed = |reg: &crate::mod_engine::model::Registry| {
+        let input = crate::overlay::collect::collect(&fx.staging, reg).unwrap();
+        fs::read_to_string(&input.packs["character/look.xml"]).unwrap()
+    };
+    assert_eq!(packed(&reg), "dwarf", "first option by default");
+    let human = registry::with_variant(&reg, "Creator", Some("Human".into()));
+    assert_eq!(packed(&human), "human");
+    let links = plan::build(&fx.config, &fx.staging, &human).unwrap();
+    assert!(
+        links
+            .ops
+            .iter()
+            .any(|op| op.target.ends_with("bin64/Creator.asi")),
+        "shared files always deploy"
+    );
+    let details =
+        crate::mod_engine::info::details(&fx.staging.join("Creator"), Some("Human")).unwrap();
+    assert_eq!(details.variants, ["Dwarf", "Human"]);
+    let dwarf_file = details
+        .files
+        .iter()
+        .find(|f| f.rel.starts_with("Dwarf"))
+        .unwrap();
+    assert_eq!(
+        dwarf_file.placement,
+        plan::Placement::Skip,
+        "other options are listed as not deployed"
+    );
+
+    let mut conn = crate::db::open(&fx.staging.with_file_name("v.sqlite3")).unwrap();
+    crate::db::mods::update(&mut conn, |_| Ok(human.clone())).unwrap();
+    assert_eq!(
+        crate::db::mods::load(&conn).unwrap().mods[0]
+            .variant
+            .as_deref(),
+        Some("Human")
+    );
+}

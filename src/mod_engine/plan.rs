@@ -62,30 +62,74 @@ pub fn resolve_case(base: &Path, rel: &Path) -> PathBuf {
     })
 }
 
-/// Lists `(relative path, placement)` for every deployable file in `mod_root`.
-pub fn deployable_files(mod_root: &Path) -> Result<Vec<(PathBuf, Placement)>> {
+/// A deployable file of a staged mod.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ModFile {
+    /// The staged file.
+    pub source: PathBuf,
+    /// Path in the game layout (relative to the mod root, without the
+    /// variant folder).
+    pub rel: PathBuf,
+    pub place: Placement,
+}
+
+/// Every deployable file of a mod. For multi-variant mods only the chosen
+/// variant (default: the first) and the shared root files are included.
+pub fn deployable_files(mod_root: &Path, variant: Option<&str>) -> Result<Vec<ModFile>> {
+    let options = super::variants::variants(mod_root);
+    let chosen = super::variants::effective(&options, variant).cloned();
     WalkDir::new(mod_root)
         .sort_by_file_name()
         .into_iter()
         .filter(|entry| entry.as_ref().map_or(true, |e| e.file_type().is_file()))
         .map(|entry| {
-            let path = entry?.into_path();
-            let rel = path.strip_prefix(mod_root).unwrap_or(&path).to_path_buf();
-            let place = placement(&rel);
-            Ok((rel, place))
+            let source = entry?.into_path();
+            let full = source
+                .strip_prefix(mod_root)
+                .unwrap_or(&source)
+                .to_path_buf();
+            let first = full
+                .components()
+                .next()
+                .map(|c| c.as_os_str().to_string_lossy().into_owned());
+            let rel = match first.filter(|f| options.contains(f)) {
+                Some(f) if Some(&f) == chosen.as_ref() => {
+                    Some(full.strip_prefix(&f).unwrap_or(&full).to_path_buf())
+                }
+                Some(_) => None,
+                None => Some(full),
+            };
+            Ok(rel.map(|rel| ModFile {
+                place: placement(&rel),
+                source,
+                rel,
+            }))
         })
-        .filter(|item| !matches!(item, Ok((_, Placement::Skip))))
+        .filter_map(|item: Result<Option<ModFile>>| item.transpose())
+        .filter(|item| {
+            !matches!(
+                item,
+                Ok(ModFile {
+                    place: Placement::Skip,
+                    ..
+                })
+            )
+        })
         .collect()
 }
 
 /// Every link one mod would create, before conflict resolution.
-pub fn mod_ops(config: &Config, staging: &Path, name: &str) -> Result<Vec<LinkOp>> {
-    let root = staging.join(name);
-    Ok(deployable_files(&root)?
+pub fn mod_ops(
+    config: &Config,
+    staging: &Path,
+    name: &str,
+    variant: Option<&str>,
+) -> Result<Vec<LinkOp>> {
+    Ok(deployable_files(&staging.join(name), variant)?
         .into_iter()
-        .filter_map(|(rel, place)| {
-            destination(config, &rel, place).map(|target| LinkOp {
-                source: root.join(&rel),
+        .filter_map(|f| {
+            destination(config, &f.rel, f.place).map(|target| LinkOp {
+                source: f.source,
                 target,
             })
         })
@@ -101,7 +145,7 @@ pub fn build(config: &Config, staging: &Path, registry: &Registry) -> Result<Lin
         .mods
         .iter()
         .filter(|m| m.enabled)
-        .map(|m| mod_ops(config, staging, &m.name))
+        .map(|m| mod_ops(config, staging, &m.name, m.variant.as_deref()))
         .collect::<Result<Vec<_>>>()?;
     let total: usize = candidates.iter().map(Vec::len).sum();
     let merged: BTreeMap<PathBuf, PathBuf> = candidates

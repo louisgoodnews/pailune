@@ -25,7 +25,7 @@ pub(super) fn register(
     let scan = registry::scan(&ctx.paths.staging)?;
     db::mods::update(&mut conn, |r| Ok(registry::merge(r, &scan, now)))?;
     db::mods::record_install(&conn, name, source, nexus, now)?;
-    let details = info::details(&ctx.paths.staging.join(name))?;
+    let details = info::details(&ctx.paths.staging.join(name), None)?;
     let lines: Vec<String> = details
         .files
         .iter()

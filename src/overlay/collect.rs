@@ -14,18 +14,19 @@ pub fn collect(staging: &Path, registry: &Registry) -> Result<OverlayInput> {
         .filter(|m| m.enabled)
         .try_fold(OverlayInput::default(), |mut input, m| {
             let root = staging.join(&m.name);
-            deployable_files(&root)?
+            deployable_files(&root, m.variant.as_deref())?
                 .into_iter()
-                .for_each(|(rel, place)| match place {
+                .for_each(|f| match f.place {
                     Placement::Pack => {
-                        if let Some(vpath) = virtual_path(&rel) {
-                            let replaced = input.packs.insert(vpath, root.join(&rel));
+                        if let Some(vpath) = virtual_path(&f.rel) {
+                            let replaced = input.packs.insert(vpath, f.source);
                             input.conflicts += usize::from(replaced.is_some());
                         }
                     }
-                    Placement::JsonPatch => input.patches.push((m.name.clone(), root.join(&rel))),
+                    Placement::JsonPatch => input.patches.push((m.name.clone(), f.source)),
                     Placement::PrebuiltGroup => {
-                        let group = rel.components().next().map(|c| root.join(c));
+                        // The group folder is the file's parent (inside a variant, too).
+                        let group = f.source.parent().map(Path::to_path_buf);
                         if let Some(group) = group.filter(|g| !input.prebuilt.contains(g)) {
                             input.prebuilt.push(group);
                         }

@@ -19,6 +19,7 @@ pub mod readme;
 pub mod settings;
 pub mod setup;
 pub mod status_bar;
+pub mod variant;
 
 use super::Action;
 

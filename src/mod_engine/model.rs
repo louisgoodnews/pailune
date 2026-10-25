@@ -47,6 +47,8 @@ pub struct ModEntry {
     pub source: String,
     /// Nexus origin, if downloaded from Nexus Mods.
     pub nexus: Option<NexusRef>,
+    /// Chosen option folder of a multi-variant mod (`None`: the first).
+    pub variant: Option<String>,
 }
 
 /// Ordered list of mods. Later entries win file conflicts.
@@ -92,4 +94,6 @@ pub struct ModDetails {
     pub total_bytes: u64,
     /// Readme / changelog candidates, relative to the mod root.
     pub readmes: Vec<PathBuf>,
+    /// Option folders of a multi-variant mod (empty otherwise).
+    pub variants: Vec<String>,
 }

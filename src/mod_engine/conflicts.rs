@@ -34,7 +34,9 @@ pub fn analyze(config: &Config, staging: &Path, registry: &Registry) -> Result<C
         .mods
         .iter()
         .filter(|m| m.enabled)
-        .map(|m| mod_ops(config, staging, &m.name).map(|ops| (m.name.clone(), ops)))
+        .map(|m| {
+            mod_ops(config, staging, &m.name, m.variant.as_deref()).map(|ops| (m.name.clone(), ops))
+        })
         .collect::<Result<Vec<_>>>()?
         .into_iter()
         .flat_map(|(name, ops)| ops.into_iter().map(move |op| (op.target, name.clone())))

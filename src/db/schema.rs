@@ -4,7 +4,7 @@ use crate::error::Result;
 use rusqlite::{Connection, TransactionBehavior};
 
 /// Migration `n` upgrades the schema from version `n` to `n + 1`.
-const MIGRATIONS: [&str; 3] = [
+const MIGRATIONS: [&str; 4] = [
     r#"
     CREATE TABLE mods (
         name          TEXT PRIMARY KEY,
@@ -75,6 +75,9 @@ const MIGRATIONS: [&str; 3] = [
         mod_name TEXT,
         PRIMARY KEY (slug, position)
     );
+"#,
+    r#"
+    ALTER TABLE mods ADD COLUMN variant TEXT;
 "#,
 ];
 

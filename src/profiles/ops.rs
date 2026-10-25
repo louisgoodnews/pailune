@@ -77,6 +77,7 @@ mod tests {
             installed_at: 0,
             source: String::new(),
             nexus: None,
+            variant: None,
         }
     }
 

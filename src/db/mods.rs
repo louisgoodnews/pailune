@@ -36,6 +36,7 @@ fn entry_from_row(row: &Row) -> rusqlite::Result<ModEntry> {
         enabled: row.get("enabled")?,
         file_count: row.get::<_, i64>("file_count")? as usize,
         paz_files: row.get::<_, i64>("paz_files")? as usize,
+        variant: row.get("variant")?,
         installed_at: row.get("installed_at")?,
         source: row.get("source")?,
         nexus: nexus_mod.zip(nexus_file).map(|(m, f)| NexusRef {
@@ -65,8 +66,8 @@ fn write(conn: &Connection, registry: &Registry) -> Result<()> {
         .try_for_each(|(position, m)| {
             conn.execute(
                 "INSERT INTO mods (name, position, enabled, kind, file_count, installed_at, source,
-                               nexus_mod_id, nexus_file_id, nexus_version, paz_files)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                               nexus_mod_id, nexus_file_id, nexus_version, paz_files, variant)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
                 params![
                     m.name,
                     position as i64,
@@ -79,6 +80,7 @@ fn write(conn: &Connection, registry: &Registry) -> Result<()> {
                     m.nexus.as_ref().map(|n| n.file_id as i64),
                     m.nexus.as_ref().map(|n| n.version.clone()),
                     m.paz_files as i64,
+                    m.variant,
                 ],
             )
             .map(|_| ())

@@ -20,12 +20,10 @@ fn dry_run_against_the_installed_game() {
     config.game.dir = crate::steam::library::find_game(config.game.app_id).expect("game installed");
     let info = crate::steam::locate::resolve(&config);
     let root = PathBuf::from(module);
-    let files = crate::mod_engine::plan::deployable_files(&root).unwrap();
+    let files = crate::mod_engine::plan::deployable_files(&root, None).unwrap();
     let packs = files
-        .iter()
-        .filter_map(|(rel, _)| {
-            crate::mod_engine::plan::virtual_path(rel).map(|v| (v, root.join(rel)))
-        })
+        .into_iter()
+        .filter_map(|f| crate::mod_engine::plan::virtual_path(&f.rel).map(|v| (v, f.source)))
         .collect();
     let input = OverlayInput {
         packs,

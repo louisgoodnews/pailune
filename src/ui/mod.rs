@@ -89,6 +89,8 @@ pub enum ModAction {
     ImportFiles,
     /// Files or folders dropped onto the window.
     ImportPaths(Vec<PathBuf>),
+    /// Choose the option folder of a multi-variant mod.
+    SetVariant(String, String),
     Rescan,
 }
 

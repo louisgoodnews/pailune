@@ -54,6 +54,16 @@ impl PyluneApp {
                 ),
             )),
             ModAction::ImportPaths(paths) => Ok(Some(self.import(paths))),
+            ModAction::SetVariant(name, variant) => {
+                self.update_registry(|r| {
+                    Ok(registry::with_variant(r, &name, Some(variant.clone())))
+                })?;
+                self.select(name.clone())?;
+                Ok(Some(StatusLine::new(
+                    Level::Info,
+                    format!("{name}: variant \"{variant}\" — press Apply"),
+                )))
+            }
             ModAction::Rescan => {
                 let now = crate::db::now();
                 let staging = self.paths.staging.clone();
@@ -68,7 +78,10 @@ impl PyluneApp {
     }
 
     fn select(&mut self, name: String) -> Result<()> {
-        let details = info::details(&self.paths.staging.join(&name))?;
+        let details = info::details(
+            &self.paths.staging.join(&name),
+            self.variant_of(&name).as_deref(),
+        )?;
         self.mods.details = Some((name.clone(), details));
         self.mods.readme = None;
         self.mods.selected = Some(name);

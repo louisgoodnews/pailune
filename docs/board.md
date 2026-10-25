@@ -40,12 +40,15 @@ Move a line between columns when its status changes.
 
 ## Backlog
 
-- [ ] A-28 (rest) Variant/FOMOD picker, save-game backup — *Phase 7*
+- [ ] A-28 (rest) FOMOD-style installer scripts, save-game backup — *Phase 7*
 - [ ] A-29 (rest) AppImage/Flatpak — *Phase 7*
 - [ ] A-32 Spec style fixes — *Phase 7*
 
 ## Done
 
+- [x] A-28 (part) multi-variant mods: option folders detected (≥ 2 sibling folders with game
+  layouts), only the chosen option (default: first) deployed, shared root files always; picker in
+  the details panel; choice stored (schema v4).
 - [x] A-31 UI actions tested through a headless `PyluneApp` (import/apply/delete, profiles,
   settings validation, nxm key rule, collection pending downloads); Nexus download, install,
   update check, rate limits and key rejection tested against a local mock API (`[nexus] api_url`).

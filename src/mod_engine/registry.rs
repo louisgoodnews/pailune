@@ -10,14 +10,14 @@ use std::path::Path;
 /// Classifies one staged mod. Unreadable folders count as empty (with a
 /// warning in the log) instead of failing the whole scan.
 fn scan_one(staging: &Path, name: &str) -> Scanned {
-    match deployable_files(&staging.join(name)) {
+    match deployable_files(&staging.join(name), None) {
         Ok(files) => {
             let paz_files = files
                 .iter()
-                .filter(|(_, p)| matches!(p, Placement::NeedsPaz(_)))
+                .filter(|f| matches!(f.place, Placement::NeedsPaz(_)))
                 .count();
             Scanned {
-                kind: classify(files.iter().map(|(_, place)| *place)),
+                kind: classify(files.iter().map(|f| f.place)),
                 file_count: files.len() - paz_files,
                 paz_files,
             }
@@ -55,6 +55,7 @@ fn discovered(name: &str, now: i64) -> ModEntry {
         installed_at: now,
         source: String::new(),
         nexus: None,
+        variant: None,
     }
 }
 
@@ -191,6 +192,14 @@ pub fn arranged(registry: &Registry, names: &[String]) -> Registry {
         .chain(rest[before..].iter().cloned())
         .collect();
     Registry { mods }
+}
+
+/// Chooses the option folder of a multi-variant mod.
+pub fn with_variant(registry: &Registry, name: &str, variant: Option<String>) -> Registry {
+    map_named(registry, name, |m| ModEntry {
+        variant: variant.clone(),
+        ..m.clone()
+    })
 }
 
 /// The registry without the mod called `name`.
