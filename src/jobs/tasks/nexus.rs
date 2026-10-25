@@ -17,9 +17,20 @@ use std::thread;
 /// Parallel requests used by the update check.
 const UPDATE_CHECK_PARALLELISM: usize = 4;
 
+/// A client for the configured game and API root.
+fn nexus_client(ctx: &JobContext, key: &str) -> Client {
+    let api = ctx
+        .config
+        .nexus
+        .api_url
+        .as_deref()
+        .unwrap_or(crate::nexus::api::DEFAULT_API);
+    Client::with_api(key, &ctx.config.nexus.domain, api)
+}
+
 fn client(ctx: &JobContext) -> Result<Client> {
     key::load(&ctx.paths.nexus_key)
-        .map(|k| Client::new(&k, &ctx.config.nexus.domain))
+        .map(|k| nexus_client(ctx, &k))
         .ok_or_else(|| PyluneError::Invalid("set a Nexus API key first".into()))
 }
 
@@ -181,7 +192,7 @@ pub fn describe_file(ctx: &JobContext, mod_id: u64, file_id: u64) -> Result<JobO
 pub fn fetch_collection(ctx: &JobContext, slug: &str, revision: Option<u32>) -> Result<JobOutput> {
     // Collection listings are public; a key is sent when one is stored.
     let key = key::load(&ctx.paths.nexus_key).unwrap_or_default();
-    Client::new(&key, &ctx.config.nexus.domain)
+    nexus_client(ctx, &key)
         .collection(slug, revision)
         .map(JobOutput::Collection)
 }

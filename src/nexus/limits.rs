@@ -11,6 +11,10 @@ const UNKNOWN: i64 = -1;
 /// Calls kept in reserve for the user's own actions.
 const RESERVE: i64 = 5;
 
+/// Serialises tests that touch the process-wide budget.
+#[cfg(test)]
+pub static TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 static HOURLY: AtomicI64 = AtomicI64::new(UNKNOWN);
 static DAILY: AtomicI64 = AtomicI64::new(UNKNOWN);
 
@@ -73,6 +77,7 @@ mod tests {
 
     #[test]
     fn tracks_the_budget_from_headers() {
+        let _serial = TEST_LOCK.lock().unwrap_or_else(|p| p.into_inner());
         let mut headers = ureq::http::HeaderMap::new();
         headers.insert("x-rl-hourly-remaining", "120".parse().unwrap());
         headers.insert("x-rl-daily-remaining", "9000".parse().unwrap());

@@ -42,11 +42,13 @@ Move a line between columns when its status changes.
 
 - [ ] A-28 (rest) Variant/FOMOD picker, save-game backup — *Phase 7*
 - [ ] A-29 (rest) AppImage/Flatpak — *Phase 7*
-- [ ] A-31 Test coverage (UI actions, mocked Nexus HTTP) — *Phase 7*
 - [ ] A-32 Spec style fixes — *Phase 7*
 
 ## Done
 
+- [x] A-31 UI actions tested through a headless `PyluneApp` (import/apply/delete, profiles,
+  settings validation, nxm key rule, collection pending downloads); Nexus download, install,
+  update check, rate limits and key rejection tested against a local mock API (`[nexus] api_url`).
 - [x] A-29 (part) dual license MIT OR Apache-2.0 (`LICENSE-MIT`, `LICENSE-APACHE`).
 - [x] A-29 (part) release profile (thin LTO, stripped), GitHub Actions CI (fmt, clippy -D
   warnings, tests), desktop launcher + SVG icon + `packaging/install.sh`, window icon,

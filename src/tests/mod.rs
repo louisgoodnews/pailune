@@ -4,9 +4,11 @@ mod crash;
 mod deployment;
 mod jobs;
 mod json_patches;
+mod nexus_http;
 mod overlay;
 mod staging;
 mod storage;
+mod ui;
 
 pub(super) use jobs::wait_all as wait_all_jobs;
 

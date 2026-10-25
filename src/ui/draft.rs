@@ -44,6 +44,8 @@ impl SettingsDraft {
             },
             nexus: NexusConfig {
                 domain: self.nexus_domain.trim().to_lowercase(),
+                // File-only setting, carried over by `save_settings`.
+                api_url: None,
             },
             launch: LaunchConfig {
                 apply_before_launch: self.apply_before_launch,

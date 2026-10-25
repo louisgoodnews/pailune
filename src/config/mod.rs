@@ -29,6 +29,9 @@ pub struct GameConfig {
 pub struct NexusConfig {
     /// Game domain (`nexusmods.com/<domain>`).
     pub domain: String,
+    /// API root override (debugging and tests); the public API when absent.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub api_url: Option<String>,
 }
 
 /// `[launch]` — how the game is started.
@@ -82,6 +85,7 @@ impl Default for NexusConfig {
     fn default() -> Self {
         Self {
             domain: NEXUS_DOMAIN.into(),
+            api_url: None,
         }
     }
 }

@@ -25,10 +25,23 @@ impl PyluneApp {
         cc: &eframe::CreationContext<'_>,
         paths: DataPaths,
         config: Config,
-        mut conn: rusqlite::Connection,
+        conn: rusqlite::Connection,
         notice: Option<String>,
     ) -> Self {
         theme::apply(&cc.egui_ctx);
+        spawn_ticker(cc.egui_ctx.clone());
+        Self::build(cc.egui_ctx.clone(), paths, config, conn, notice)
+    }
+
+    /// Builds the application state around any egui context (a window's,
+    /// or a headless one in tests).
+    pub fn build(
+        ctx: egui::Context,
+        paths: DataPaths,
+        config: Config,
+        mut conn: rusqlite::Connection,
+        notice: Option<String>,
+    ) -> Self {
         let (config, discovery) = detect::resolve_game(config, &paths.config_file);
         let now = db::now();
         let staging = paths.staging.clone();
@@ -50,14 +63,12 @@ impl PyluneApp {
         }
         let notice = notice.map(|n| StatusLine::new(Level::Warning, n));
         let notice = notice.or(scan_error.map(|e| StatusLine::new(Level::Error, e)));
-        let ctx = cc.egui_ctx.clone();
         let pool = JobPool::spawn(
             config.jobs.max_parallel,
             paths.clone(),
             Arc::new(tasks::run),
             Arc::new(move || ctx.request_repaint()),
         );
-        spawn_ticker(cc.egui_ctx.clone());
         let info = locate::resolve(&config);
         let mut app = Self {
             draft: SettingsDraft::from_config(&config),

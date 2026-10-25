@@ -5,8 +5,8 @@ use crate::error::{PyluneError, Result};
 use serde::de::DeserializeOwned;
 use std::time::Duration;
 
-const BASE: &str = "https://api.nexusmods.com/v1";
-const GRAPHQL: &str = "https://api.nexusmods.com/v2/graphql";
+/// The public Nexus Mods API.
+pub const DEFAULT_API: &str = "https://api.nexusmods.com";
 const COLLECTION_QUERY: &str = "query Rev($slug: String!, $domain: String, $revision: Int) { \
     collectionRevision(slug: $slug, domainName: $domain, revision: $revision) { revisionNumber \
     collection { name slug } modFiles { fileId optional file { modId name version sizeInBytes \
@@ -24,6 +24,8 @@ pub struct Client {
     downloads: ureq::Agent,
     key: String,
     domain: String,
+    /// API root, e.g. `https://api.nexusmods.com` (overridable for tests).
+    api: String,
 }
 
 /// Never prints the API key.
@@ -82,13 +84,20 @@ fn explain(err: ureq::Error) -> PyluneError {
 }
 
 impl Client {
-    /// Creates a client for `domain` (e.g. `crimsondesert`).
+    /// Creates a client for `domain` (e.g. `crimsondesert`) on the public API.
+    #[cfg(test)]
     pub fn new(key: &str, domain: &str) -> Self {
+        Self::with_api(key, domain, DEFAULT_API)
+    }
+
+    /// A client for a different API root (`[nexus] api_url`, tests).
+    pub fn with_api(key: &str, domain: &str, api: &str) -> Self {
         Self {
             agent: agent(Some(Duration::from_secs(30)), None),
             downloads: agent(None, Some(Duration::from_secs(60))),
             key: key.trim().to_string(),
             domain: domain.trim().to_lowercase(),
+            api: api.trim_end_matches('/').to_string(),
         }
     }
 
@@ -97,7 +106,7 @@ impl Client {
         super::limits::allow().map_err(PyluneError::Invalid)?;
         let mut response = self
             .agent
-            .get(format!("{BASE}{path}"))
+            .get(format!("{}/v1{path}", self.api))
             .header("apikey", &self.key)
             .header("Application-Name", APP_NAME)
             .header("Application-Version", APP_VERSION)
@@ -160,7 +169,7 @@ impl Client {
         super::limits::allow().map_err(PyluneError::Invalid)?;
         let mut reply = self
             .agent
-            .post(GRAPHQL)
+            .post(format!("{}/v2/graphql", self.api))
             .header("apikey", &self.key)
             .header("Application-Name", APP_NAME)
             .header("Application-Version", APP_VERSION)

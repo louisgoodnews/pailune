@@ -21,7 +21,8 @@ impl PyluneApp {
     }
 
     pub(super) fn save_settings(&mut self) -> Result<StatusLine> {
-        let next = self.draft.to_config()?;
+        let mut next = self.draft.to_config()?;
+        next.nexus.api_url = self.config.nexus.api_url.clone();
         // Queued jobs carry the old configuration; never let them run
         // against a different game folder (A-26).
         if next.game.dir != self.config.game.dir
