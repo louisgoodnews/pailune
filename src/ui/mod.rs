@@ -91,6 +91,10 @@ pub enum ModAction {
     ImportPaths(Vec<PathBuf>),
     /// Choose the option folder of a multi-variant mod.
     SetVariant(String, String),
+    /// Bring a deleted mod back from the trash.
+    RestoreDeleted(String),
+    /// Delete a trash entry for good.
+    PurgeDeleted(String),
     Rescan,
 }
 

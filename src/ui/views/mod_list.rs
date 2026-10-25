@@ -126,6 +126,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
             ui.label(RichText::new("No mods staged yet").size(18.0));
             ui.label(RichText::new("Import a folder or a .zip/.7z/.rar/.asi/.dll/.json file, or download from Nexus.").color(MUTED));
         });
+        actions.extend(trash(ui, app));
         return actions;
     }
     // Both directions, so narrow windows never clip columns.
@@ -152,5 +153,39 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
                     actions.extend(rows);
                 });
         });
+    actions.extend(trash(ui, app));
     actions
+}
+
+/// "Recently deleted" mods with restore and permanent-delete buttons.
+fn trash(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+    if app.mods.trash.is_empty() {
+        return Vec::new();
+    }
+    egui::CollapsingHeader::new(format!("🗑 Recently deleted ({})", app.mods.trash.len()))
+        .id_salt("trash")
+        .show(ui, |ui| {
+            app.mods
+                .trash
+                .iter()
+                .flat_map(|item| {
+                    ui.horizontal(|ui| {
+                        ui.label(&item.name);
+                        clicked([
+                            (
+                                ui.small_button("Restore").clicked(),
+                                Action::Mod(ModAction::RestoreDeleted(item.id.clone())),
+                            ),
+                            (
+                                ui.small_button("Delete forever").clicked(),
+                                Action::Mod(ModAction::PurgeDeleted(item.id.clone())),
+                            ),
+                        ])
+                    })
+                    .inner
+                })
+                .collect()
+        })
+        .body_returned
+        .unwrap_or_default()
 }

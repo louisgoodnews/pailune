@@ -17,8 +17,8 @@ fn describe(confirm: &Confirm) -> (String, String, Action) {
         ),
         Confirm::DeleteMod(name) => (
             format!("Delete '{name}'?"),
-            "The mod's folder is deleted from the staging area. If it is deployed, the remaining \
-             mods are redeployed."
+            "The mod moves to \"Recently deleted\" and can be restored from there (or with Undo). \
+             If it is deployed, the remaining mods are redeployed."
                 .into(),
             Action::Mod(ModAction::Delete(name.clone())),
         ),

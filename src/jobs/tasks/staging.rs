@@ -2,13 +2,12 @@
 
 use super::deploy::redeploy;
 use crate::db;
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{PyluneError, Result};
 use crate::jobs::JobOutput;
 use crate::jobs::context::JobContext;
 use crate::logging::{Event, EventKind, Severity, journal};
 use crate::mod_engine::model::NexusRef;
-use crate::mod_engine::{info, install, registry};
-use std::fs;
+use crate::mod_engine::{info, install, registry, trash};
 use std::path::Path;
 
 /// Registers a freshly staged mod and writes its install log.
@@ -78,9 +77,11 @@ pub fn import(ctx: &JobContext, source: &Path, replace: Option<String>) -> Resul
 /// Deletes a staged mod, redeploying first if links point into it.
 pub fn remove(ctx: &JobContext, name: &str) -> Result<JobOutput> {
     let mut conn = ctx.db()?;
-    if db::mods::load(&conn)?.mods.iter().all(|m| m.name != name) {
-        return Err(PyluneError::Invalid(format!("no mod named '{name}'")));
-    }
+    let entry = db::mods::load(&conn)?
+        .mods
+        .into_iter()
+        .find(|m| m.name == name)
+        .ok_or_else(|| PyluneError::Invalid(format!("no mod named '{name}'")))?;
     // Decide by what is actually linked, not by the (possibly changed) flag.
     let mod_dir = ctx.paths.staging.join(name);
     let deployed = db::links::load(&conn)?
@@ -96,19 +97,56 @@ pub fn remove(ctx: &JobContext, name: &str) -> Result<JobOutput> {
         true => Some(redeploy(ctx, &mut conn)?),
         false => None,
     };
-    fs::remove_dir_all(&mod_dir).at(&mod_dir)?;
+    // Recoverable: the folder moves to the trash with its metadata.
+    trash::move_to_trash(&ctx.paths.staging, &ctx.paths.trash, &entry, db::now())?;
+    trash::prune(&ctx.paths.trash, trash::KEEP)?;
     ctx.journal(
         &conn,
         Event::new(
             Severity::Info,
             EventKind::Remove,
             Some(name),
-            "deleted from staging",
+            "moved to the trash",
         ),
     );
     crate::logging::journal::retire_mod_log(&ctx.paths.mod_logs, name);
     Ok(JobOutput::Done(match redeployed {
-        Some(text) => format!("Deleted '{name}'; {text}"),
-        None => format!("Deleted '{name}'"),
+        Some(text) => format!("Deleted '{name}' (restorable); {text}"),
+        None => format!("Deleted '{name}' (restorable)"),
     }))
+}
+
+/// Brings a deleted mod back from the trash with its metadata (origin,
+/// variant); it returns disabled at the end of the load order.
+pub fn restore_deleted(ctx: &JobContext, id: &str) -> Result<JobOutput> {
+    let (name, item) = trash::restore(&ctx.paths.trash, &ctx.paths.staging, id)?;
+    let mut conn = ctx.db()?;
+    let scan = registry::scan(&ctx.paths.staging)?;
+    let now = db::now();
+    db::mods::update(&mut conn, |r| {
+        Ok(registry::with_variant(
+            &registry::merge(r, &scan, now),
+            &name,
+            item.variant.clone(),
+        ))
+    })?;
+    db::mods::record_install(&conn, &name, &item.source, item.nexus.as_ref(), now)?;
+    ctx.journal(
+        &conn,
+        Event::new(
+            Severity::Info,
+            EventKind::Install,
+            Some(&name),
+            "restored from the trash",
+        ),
+    );
+    Ok(JobOutput::Done(format!(
+        "Restored '{name}' — enable it and press Apply"
+    )))
+}
+
+/// Deletes a trashed mod for good.
+pub fn purge_deleted(ctx: &JobContext, id: &str) -> Result<JobOutput> {
+    trash::purge(&ctx.paths.trash, id)?;
+    Ok(JobOutput::Done("Deleted permanently".into()))
 }

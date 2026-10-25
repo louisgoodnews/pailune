@@ -55,6 +55,15 @@ impl PyluneApp {
                 ),
             )),
             ModAction::ImportPaths(paths) => Ok(Some(self.import(paths))),
+            ModAction::RestoreDeleted(id) => {
+                self.mods.undo = None;
+                self.submit(JobKind::RestoreDeleted(id));
+                Ok(Some(StatusLine::new(Level::Info, "Restoring…")))
+            }
+            ModAction::PurgeDeleted(id) => {
+                self.submit(JobKind::PurgeDeleted(id));
+                Ok(None)
+            }
             ModAction::SetVariant(name, variant) => {
                 self.update_registry(|r| {
                     Ok(registry::with_variant(r, &name, Some(variant.clone())))

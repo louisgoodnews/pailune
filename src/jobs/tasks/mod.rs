@@ -22,6 +22,8 @@ pub fn run(ctx: &JobContext, kind: JobKind) -> Result<JobOutput> {
         JobKind::RestoreOverlays => deploy::restore_overlays(ctx),
         JobKind::RefreshBackup => deploy::refresh_backup(ctx),
         JobKind::Remove(name) => staging::remove(ctx, &name),
+        JobKind::RestoreDeleted(id) => staging::restore_deleted(ctx, &id),
+        JobKind::PurgeDeleted(id) => staging::purge_deleted(ctx, &id),
         JobKind::ValidateKey => nexus::validate(ctx),
         JobKind::FetchMod(id) => nexus::fetch_mod(ctx, id),
         JobKind::DescribeFile { mod_id, file_id } => nexus::describe_file(ctx, mod_id, file_id),

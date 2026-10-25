@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] B-06 Recoverable deletes (mod trash) — *S*
 - [ ] B-01 Backup and restore (mods, profiles, mod lists, settings) — *M*
 - [ ] B-02 Full settings menu — *M*
 - [ ] B-03 Onboarding: guided first run + built-in guide — *M*
@@ -59,6 +58,8 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-06 deleted mods move to a trash with their metadata (origin, source, variant); Undo in
+  the status bar and a "Recently deleted" list restore them; the newest 20 are kept.
 - [x] A-24 downloads resume with HTTP ranges (up to 4 attempts) and are verified with Nexus'
   `md5_search` (a hash registered for another file fails; an unknown hash is noted).
 - [x] A-32 rustdoc on every function and constant outside the UI views (views follow in B-04);

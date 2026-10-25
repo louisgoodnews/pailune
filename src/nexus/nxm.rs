@@ -72,6 +72,16 @@ pub fn parse_collection(url: &str) -> Option<CollectionLink> {
     .filter(|link| link.slug.chars().all(|c| c.is_ascii_alphanumeric()))
 }
 
+/// Accepts a bare id or a `nexusmods.com/<game>/mods/<id>` URL.
+pub fn parse_mod_id(input: &str) -> Result<u64> {
+    let trimmed = input.trim();
+    let tail = trimmed.split("/mods/").nth(1).unwrap_or(trimmed);
+    tail.split(|c: char| !c.is_ascii_digit())
+        .next()
+        .and_then(|digits| digits.parse().ok())
+        .ok_or_else(|| PyluneError::Invalid(format!("'{trimmed}' is not a Nexus mod id or URL")))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,5 +109,15 @@ mod tests {
             .unwrap_err()
             .to_string();
         assert!(!err.contains("SECRET"));
+    }
+
+    #[test]
+    fn mod_ids_from_urls() {
+        assert_eq!(parse_mod_id(" 42 ").unwrap(), 42);
+        assert_eq!(
+            parse_mod_id("https://www.nexusmods.com/crimsondesert/mods/77?tab=files").unwrap(),
+            77
+        );
+        assert!(parse_mod_id("abc").is_err());
     }
 }

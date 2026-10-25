@@ -34,6 +34,10 @@ pub enum JobKind {
     RefreshBackup,
     /// Delete a staged mod (and redeploy if it was linked).
     Remove(String),
+    /// Restore a deleted mod from the trash (by trash id).
+    RestoreDeleted(String),
+    /// Delete a trash entry for good.
+    PurgeDeleted(String),
     ValidateKey,
     FetchMod(u64),
     /// Fetch a collection revision (latest when `revision` is `None`).
@@ -126,6 +130,8 @@ impl JobKind {
             JobKind::RestoreOverlays => "Restore overlays".into(),
             JobKind::RefreshBackup => "Refresh backup".into(),
             JobKind::Remove(name) => format!("Delete {name}"),
+            JobKind::RestoreDeleted(_) => "Restore deleted mod".into(),
+            JobKind::PurgeDeleted(_) => "Empty trash entry".into(),
             JobKind::ValidateKey => "Validate Nexus key".into(),
             JobKind::FetchMod(id) => format!("Fetch Nexus mod {id}"),
             JobKind::DescribeFile { file_id, .. } => format!("Look up Nexus file {file_id}"),

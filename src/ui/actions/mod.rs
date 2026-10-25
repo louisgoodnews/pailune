@@ -124,6 +124,7 @@ impl PyluneApp {
     pub(super) fn reload(&mut self) -> Result<()> {
         self.registry = db::mods::load(&self.conn)?;
         self.profiles.book = db::profiles::load(&self.conn)?;
+        self.mods.trash = crate::mod_engine::trash::list(&self.paths.trash);
         let selected_gone = self
             .mods
             .selected

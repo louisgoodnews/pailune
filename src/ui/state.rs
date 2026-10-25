@@ -46,6 +46,10 @@ pub struct ModsState {
     pub conflicts_rerun: bool,
     /// Text filter of the mod list (case-insensitive name match).
     pub filter: String,
+    /// Deleted mods in the trash, newest first.
+    pub trash: Vec<crate::mod_engine::trash::TrashItem>,
+    /// Trash id of the mod deleted last, offered as "Undo".
+    pub undo: Option<String>,
 }
 
 /// Nexus page state.

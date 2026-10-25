@@ -10,16 +10,6 @@ use crate::ui::{Incoming, Level, NexusAction, PyluneApp, StatusLine};
 /// Key/value entry remembering the `nxm://` handler Pylune replaced.
 const PREVIOUS_HANDLER: &str = "previous_nxm_handler";
 
-/// Accepts a bare id or a `nexusmods.com/<game>/mods/<id>` URL.
-fn parse_mod_id(input: &str) -> Result<u64> {
-    let trimmed = input.trim();
-    let tail = trimmed.split("/mods/").nth(1).unwrap_or(trimmed);
-    tail.split(|c: char| !c.is_ascii_digit())
-        .next()
-        .and_then(|digits| digits.parse().ok())
-        .ok_or_else(|| PyluneError::Invalid(format!("'{trimmed}' is not a Nexus mod id or URL")))
-}
-
 /// An informational status line.
 fn info(text: impl Into<String>) -> Option<StatusLine> {
     Some(StatusLine::new(Level::Info, text))
@@ -54,7 +44,7 @@ impl PyluneApp {
                 Ok(info("Checking API key…"))
             }
             NexusAction::Fetch => {
-                let id = parse_mod_id(&self.nexus.mod_id_draft)?;
+                let id = nxm::parse_mod_id(&self.nexus.mod_id_draft)?;
                 self.nexus.replace_target = None;
                 self.submit(JobKind::FetchMod(id));
                 Ok(info("Fetching mod…"))
@@ -233,20 +223,5 @@ impl PyluneApp {
         };
         self.submit(JobKind::Download(job));
         Ok(Some(StatusLine::new(Level::Info, "Download started…")))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::parse_mod_id;
-
-    #[test]
-    fn mod_ids_from_urls() {
-        assert_eq!(parse_mod_id(" 42 ").unwrap(), 42);
-        assert_eq!(
-            parse_mod_id("https://www.nexusmods.com/crimsondesert/mods/77?tab=files").unwrap(),
-            77
-        );
-        assert!(parse_mod_id("abc").is_err());
     }
 }

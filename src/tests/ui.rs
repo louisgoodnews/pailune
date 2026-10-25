@@ -87,6 +87,18 @@ fn import_enable_apply_and_delete() {
         app.mods.selected.is_none(),
         "selection cleared with the mod"
     );
+    // Deletes are recoverable: Undo brings the mod back with its files.
+    let undo = app.mods.undo.clone().expect("undo offered");
+    assert_eq!(app.mods.trash.len(), 1);
+    app.dispatch(Action::Mod(ModAction::RestoreDeleted(undo)));
+    settle(&mut app);
+    assert!(
+        app.registry.mods.iter().any(|m| m.name == "Cool Mod"),
+        "{:?}",
+        app.status
+    );
+    assert!(fx.staging.join("Cool Mod/CoolMod.asi").is_file());
+    assert!(app.mods.trash.is_empty() && app.mods.undo.is_none());
 }
 
 #[test]
