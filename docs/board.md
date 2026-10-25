@@ -41,12 +41,13 @@ Move a line between columns when its status changes.
 ## Backlog
 
 - [ ] A-28 (rest) Variant/FOMOD picker, save-game backup — *Phase 7*
-- [ ] A-29 (rest) LICENSE (owner's choice), AppImage/Flatpak — *Phase 7*
+- [ ] A-29 (rest) AppImage/Flatpak — *Phase 7*
 - [ ] A-31 Test coverage (UI actions, mocked Nexus HTTP) — *Phase 7*
 - [ ] A-32 Spec style fixes — *Phase 7*
 
 ## Done
 
+- [x] A-29 (part) dual license MIT OR Apache-2.0 (`LICENSE-MIT`, `LICENSE-APACHE`).
 - [x] A-29 (part) release profile (thin LTO, stripped), GitHub Actions CI (fmt, clippy -D
   warnings, tests), desktop launcher + SVG icon + `packaging/install.sh`, window icon,
   CHANGELOG.
