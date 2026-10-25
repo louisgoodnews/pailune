@@ -52,6 +52,16 @@ pub struct Registry {
     pub mods: Vec<ModEntry>,
 }
 
+/// What a staging scan found for one mod folder.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Scanned {
+    pub kind: ModKind,
+    pub file_count: usize,
+}
+
+/// Staging scan result: mod folder name → classification.
+pub type Scan = std::collections::BTreeMap<String, Scanned>;
+
 /// Where a mod is moved in the load order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MoveTo {

@@ -91,10 +91,54 @@ pub fn update(
     f: impl FnOnce(&Registry) -> Result<Registry>,
 ) -> Result<Registry> {
     let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
-    let next = f(&load(&tx)?)?;
-    write(&tx, &next)?;
+    let current = load(&tx)?;
+    let next = f(&current)?;
+    if next != current {
+        write(&tx, &next)?;
+        bump_revision(&tx)?;
+    }
     tx.commit()?;
     Ok(next)
+}
+
+const REVISION_KEY: &str = "registry_revision";
+const DEPLOYED_KEY: &str = "deployed_revision";
+
+fn revision(conn: &Connection, key: &str) -> Result<Option<i64>> {
+    Ok(super::get_value(conn, key)?.and_then(|v| v.parse().ok()))
+}
+
+/// Marks the registry (or a staged mod's files) as changed.
+fn bump_revision(conn: &Connection) -> Result<()> {
+    let next = revision(conn, REVISION_KEY)?.unwrap_or(0) + 1;
+    super::set_value(conn, REVISION_KEY, Some(&next.to_string()))
+}
+
+/// Loads the registry together with its revision, consistently.
+pub fn load_with_revision(conn: &Connection) -> Result<(Registry, i64)> {
+    let tx = conn.unchecked_transaction()?;
+    let loaded = (load(&tx)?, revision(&tx, REVISION_KEY)?.unwrap_or(0));
+    tx.commit()?;
+    Ok(loaded)
+}
+
+/// Records which revision is deployed; `None` after unlinking everything.
+pub fn set_deployed_revision(conn: &Connection, deployed: Option<i64>) -> Result<()> {
+    super::set_value(
+        conn,
+        DEPLOYED_KEY,
+        deployed.map(|r| r.to_string()).as_deref(),
+    )
+}
+
+/// Whether the game directory lags behind the registry.
+///
+/// Nothing is pending when no mod is enabled and nothing is linked.
+pub fn pending(conn: &Connection, registry: &Registry, links: usize) -> Result<bool> {
+    let current = revision(conn, REVISION_KEY)?.unwrap_or(0);
+    let deployed = revision(conn, DEPLOYED_KEY)?;
+    let idle = links == 0 && registry.mods.iter().all(|m| !m.enabled);
+    Ok(!idle && deployed != Some(current))
 }
 
 /// Records where a (re)installed mod came from.
@@ -117,5 +161,6 @@ pub fn record_install(
             nexus.map(|n| n.version.clone()),
         ],
     )?;
-    Ok(())
+    // New files of an installed mod need a redeploy even if the list is unchanged.
+    bump_revision(conn)
 }

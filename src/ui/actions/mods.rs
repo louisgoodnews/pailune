@@ -56,7 +56,8 @@ impl PyluneApp {
             ModAction::Rescan => {
                 let now = crate::db::now();
                 let staging = self.paths.staging.clone();
-                self.update_registry(|r| registry::sync(r, &staging, now))?;
+                let scan = registry::scan(&staging)?;
+                self.update_registry(|r| Ok(registry::merge(r, &scan, now)))?;
                 Ok(Some(StatusLine::new(
                     Level::Info,
                     format!("{} mod(s) in staging", self.registry.mods.len()),

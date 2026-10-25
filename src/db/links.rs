@@ -27,7 +27,8 @@ pub fn load(conn: &Connection) -> Result<Manifest> {
     })
 }
 
-/// Replaces the stored manifest.
+/// Replaces the stored manifest (tests; jobs use [`DbJournal`]).
+#[cfg(test)]
 pub fn save(conn: &mut Connection, manifest: &Manifest) -> Result<()> {
     let lossy = |p: &PathBuf| p.to_string_lossy().into_owned();
     let tx = conn.transaction()?;
@@ -50,4 +51,46 @@ pub fn save(conn: &mut Connection, manifest: &Manifest) -> Result<()> {
     })?;
     tx.commit()?;
     Ok(())
+}
+
+/// Persists manifest changes to the database as they happen.
+pub struct DbJournal<'a> {
+    pub conn: &'a Connection,
+}
+
+impl crate::symlink::journal::Journal for DbJournal<'_> {
+    fn link_planned(&mut self, record: &LinkRecord) -> Result<()> {
+        let lossy = |p: &PathBuf| p.to_string_lossy().into_owned();
+        self.conn.execute(
+            "INSERT INTO links (target, source, backup) VALUES (?1, ?2, ?3)
+             ON CONFLICT(target) DO UPDATE SET source = excluded.source, backup = excluded.backup",
+            params![
+                lossy(&record.target),
+                lossy(&record.source),
+                record.backup.as_ref().map(lossy)
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn link_reverted(&mut self, target: &std::path::Path) -> Result<()> {
+        self.conn.execute(
+            "DELETE FROM links WHERE target = ?1",
+            [target.to_string_lossy()],
+        )?;
+        Ok(())
+    }
+
+    fn dir_planned(&mut self, dir: &std::path::Path) -> Result<()> {
+        self.conn.execute(
+            "INSERT INTO created_dirs (path) VALUES (?1)",
+            [dir.to_string_lossy()],
+        )?;
+        Ok(())
+    }
+
+    fn dirs_cleared(&mut self) -> Result<()> {
+        self.conn.execute("DELETE FROM created_dirs", [])?;
+        Ok(())
+    }
 }

@@ -36,13 +36,22 @@ fn main() -> eframe::Result<()> {
         config::Config::default()
     });
     let _log_guard = logging::init::init(&paths.logs, &config.logging.level);
-    match instance::bootstrap(&paths, &args) {
-        Ok(instance::Startup::HandedOff) => return Ok(()),
-        Ok(instance::Startup::RunGui) => {
-            tracing::info!("Pylune {} starting", env!("CARGO_PKG_VERSION"))
+    // The lock must live until the window closes.
+    let _instance = match instance::bootstrap(&paths, &args) {
+        Ok(instance::Startup::HandedOff) => {
+            eprintln!("pylune: already running — request handed to the open window");
+            return Ok(());
         }
-        Err(err) => tracing::error!(%err, "start-up coordination failed"),
-    }
+        Ok(instance::Startup::RunGui(lock)) => {
+            tracing::info!("Pylune {} starting", env!("CARGO_PKG_VERSION"));
+            lock
+        }
+        Err(err) => {
+            tracing::error!(%err, "single-instance lock failed");
+            eprintln!("pylune: cannot take the instance lock: {err}");
+            std::process::exit(1);
+        }
+    };
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_title("Pylune — Crimson Desert Mod Manager")

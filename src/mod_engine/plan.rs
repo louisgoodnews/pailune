@@ -65,12 +65,33 @@ pub fn placement(rel: &Path) -> Placement {
 /// Resolves the absolute game path for `rel` under the given placement.
 fn destination(config: &Config, rel: &Path, place: Placement) -> Option<PathBuf> {
     let game = &config.game.dir;
-    match place {
-        Placement::Mirror => Some(game.join(rel)),
-        Placement::Bin64 => rel.file_name().map(|name| game.join("bin64").join(name)),
-        Placement::JsonDir => Some(game.join(&config.game.json_subdir).join(rel)),
+    let inside = match place {
+        Placement::Mirror => Some(rel.to_path_buf()),
+        Placement::Bin64 => rel.file_name().map(|name| Path::new("bin64").join(name)),
+        Placement::JsonDir => Some(config.game.json_subdir.join(rel)),
         Placement::Skip => None,
-    }
+    };
+    inside.map(|inside| resolve_case(game, &inside))
+}
+
+/// Joins `rel` onto `base`, reusing existing entries that differ only in
+/// letter case. Windows games under Proton see `Bin64` and `bin64` as one
+/// directory; on Linux they would be two.
+pub fn resolve_case(base: &Path, rel: &Path) -> PathBuf {
+    rel.components().fold(base.to_path_buf(), |dir, component| {
+        let name = component.as_os_str();
+        let wanted = name.to_string_lossy().to_lowercase();
+        let existing = match dir.join(name).exists() {
+            true => None,
+            false => std::fs::read_dir(&dir).ok().and_then(|entries| {
+                entries
+                    .filter_map(|e| e.ok())
+                    .map(|e| e.file_name())
+                    .find(|n| n.to_string_lossy().to_lowercase() == wanted)
+            }),
+        };
+        dir.join(existing.as_deref().unwrap_or(name))
+    })
 }
 
 /// Lists `(relative path, placement)` for every deployable file in `mod_root`.

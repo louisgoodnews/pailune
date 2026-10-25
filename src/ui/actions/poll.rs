@@ -21,11 +21,13 @@ impl PyluneApp {
             return;
         }
         self.last_poll = Instant::now();
+        self.close_refused &= self.game_job_active();
         self.process = run::game_process();
-        let links = instance::drain(&self.paths.nxm_queue);
-        links
-            .iter()
-            .for_each(|url| self.status = self.handle_nxm(url));
+        let requests = instance::drain(&self.paths.spool);
+        requests.iter().for_each(|request| match request.as_str() {
+            instance::FOCUS_REQUEST => self.focus_requested = true,
+            url => self.status = self.handle_nxm(url),
+        });
     }
 
     fn on_job_event(&mut self, event: JobEvent) {
@@ -118,7 +120,6 @@ impl PyluneApp {
     /// Follow-ups of finished file jobs.
     fn after_done(&mut self, id: u64, kind: &JobKind) {
         match kind {
-            JobKind::Apply | JobKind::CleanSlate => self.dirty = false,
             JobKind::Import {
                 replace: Some(name),
                 ..
@@ -138,14 +139,36 @@ impl PyluneApp {
         }
     }
 
-    /// A replaced mod that is enabled needs a redeploy.
+    /// Clears update hints once a mod was replaced. Whether a redeploy is
+    /// needed follows from the stored registry revision.
     fn mark_updated(&mut self, name: String) {
         self.nexus.updates.remove(&name);
         self.nexus.replace_target = None;
-        self.dirty |= self
-            .registry
-            .mods
-            .iter()
-            .any(|m| m.name == name && m.enabled);
+    }
+}
+
+impl PyluneApp {
+    /// Whether a job that changes the game directory is queued or running.
+    pub fn game_job_active(&self) -> bool {
+        self.jobs.iter().any(|j| {
+            matches!(j.state, JobState::Queued | JobState::Running)
+                && j.kind.access() == crate::jobs::Access::Exclusive
+        })
+    }
+
+    /// Refuses the first close request while a game-folder job runs, so the
+    /// job is not killed halfway; a second request closes anyway.
+    pub fn guard_close(&mut self, ctx: &eframe::egui::Context) {
+        let requested = ctx.input(|i| i.viewport().close_requested());
+        if !requested || !self.game_job_active() || self.close_refused {
+            return;
+        }
+        ctx.send_viewport_cmd(eframe::egui::ViewportCommand::CancelClose);
+        self.close_refused = true;
+        self.status = StatusLine::new(
+            Level::Warning,
+            "A job is changing the game folder — wait for it, or close again to quit anyway \
+             (the next Unlink/Apply repairs an interrupted run)",
+        );
     }
 }

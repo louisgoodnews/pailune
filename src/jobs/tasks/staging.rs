@@ -21,7 +21,9 @@ pub(super) fn register(
 ) -> Result<String> {
     let mut conn = ctx.db()?;
     let now = db::now();
-    db::mods::update(&mut conn, |r| registry::sync(r, &ctx.paths.staging, now))?;
+    // Walk the files before taking the write lock (A-20).
+    let scan = registry::scan(&ctx.paths.staging)?;
+    db::mods::update(&mut conn, |r| Ok(registry::merge(r, &scan, now)))?;
     db::mods::record_install(&conn, name, source, nexus, now)?;
     let details = info::details(&ctx.paths.staging.join(name))?;
     let lines: Vec<String> = details
@@ -74,23 +76,25 @@ pub fn import(ctx: &JobContext, source: &Path, replace: Option<String>) -> Resul
 
 pub fn remove(ctx: &JobContext, name: &str) -> Result<JobOutput> {
     let mut conn = ctx.db()?;
-    let entry = db::mods::load(&conn)?
-        .mods
-        .into_iter()
-        .find(|m| m.name == name)
-        .ok_or_else(|| PyluneError::Invalid(format!("no mod named '{name}'")))?;
-    let deployed = !db::links::load(&conn)?.links.is_empty();
-    if deployed && entry.enabled {
+    if db::mods::load(&conn)?.mods.iter().all(|m| m.name != name) {
+        return Err(PyluneError::Invalid(format!("no mod named '{name}'")));
+    }
+    // Decide by what is actually linked, not by the (possibly changed) flag.
+    let mod_dir = ctx.paths.staging.join(name);
+    let deployed = db::links::load(&conn)?
+        .links
+        .iter()
+        .any(|l| l.source.starts_with(&mod_dir));
+    if deployed {
         super::require_game(&ctx.steam())?;
     }
     // Drop the mod from the registry first so a redeploy no longer links it.
     db::mods::update(&mut conn, |r| Ok(registry::without(r, name)))?;
-    let redeployed = match deployed && entry.enabled {
+    let redeployed = match deployed {
         true => Some(redeploy(ctx, &mut conn)?),
         false => None,
     };
-    let dir = ctx.paths.staging.join(name);
-    fs::remove_dir_all(&dir).at(&dir)?;
+    fs::remove_dir_all(&mod_dir).at(&mod_dir)?;
     ctx.journal(
         &conn,
         Event::new(

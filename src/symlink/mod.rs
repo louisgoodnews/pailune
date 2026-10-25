@@ -4,6 +4,7 @@
 //! removes exactly what was added and nothing else.
 
 pub mod deploy;
+pub mod journal;
 pub mod undeploy;
 
 use serde::{Deserialize, Serialize};

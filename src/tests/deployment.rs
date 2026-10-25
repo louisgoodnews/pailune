@@ -7,6 +7,7 @@ use crate::mod_engine::model::ModKind;
 use crate::mod_engine::plan::{self, Placement};
 use crate::mod_engine::{install, registry};
 use crate::steam::{AsiLoader, GameStatus, locate};
+use crate::symlink::journal::NullJournal;
 use crate::symlink::{Manifest, PathState, deploy, path_state, undeploy};
 use std::fs;
 use std::path::Path;
@@ -55,7 +56,7 @@ fn full_cycle_is_non_destructive() {
 
     let link_plan = plan::build(&fx.config, &fx.staging, &reg).unwrap();
     let mut manifest = Manifest::default();
-    let report = deploy::deploy(&link_plan, &mut manifest).unwrap();
+    let report = deploy::deploy(&link_plan, &fx.staging, &mut manifest, &mut NullJournal).unwrap();
     assert_eq!(report.linked, 4);
     assert!(report.warnings.is_empty(), "{:?}", report.warnings);
     assert!(matches!(
@@ -77,7 +78,7 @@ fn full_cycle_is_non_destructive() {
     assert!(!game.join("bin64/readme.txt").exists());
 
     // Clean slate: links gone, originals back, foreign overlay archived.
-    let report = reset::clean_slate(&info, &mut manifest).unwrap();
+    let report = reset::clean_slate(&info, &mut manifest, &mut NullJournal).unwrap();
     assert!(report.warnings.is_empty(), "{:?}", report.warnings);
     assert_eq!(
         fs::read_to_string(game.join("meta/0.papgt")).unwrap(),
@@ -112,11 +113,11 @@ fn undeploy_leaves_foreign_replacements_alone() {
     let reg = enabled_registry(&fx);
     let link_plan = plan::build(&fx.config, &fx.staging, &reg).unwrap();
     let mut manifest = Manifest::default();
-    deploy::deploy(&link_plan, &mut manifest).unwrap();
+    deploy::deploy(&link_plan, &fx.staging, &mut manifest, &mut NullJournal).unwrap();
     let papgt = fx.config.game.dir.join("meta/0.papgt");
     fs::remove_file(&papgt).unwrap();
     fs::write(&papgt, "steam-update").unwrap();
-    let report = undeploy::undeploy(&mut manifest).unwrap();
+    let report = undeploy::undeploy(&mut manifest, &mut NullJournal).unwrap();
     assert_eq!(report.warnings.len(), 1);
     assert_eq!(fs::read_to_string(&papgt).unwrap(), "steam-update");
 }
@@ -128,7 +129,7 @@ fn outdated_meta_backup_blocks_restore() {
     snapshot::ensure_meta_backup(&info).unwrap();
     fs::write(info.meta_dir.join("0.paver"), "v2").unwrap();
     assert_eq!(snapshot::meta_backup_state(&info), MetaBackup::Outdated);
-    assert!(reset::clean_slate(&info, &mut Manifest::default()).is_err());
+    assert!(reset::clean_slate(&info, &mut Manifest::default(), &mut NullJournal).is_err());
 }
 
 #[test]
@@ -176,4 +177,53 @@ fn conflicts_report_winners_and_losers() {
             .unwrap()
             .is_empty()
     );
+}
+
+#[test]
+fn mixed_case_paths_reuse_existing_game_folders() {
+    let fx = fixture();
+    write(&fx.sources.join("Shouty/BIN64/Loud.asi"), "x");
+    write(&fx.sources.join("Shouty/Meta/0.PAPGT"), "y");
+    install::import(&fx.sources.join("Shouty"), &fx.staging).unwrap();
+    let link_plan = plan::build(&fx.config, &fx.staging, &enabled_registry(&fx)).unwrap();
+    let targets: Vec<_> = link_plan.ops.iter().map(|op| op.target.clone()).collect();
+    let game = &fx.config.game.dir;
+    assert!(
+        targets.contains(&game.join("bin64/Loud.asi")),
+        "{targets:?}"
+    );
+    assert!(targets.contains(&game.join("meta/0.papgt")), "{targets:?}");
+}
+
+#[test]
+fn concurrent_same_name_imports_never_clobber() {
+    let fx = fixture();
+    let a = fx.sources.join("a/Same.asi");
+    let b = fx.sources.join("b/Same.asi");
+    write(&a, "first");
+    write(&b, "second");
+    let staging = fx.staging.clone();
+    let results: Vec<_> = [a, b]
+        .into_iter()
+        .map(|src| {
+            let staging = staging.clone();
+            std::thread::spawn(move || install::import(&src, &staging))
+        })
+        .collect::<Vec<_>>()
+        .into_iter()
+        .map(|h| h.join().unwrap())
+        .collect();
+    assert_eq!(
+        results.iter().filter(|r| r.is_ok()).count(),
+        1,
+        "{results:?}"
+    );
+    let content = fs::read_to_string(fx.staging.join("Same/Same.asi")).unwrap();
+    assert!(content == "first" || content == "second");
+    let leftovers = fs::read_dir(&fx.staging)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_name().to_string_lossy().starts_with(".pylune"))
+        .count();
+    assert_eq!(leftovers, 0, "no temp folders left behind");
 }

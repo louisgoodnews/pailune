@@ -1,27 +1,46 @@
 //! Pure transformations of the mod [`Registry`] plus staging reconciliation.
 
 use super::classify::classify;
-use super::model::{ModEntry, MoveTo, Registry};
+use super::model::{ModEntry, ModKind, MoveTo, Registry, Scan, Scanned};
 use super::plan::deployable_files;
 use crate::error::{IoContext, Result};
 use std::fs;
 use std::path::Path;
 
-/// Inspects a staged mod and refreshes `kind` and `file_count` of `base`.
-pub fn describe(staging: &Path, base: ModEntry) -> Result<ModEntry> {
-    let files = deployable_files(&staging.join(&base.name))?;
-    Ok(ModEntry {
-        kind: classify(files.iter().map(|(_, place)| *place)),
-        file_count: files.len(),
-        ..base
-    })
+/// Classifies one staged mod. Unreadable folders count as empty (with a
+/// warning in the log) instead of failing the whole scan.
+fn scan_one(staging: &Path, name: &str) -> Scanned {
+    match deployable_files(&staging.join(name)) {
+        Ok(files) => Scanned {
+            kind: classify(files.iter().map(|(_, place)| *place)),
+            file_count: files.len(),
+        },
+        Err(err) => {
+            tracing::warn!(mod_name = name, %err, "could not scan staged mod");
+            Scanned {
+                kind: ModKind::Empty,
+                file_count: 0,
+            }
+        }
+    }
+}
+
+/// Classifies every staged mod. Runs outside any database transaction.
+pub fn scan(staging: &Path) -> Result<Scan> {
+    Ok(staged_names(staging)?
+        .into_iter()
+        .map(|n| {
+            let scanned = scan_one(staging, &n);
+            (n, scanned)
+        })
+        .collect())
 }
 
 /// A disabled entry for a mod found in staging without a database row.
 fn discovered(name: &str, now: i64) -> ModEntry {
     ModEntry {
         name: name.to_string(),
-        kind: super::model::ModKind::Empty,
+        kind: ModKind::Empty,
         enabled: false,
         file_count: 0,
         installed_at: now,
@@ -43,27 +62,37 @@ fn staged_names(staging: &Path) -> Result<Vec<String>> {
     Ok(names)
 }
 
-/// Reconciles `registry` with the staging folder.
+/// Reconciles `registry` with a staging [`Scan`] (pure).
 ///
 /// Known mods keep their order, flags and metadata; vanished mods are
 /// dropped; newly found folders are appended disabled.
+pub fn merge(registry: &Registry, scan: &Scan, now: i64) -> Registry {
+    let refresh = |m: ModEntry| {
+        scan.get(&m.name).map(|s| ModEntry {
+            kind: s.kind,
+            file_count: s.file_count,
+            ..m
+        })
+    };
+    let known = registry.mods.iter().cloned().filter_map(refresh);
+    let fresh = scan
+        .iter()
+        .filter(|(n, _)| registry.mods.iter().all(|m| &m.name != *n))
+        .map(|(n, s)| ModEntry {
+            kind: s.kind,
+            file_count: s.file_count,
+            ..discovered(n, now)
+        });
+    Registry {
+        mods: known.chain(fresh).collect(),
+    }
+}
+
+/// [`scan`] followed by [`merge`] (tests; production code scans before
+/// opening the write transaction).
+#[cfg(test)]
 pub fn sync(registry: &Registry, staging: &Path, now: i64) -> Result<Registry> {
-    let names = staged_names(staging)?;
-    let known = registry
-        .mods
-        .iter()
-        .filter(|m| names.contains(&m.name))
-        .cloned();
-    let fresh = names
-        .iter()
-        .filter(|n| registry.mods.iter().all(|m| &m.name != *n))
-        .map(|n| discovered(n, now));
-    Ok(Registry {
-        mods: known
-            .chain(fresh)
-            .map(|m| describe(staging, m))
-            .collect::<Result<_>>()?,
-    })
+    Ok(merge(registry, &scan(staging)?, now))
 }
 
 /// Maps the entry called `name` through `f`, leaving the others untouched.

@@ -4,6 +4,7 @@ use super::snapshot::{archived_overlays, ensure_meta_backup, foreign_overlays, m
 use super::{META_FILES, MetaBackup};
 use crate::error::{IoContext, PyluneError, Result};
 use crate::steam::SteamInfo;
+use crate::symlink::journal::Journal;
 use crate::symlink::undeploy::undeploy;
 use crate::symlink::{BAK_SUFFIX, Manifest, PathState, Report, bak_path, path_state};
 use std::fs;
@@ -49,8 +50,12 @@ fn archive_dir(dir: &Path) -> Result<Option<String>> {
 /// 2. Restores `meta/` files from their `.bak` snapshot.
 /// 3. Sets foreign archive folders (> 35) aside as `NNNN.bak`.
 /// 4. Re-takes the metadata snapshot if step 1 consumed it.
-pub fn clean_slate(info: &SteamInfo, manifest: &mut Manifest) -> Result<Report> {
-    let mut report = undeploy(manifest)?;
+pub fn clean_slate(
+    info: &SteamInfo,
+    manifest: &mut Manifest,
+    journal: &mut dyn Journal,
+) -> Result<Report> {
+    let mut report = undeploy(manifest, journal)?;
     report.backed_up += restore_meta(info)?;
     let overlay_warnings = foreign_overlays(info, manifest)
         .iter()

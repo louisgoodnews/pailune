@@ -10,11 +10,40 @@ const APP_NAME: &str = "Pylune";
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Credentials and connection settings. Holds no mutable state.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Client {
+    /// API calls: small responses, bounded overall.
     agent: ureq::Agent,
+    /// Archive downloads: no overall limit (large files take minutes), but a
+    /// stalled connection still fails.
+    downloads: ureq::Agent,
     key: String,
     domain: String,
+}
+
+/// Never prints the API key.
+impl std::fmt::Debug for Client {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Client")
+            .field("domain", &self.domain)
+            .field("key", &"<redacted>")
+            .finish()
+    }
+}
+
+/// Builds an agent with the Pylune user agent and the given limits.
+fn agent(global: Option<Duration>, per_read: Option<Duration>) -> ureq::Agent {
+    let config = ureq::Agent::config_builder()
+        .timeout_global(global)
+        .timeout_connect(Some(Duration::from_secs(20)))
+        .timeout_recv_response(Some(Duration::from_secs(60)))
+        .timeout_per_read(per_read)
+        .user_agent(format!(
+            "{APP_NAME}/{APP_VERSION} (Linux; {})",
+            std::env::consts::ARCH
+        ))
+        .build();
+    ureq::Agent::new_with_config(config)
 }
 
 /// Translates well-known status codes into actionable messages.
@@ -37,12 +66,9 @@ fn explain(err: ureq::Error) -> PyluneError {
 impl Client {
     /// Creates a client for `domain` (e.g. `crimsondesert`).
     pub fn new(key: &str, domain: &str) -> Self {
-        let config = ureq::Agent::config_builder()
-            .timeout_global(Some(Duration::from_secs(30)))
-            .user_agent(format!("{APP_NAME}/{APP_VERSION} (Linux)"))
-            .build();
         Self {
-            agent: ureq::Agent::new_with_config(config),
+            agent: agent(Some(Duration::from_secs(30)), None),
+            downloads: agent(None, Some(Duration::from_secs(60))),
             key: key.trim().to_string(),
             domain: domain.trim().to_lowercase(),
         }
@@ -96,7 +122,7 @@ impl Client {
 
     /// Opens a streaming download, returning `(content length, reader)`.
     pub fn open_download(&self, uri: &str) -> Result<(Option<u64>, impl std::io::Read + use<>)> {
-        let response = self.agent.get(uri).call().map_err(explain)?;
+        let response = self.downloads.get(uri).call().map_err(explain)?;
         let length = response.body().content_length();
         Ok((length, response.into_body().into_reader()))
     }

@@ -25,8 +25,9 @@ impl PyluneApp {
         let mut conn = db::open(&paths.database).expect("Pylune needs a working database");
         let now = db::now();
         let staging = paths.staging.clone();
-        let registry =
-            db::mods::update(&mut conn, |r| registry::sync(r, &staging, now)).unwrap_or_default();
+        let registry = registry::scan(&staging)
+            .and_then(|scan| db::mods::update(&mut conn, |r| Ok(registry::merge(r, &scan, now))))
+            .unwrap_or_default();
         let book = db::profiles::load(&conn).unwrap_or_default();
         let ctx = cc.egui_ctx.clone();
         let pool = JobPool::spawn(
@@ -61,6 +62,8 @@ impl PyluneApp {
             jobs: Vec::new(),
             launch_after: None,
             last_poll: Instant::now(),
+            close_refused: false,
+            focus_requested: false,
             pool,
             paths,
             config,
@@ -106,6 +109,10 @@ impl eframe::App for PyluneApp {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        self.guard_close(ui.ctx());
+        if std::mem::take(&mut self.focus_requested) {
+            ui.ctx().send_viewport_cmd(egui::ViewportCommand::Focus);
+        }
         let mut actions: Vec<Action> = Vec::new();
         actions.extend(
             egui::Panel::top("header")

@@ -3,6 +3,7 @@
 use super::require_game;
 use crate::backup::{reset, snapshot};
 use crate::db;
+use crate::db::links::DbJournal;
 use crate::error::{PyluneError, Result};
 use crate::jobs::JobOutput;
 use crate::jobs::context::JobContext;
@@ -38,14 +39,13 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
     let info = ctx.steam();
     require_game(&info)?;
     let mut manifest = db::links::load(conn)?;
-    undeploy::undeploy(&mut manifest)?;
-    db::links::save(conn, &manifest)?;
+    let mut journal = DbJournal { conn };
+    undeploy::undeploy(&mut manifest, &mut journal)?;
     snapshot::ensure_meta_backup(&info)?;
-    let registry = db::mods::load(conn)?;
+    let (registry, revision) = db::mods::load_with_revision(conn)?;
     let link_plan = plan::build(&ctx.config, &ctx.paths.staging, &registry)?;
-    let result = deploy::deploy(&link_plan, &mut manifest);
-    db::links::save(conn, &manifest)?;
-    let report = result?;
+    let report = deploy::deploy(&link_plan, &ctx.paths.staging, &mut manifest, &mut journal)?;
+    db::mods::set_deployed_revision(conn, Some(revision))?;
     let enabled: Vec<&ModEntry> = registry.mods.iter().filter(|m| m.enabled).collect();
     enabled.iter().for_each(|m| {
         let msg = format!(
@@ -84,12 +84,12 @@ pub fn apply(ctx: &JobContext) -> Result<JobOutput> {
 }
 
 pub fn unlink_all(ctx: &JobContext) -> Result<JobOutput> {
-    let mut conn = ctx.db()?;
+    let conn = ctx.db()?;
     require_game(&ctx.steam())?;
     let mut manifest = db::links::load(&conn)?;
-    let result = undeploy::undeploy(&mut manifest);
-    db::links::save(&mut conn, &manifest)?;
-    let text = summarise(ctx, &conn, EventKind::Unlink, "Unlinked", &result?);
+    let report = undeploy::undeploy(&mut manifest, &mut DbJournal { conn: &conn })?;
+    db::mods::set_deployed_revision(&conn, None)?;
+    let text = summarise(ctx, &conn, EventKind::Unlink, "Unlinked", &report);
     ctx.journal(
         &conn,
         Event::new(Severity::Info, EventKind::Unlink, None, text.clone()),
@@ -102,17 +102,19 @@ pub fn clean_slate(ctx: &JobContext) -> Result<JobOutput> {
     let info = ctx.steam();
     require_game(&info)?;
     let mut manifest = db::links::load(&conn)?;
-    let result = reset::clean_slate(&info, &mut manifest);
-    db::links::save(&mut conn, &manifest)?;
+    let report = reset::clean_slate(&info, &mut manifest, &mut DbJournal { conn: &conn })?;
     db::mods::update(&mut conn, |r| {
         Ok(crate::mod_engine::registry::with_all(r, false))
     })?;
+    // Nothing is enabled and nothing is linked: the deployment is current.
+    let (_, revision) = db::mods::load_with_revision(&conn)?;
+    db::mods::set_deployed_revision(&conn, Some(revision))?;
     let text = summarise(
         ctx,
         &conn,
         EventKind::Reset,
         "Clean slate restored",
-        &result?,
+        &report,
     );
     ctx.journal(
         &conn,

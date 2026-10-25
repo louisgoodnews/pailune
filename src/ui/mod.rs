@@ -219,7 +219,7 @@ pub struct PyluneApp {
     pub backup: BackupStatus,
     pub status: StatusLine,
     pub confirm: Option<Confirm>,
-    /// The mod selection changed since the last apply.
+    /// The game directory lags behind the mod list (derived from the DB).
     pub dirty: bool,
     pub tab: Tab,
     pub process: GameProcess,
@@ -233,4 +233,9 @@ pub struct PyluneApp {
     pub launch_after: Option<JobId>,
     /// Last time the game process and nxm queue were polled.
     pub last_poll: Instant,
+    /// A close request was refused because a game-folder job is running;
+    /// the next request closes anyway.
+    pub close_refused: bool,
+    /// A second start asked this window to come to the front.
+    pub focus_requested: bool,
 }

@@ -22,10 +22,10 @@ pub struct DataPaths {
     pub mod_logs: PathBuf,
     /// Nexus API key (mode 0600).
     pub nexus_key: PathBuf,
-    /// `nxm://` links handed over by secondary instances.
-    pub nxm_queue: PathBuf,
-    /// PID of the running primary instance.
-    pub pid: PathBuf,
+    /// Requests (`nxm://` links, focus) handed over by secondary instances.
+    pub spool: PathBuf,
+    /// Held with `flock` by the running primary instance.
+    pub lock: PathBuf,
 }
 
 impl DataPaths {
@@ -39,8 +39,8 @@ impl DataPaths {
             logs: data.join("logs"),
             mod_logs: data.join("logs").join("mods"),
             nexus_key: data.join("nexus_api_key"),
-            nxm_queue: data.join("nxm_queue.txt"),
-            pid: data.join("pylune.pid"),
+            spool: data.join("spool"),
+            lock: data.join("pylune.lock"),
         }
     }
 

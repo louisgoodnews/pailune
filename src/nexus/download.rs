@@ -1,7 +1,7 @@
 //! Resolving download links and streaming archives to disk.
 
 use super::api::Client;
-use super::{NexusFile, NexusMod, NxmLink};
+use super::{DownloadLink, NexusFile, NexusMod, NxmLink};
 use crate::error::{IoContext, PyluneError, Result};
 use crate::mod_engine::install;
 use std::fs;
@@ -52,20 +52,58 @@ impl<R: Read> Read for Counting<'_, R> {
     }
 }
 
-/// Streams `uri` into `dest`, via a `.part` file renamed on success.
+/// Streams `uri` into `dest` via a `.part` file that is renamed on success
+/// and removed on failure.
 fn stream(client: &Client, uri: &str, dest: &Path, progress: Progress) -> Result<()> {
-    let (total, reader) = client.open_download(uri)?;
     let part = dest.with_extension("part");
-    let mut file = fs::File::create(&part).at(&part)?;
-    let mut counting = Counting {
-        inner: reader,
-        done: 0,
-        reported: 0,
-        total,
-        progress,
-    };
-    io::copy(&mut counting, &mut file).at(&part)?;
-    fs::rename(&part, dest).at(dest)
+    let copied = client.open_download(uri).and_then(|(total, reader)| {
+        let mut file = fs::File::create(&part).at(&part)?;
+        let mut counting = Counting {
+            inner: reader,
+            done: 0,
+            reported: 0,
+            total,
+            progress,
+        };
+        io::copy(&mut counting, &mut file).at(&part).map(drop)
+    });
+    match copied {
+        Ok(()) => fs::rename(&part, dest).at(dest),
+        Err(err) => {
+            let _ = fs::remove_file(&part);
+            Err(err)
+        }
+    }
+}
+
+/// Tries each mirror in turn until one succeeds; the last failure is kept.
+fn download_any(
+    client: &Client,
+    mirrors: &[DownloadLink],
+    archive: &Path,
+    progress: Progress,
+) -> Result<()> {
+    let none = Err(PyluneError::Invalid(
+        "Nexus returned no download mirrors".into(),
+    ));
+    mirrors.iter().fold(none, |result, link| match result {
+        Ok(()) => Ok(()),
+        Err(_) => stream(client, &link.uri, archive, progress).inspect_err(|err| {
+            tracing::warn!(mirror = %link.short_name, %err, "download mirror failed");
+        }),
+    })
+}
+
+/// Fails early with a clear message when an `nxm://` link has expired.
+fn check_expiry(job: &DownloadJob) -> Result<()> {
+    let now = crate::db::now() as u64;
+    match job.nxm.as_ref().and_then(|link| link.expires) {
+        Some(expires) if expires < now => Err(PyluneError::Invalid(
+            "this nxm:// link has expired — click \"Mod Manager Download\" on the website again"
+                .into(),
+        )),
+        _ => Ok(()),
+    }
 }
 
 /// Looks up the file, resolves a mirror and downloads it into `downloads`.
@@ -75,6 +113,7 @@ pub fn fetch(
     downloads: &Path,
     progress: Progress,
 ) -> Result<Fetched> {
+    check_expiry(job)?;
     let info = client.mod_info(job.mod_id)?;
     let file = client
         .files(job.mod_id)?
@@ -87,18 +126,16 @@ pub fn fetch(
                 job.file_id, job.mod_id
             ))
         })?;
-    let link = client
-        .download_links(job.mod_id, job.file_id, job.nxm.as_ref())?
-        .into_iter()
-        .next()
-        .ok_or_else(|| PyluneError::Invalid("Nexus returned no download mirrors".into()))?;
+    let mirrors = client.download_links(job.mod_id, job.file_id, job.nxm.as_ref())?;
     fs::create_dir_all(downloads).at(downloads)?;
+    // Unique per job: two downloads of the same file never share a path.
     let archive = downloads.join(format!(
-        "{}-{}",
+        "{}-{}-{}",
         job.file_id,
+        install::unique_suffix(),
         install::sanitize_name(&file.file_name)
     ));
-    stream(client, &link.uri, &archive, progress)?;
+    download_any(client, &mirrors, &archive, progress)?;
     Ok(Fetched {
         archive,
         info,

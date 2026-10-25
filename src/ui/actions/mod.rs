@@ -59,6 +59,8 @@ impl PyluneApp {
         self.loader = locate::detect_loader(&self.info);
         let manifest = db::links::load(&self.conn).unwrap_or_default();
         self.deployed_links = manifest.links.len();
+        self.dirty =
+            db::mods::pending(&self.conn, &self.registry, self.deployed_links).unwrap_or(true);
         self.backup = snapshot::status(&self.info, &manifest);
     }
 
@@ -94,7 +96,6 @@ impl PyluneApp {
         f: impl FnOnce(&Registry) -> Result<Registry>,
     ) -> Result<()> {
         self.registry = db::mods::update(&mut self.conn, f)?;
-        self.dirty = true;
         self.request_conflicts();
         Ok(())
     }

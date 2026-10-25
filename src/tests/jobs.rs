@@ -157,3 +157,54 @@ fn real_jobs_import_apply_remove_and_reset() {
     );
     assert!(!db::events::recent(&conn, 50, None).unwrap().is_empty());
 }
+
+#[test]
+fn pending_state_and_deleting_a_disabled_but_deployed_mod() {
+    use crate::config::paths::DataPaths;
+    use crate::db;
+    use crate::jobs::pool::JobPool;
+    use crate::jobs::{JobKind, tasks};
+    use crate::mod_engine::registry;
+    use std::sync::Arc;
+
+    let fx = super::fixture();
+    let root = fx.staging.parent().unwrap().to_path_buf();
+    let paths = DataPaths::under(&root, &root);
+    paths.create_dirs().unwrap();
+    let pool = JobPool::spawn(2, paths.clone(), Arc::new(tasks::run), Arc::new(|| {}));
+    let source = fx.sources.join("Cool Mod");
+    let import = pool.submit(
+        JobKind::Import {
+            source,
+            replace: None,
+        },
+        &fx.config,
+    );
+    assert!(wait_all(&pool, &[import])[0].is_ok());
+
+    let mut conn = db::open(&paths.database).unwrap();
+    let pending = |conn: &rusqlite::Connection| {
+        let registry = db::mods::load(conn).unwrap();
+        let links = db::links::load(conn).unwrap().links.len();
+        db::mods::pending(conn, &registry, links).unwrap()
+    };
+    assert!(!pending(&conn), "nothing enabled, nothing linked");
+    db::mods::update(&mut conn, |r| Ok(registry::with_all(r, true))).unwrap();
+    assert!(pending(&conn), "enabled but not applied");
+    let apply = pool.submit(JobKind::Apply, &fx.config);
+    assert!(wait_all(&pool, &[apply])[0].is_ok());
+    assert!(!pending(&conn), "applied");
+
+    // Disable without applying, then delete: its links must still go.
+    db::mods::update(&mut conn, |r| Ok(registry::with_all(r, false))).unwrap();
+    assert!(pending(&conn));
+    let remove = pool.submit(JobKind::Remove("Cool Mod".into()), &fx.config);
+    assert!(wait_all(&pool, &[remove])[0].is_ok());
+    assert!(db::links::load(&conn).unwrap().links.is_empty());
+    assert!(!fx.config.game.dir.join("bin64/CoolMod.asi").exists());
+    assert!(!pending(&conn), "redeployed and clean");
+
+    let unlink = pool.submit(JobKind::UnlinkAll, &fx.config);
+    assert!(wait_all(&pool, &[unlink])[0].is_ok());
+    assert!(!pending(&conn), "unlinked with nothing enabled");
+}

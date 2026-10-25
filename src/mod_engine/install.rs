@@ -23,19 +23,38 @@ pub fn import(source: &Path, staging: &Path) -> Result<String> {
     import_as(source, staging, &mod_name(source)?, false)
 }
 
+/// A name unique to this process and moment, for temporary entries.
+pub fn unique_suffix() -> String {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let n = COUNTER.fetch_add(1, Ordering::Relaxed);
+    format!("{}-{n}", std::process::id())
+}
+
 /// Like [`import`] but with an explicit mod name.
 ///
-/// With `replace`, an existing mod of that name is swapped out only after the
-/// new contents were staged successfully (used for Nexus updates).
+/// Every call stages into its own hidden work directory, so concurrent
+/// imports never touch each other's files. Without `replace` the final step
+/// fails if the name was taken meanwhile; with `replace` the existing mod is
+/// swapped out only after the new contents were staged successfully.
 pub fn import_as(source: &Path, staging: &Path, name: &str, replace: bool) -> Result<String> {
     let dest = staging.join(name);
-    if dest.exists() && !replace {
-        return Err(PyluneError::Invalid(format!(
-            "a mod named '{name}' is already staged"
-        )));
+    let taken = || PyluneError::Invalid(format!("a mod named '{name}' is already staged"));
+    match (dest.exists(), replace) {
+        (true, false) => return Err(taken()),
+        (false, true) => {
+            return Err(PyluneError::Invalid(format!(
+                "'{name}' is no longer staged"
+            )));
+        }
+        _ => {}
     }
-    let work = staging.join(format!(".pylune-incoming-{name}"));
-    let _ = fs::remove_dir_all(&work);
+    if source.starts_with(staging) || staging.starts_with(source) {
+        return Err(PyluneError::Invalid(
+            "cannot import from inside Pylune's staging folder".into(),
+        ));
+    }
+    let work = staging.join(format!(".pylune-incoming-{}", unique_suffix()));
     fs::create_dir_all(&work).at(&work)?;
     let outcome = match source_kind(source) {
         SourceKind::Directory => copy_tree(source, &work),
@@ -43,19 +62,31 @@ pub fn import_as(source: &Path, staging: &Path, name: &str, replace: bool) -> Re
         SourceKind::LooseFile => copy_file(source, &work),
     }
     .and_then(|()| hoist_wrapper_dirs(&work))
-    .and_then(|()| swap_into_place(&work, &dest));
+    .and_then(|()| match replace {
+        true => swap_into_place(&work, &dest, staging),
+        false => claim_and_move(&work, &dest).map_err(|_| taken()),
+    });
     // Leave no half-imported mod behind.
     outcome.map(|()| name.to_string()).inspect_err(|_| {
         let _ = fs::remove_dir_all(&work);
     })
 }
 
-/// Replaces `dest` with the freshly staged `work` directory.
-fn swap_into_place(work: &Path, dest: &Path) -> Result<()> {
-    if dest.exists() {
-        fs::remove_dir_all(dest).at(dest)?;
-    }
+/// Moves `work` to a free `dest`. `create_dir` is atomic, so exactly one of
+/// several concurrent imports claims a name; renaming a directory onto the
+/// claimed empty directory then succeeds.
+fn claim_and_move(work: &Path, dest: &Path) -> Result<()> {
+    fs::create_dir(dest).at(dest)?;
     fs::rename(work, dest).at(dest)
+}
+
+/// Replaces `dest` with `work` using renames only, so the mod's folder is
+/// missing for just an instant; the old contents are deleted afterwards.
+fn swap_into_place(work: &Path, dest: &Path, staging: &Path) -> Result<()> {
+    let trash = staging.join(format!(".pylune-trash-{}", unique_suffix()));
+    fs::rename(dest, &trash).at(dest)?;
+    fs::rename(work, dest).at(dest)?;
+    fs::remove_dir_all(&trash).at(&trash)
 }
 
 /// Makes an arbitrary title safe to use as a staging directory name.
