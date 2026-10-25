@@ -63,13 +63,17 @@ pub fn pa_hash(data: &[u8]) -> u32 {
         0 => return c,
         n => (n - 1) / 12 * 12,
     };
-    data[..tail_start].as_chunks::<12>().0.iter().for_each(|block| {
-        let (x, y, z) = words(block);
-        a = a.wrapping_add(x);
-        b = b.wrapping_add(y);
-        c = c.wrapping_add(z);
-        mix(&mut a, &mut b, &mut c);
-    });
+    data[..tail_start]
+        .as_chunks::<12>()
+        .0
+        .iter()
+        .for_each(|block| {
+            let (x, y, z) = words(block);
+            a = a.wrapping_add(x);
+            b = b.wrapping_add(y);
+            c = c.wrapping_add(z);
+            mix(&mut a, &mut b, &mut c);
+        });
     let (x, y, z) = words(&data[tail_start..]);
     a = a.wrapping_add(x);
     b = b.wrapping_add(y);

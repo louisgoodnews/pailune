@@ -9,6 +9,7 @@ pub mod incoming;
 pub mod jobs;
 pub mod log;
 pub mod mod_details;
+pub mod mod_files;
 pub mod mod_list;
 pub mod nexus;
 pub mod profiles;

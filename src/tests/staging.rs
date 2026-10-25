@@ -8,7 +8,7 @@ use std::fs;
 fn mixed_case_paths_reuse_existing_game_folders() {
     let fx = fixture();
     write(&fx.sources.join("Shouty/BIN64/Loud.asi"), "x");
-    write(&fx.sources.join("Shouty/Meta/0.PAPGT"), "y");
+    write(&fx.sources.join("Shouty/BIN64/WINMM.DLL"), "y");
     install::import(&fx.sources.join("Shouty"), &fx.staging).unwrap();
     let link_plan = plan::build(&fx.config, &fx.staging, &enabled_registry(&fx)).unwrap();
     let targets: Vec<_> = link_plan.ops.iter().map(|op| op.target.clone()).collect();
@@ -17,7 +17,10 @@ fn mixed_case_paths_reuse_existing_game_folders() {
         targets.contains(&game.join("bin64/Loud.asi")),
         "{targets:?}"
     );
-    assert!(targets.contains(&game.join("meta/0.papgt")), "{targets:?}");
+    assert!(
+        targets.contains(&game.join("bin64/winmm.dll")),
+        "{targets:?}"
+    );
 }
 
 #[test]

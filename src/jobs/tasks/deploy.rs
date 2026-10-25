@@ -9,6 +9,7 @@ use crate::jobs::JobOutput;
 use crate::jobs::context::JobContext;
 use crate::logging::{Event, EventKind, Severity};
 use crate::mod_engine::{model::ModEntry, plan};
+use crate::overlay::{self, OverlayPlan};
 use crate::symlink::{Report, deploy, undeploy};
 use rusqlite::Connection;
 
@@ -50,8 +51,13 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
     undeploy::undeploy(&mut manifest, &mut journal)?;
     snapshot::ensure_meta_backup(&info)?;
     let (registry, revision) = db::mods::load_with_revision(conn)?;
-    let link_plan = plan::build(&ctx.config, &ctx.paths.staging, &registry)?;
-    let report = deploy::deploy(&link_plan, &ctx.paths.staging, &mut manifest, &mut journal)?;
+    let mut link_plan = plan::build(&ctx.config, &ctx.paths.staging, &registry)?;
+    let overlay = build_overlay(ctx, &info, &registry)?;
+    link_plan
+        .ops
+        .extend(overlay.iter().flat_map(|o| o.links.clone()));
+    let owned = [ctx.paths.staging.as_path(), ctx.paths.overlay.as_path()];
+    let report = deploy::deploy(&link_plan, &owned, &mut manifest, &mut journal)?;
     db::mods::set_deployed_revision(conn, Some(revision))?;
     let enabled: Vec<&ModEntry> = registry.mods.iter().filter(|m| m.enabled).collect();
     enabled.iter().for_each(|m| {
@@ -69,7 +75,25 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
     let waiting = enabled.iter().filter(|m| m.paz_files > 0).count();
     if waiting > 0 {
         text.push_str(&format!(
-            " — {waiting} mod(s) contain content that needs PAZ support and was skipped"
+            " — {waiting} mod(s) contain textures, JSON patches or unplaced files that were skipped"
+        ));
+    }
+    if let Some(o) = &overlay {
+        o.skipped.iter().for_each(|reason| {
+            ctx.journal(
+                conn,
+                Event::new(Severity::Warn, EventKind::Deploy, None, reason.clone()),
+            )
+        });
+        text.push_str(&format!(
+            " — archive overlay: {} file(s) packed ({} replace game files) in group(s) {}{}",
+            o.packed,
+            o.replaced,
+            o.groups.join(", "),
+            match o.skipped.len() {
+                0 => String::new(),
+                n => format!(", {n} skipped (see Log)"),
+            }
         ));
     }
     if link_plan.conflicts > 0 {
@@ -83,6 +107,22 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
         Event::new(Severity::Info, EventKind::Deploy, None, text.clone()),
     );
     Ok(text)
+}
+
+/// Builds Pylune's archive overlay when enabled mods need one.
+fn build_overlay(
+    ctx: &JobContext,
+    info: &crate::steam::SteamInfo,
+    registry: &crate::mod_engine::model::Registry,
+) -> Result<Option<OverlayPlan>> {
+    let input = overlay::collect::collect(&ctx.paths.staging, registry)?;
+    match input.is_empty() {
+        true => {
+            let _ = std::fs::remove_dir_all(&ctx.paths.overlay);
+            Ok(None)
+        }
+        false => overlay::build::build(info, &input, &ctx.paths.overlay).map(Some),
+    }
 }
 
 fn position(mods: &[ModEntry], name: &str) -> usize {

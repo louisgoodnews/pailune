@@ -10,9 +10,14 @@ Move a line between columns when its status changes.
     ChaCha20, LZ4, extraction), verified read-only on the installed game (34 groups,
     2 052 523 files, real XML decrypted); PAZ-only content flagged instead of linked;
     inactive archive folders reported.
-  - next: overlay writer for non-texture files (own group, PAPGT entry at index 0) and
-    **one manual in-game test** that confirms "first group wins" before building on it;
-    then JSON byte patches, RAW files, DDS + PATHC.
+  - done: overlay writer (`src/paz/write.rs`, `src/overlay/`): RAW and group-folder files are
+    packed into group `0100` with the shadowed file's flags; prebuilt mod groups re-registered
+    under free numbers; `0.papgt` rebuilt from the verified vanilla backup with overlays first;
+    deployed as symlinks; Unlink restores vanilla byte for byte. Tested end to end on a
+    fixture and dry-run against the installed game.
+  - **waiting: in-game test** with `local/Pylune Overlay Test` (title screen copyright line
+    turns red and large) to confirm "first group wins".
+  - next: DDS textures + PATHC, JSON byte patches, pack-level conflict reporting.
 
 ## Next
 

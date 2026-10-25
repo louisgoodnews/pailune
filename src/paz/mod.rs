@@ -7,6 +7,7 @@
 #![allow(dead_code)]
 
 pub mod crypto;
+pub mod encode;
 pub mod extract;
 pub mod hash;
 pub mod pamt;
@@ -14,6 +15,8 @@ pub mod papgt;
 pub mod paver;
 mod reader;
 pub mod status;
+pub mod vanilla;
+pub mod write;
 
 #[cfg(test)]
 mod machine;

@@ -7,5 +7,6 @@ pub mod conflicts;
 pub mod info;
 pub mod install;
 pub mod model;
+pub mod placement;
 pub mod plan;
 pub mod registry;

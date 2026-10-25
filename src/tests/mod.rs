@@ -3,8 +3,11 @@
 mod crash;
 mod deployment;
 mod jobs;
+mod overlay;
 mod staging;
 mod storage;
+
+pub(super) use jobs::wait_all as wait_all_jobs;
 
 use crate::config::Config;
 use crate::mod_engine::model::Registry;
@@ -42,9 +45,12 @@ pub(super) fn fixture() -> Fixture {
     write(&sources.join("Cool Mod/Cool Mod v1/CoolMod.asi"), "asi");
     write(&sources.join("Cool Mod/Cool Mod v1/readme.txt"), "docs");
     write(&sources.join("Cool Mod/Cool Mod v1/patch.json"), "{}");
-    // An overlay mod replacing the papgt and adding an archive folder.
-    write(&sources.join("Overlay/meta/0.papgt"), "modded-papgt");
-    write(&sources.join("Overlay/0037/0.paz"), "mod-archive");
+    // A mod replacing the ASI loader and adding a plugin folder.
+    write(&sources.join("Overlay/bin64/winmm.dll"), "modded-loader");
+    write(
+        &sources.join("Overlay/bin64/plugins/extra.asi"),
+        "mod-plugin",
+    );
     let mut config = Config::default();
     config.game.dir = game;
     Fixture {

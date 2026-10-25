@@ -31,11 +31,13 @@ fn same_contents(a: &Path, b: &Path) -> bool {
 }
 
 /// Decides how to free `target` for a new link.
-fn displacement(target: &Path, staging: &Path) -> Displace {
+fn displacement(target: &Path, owned: &[&Path]) -> Displace {
     let bak = bak_path(target);
     match (path_state(target), path_state(&bak)) {
         (PathState::Missing, _) => Displace::Nothing,
-        (PathState::Symlink(dest), bak_state) if dest.starts_with(staging) => {
+        (PathState::Symlink(dest), bak_state)
+            if owned.iter().any(|root| dest.starts_with(root)) =>
+        {
             Displace::ReplaceOrphan((bak_state != PathState::Missing).then_some(bak))
         }
         (_, PathState::Missing) => Displace::RenameToBak(bak),
@@ -65,11 +67,11 @@ fn missing_parents(target: &Path) -> Vec<PathBuf> {
 /// Performs a single link operation, journaling it before any change.
 fn apply_op(
     op: &LinkOp,
-    staging: &Path,
+    owned: &[&Path],
     manifest: &mut Manifest,
     journal: &mut dyn Journal,
 ) -> Result<Option<String>> {
-    let displace = displacement(&op.target, staging);
+    let displace = displacement(&op.target, owned);
     let backup = match &displace {
         Displace::Refuse(reason) => return Ok(Some(reason.clone())),
         Displace::Nothing => None,
@@ -103,10 +105,11 @@ fn apply_op(
 ///
 /// Each link is journaled before the filesystem changes, so an interruption
 /// at any point leaves a manifest that a later revert can undo exactly.
-/// Stale links into `staging` from interrupted runs are replaced.
+/// Stale links into an `owned` folder (staging, overlay) from interrupted
+/// runs are replaced.
 pub fn deploy(
     plan: &LinkPlan,
-    staging: &Path,
+    owned: &[&Path],
     manifest: &mut Manifest,
     journal: &mut dyn Journal,
 ) -> Result<Report> {
@@ -114,7 +117,7 @@ pub fn deploy(
     let warnings = plan
         .ops
         .iter()
-        .map(|op| apply_op(op, staging, manifest, journal))
+        .map(|op| apply_op(op, owned, manifest, journal))
         .collect::<Result<Vec<_>>>()?
         .into_iter()
         .flatten()

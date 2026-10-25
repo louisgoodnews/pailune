@@ -14,36 +14,27 @@ use std::path::Path;
 
 #[test]
 fn placement_rules() {
-    assert_eq!(plan::placement(Path::new("x/Mod.ASI")), Placement::Bin64);
-    assert_eq!(plan::placement(Path::new("0036/0.paz")), Placement::Mirror);
-    assert_eq!(
-        plan::placement(Path::new("bin64/foo.txt")),
-        Placement::Mirror
-    );
     use crate::mod_engine::plan::PazFormat;
-    let paz = |f| Placement::NeedsPaz(f);
+    let at = |p: &str| plan::placement(Path::new(p));
+    assert_eq!(at("x/Mod.ASI"), Placement::Bin64);
+    assert_eq!(at("bin64/foo.txt"), Placement::Mirror);
     assert_eq!(
-        plan::placement(Path::new("cfg/a.json")),
-        paz(PazFormat::JsonPatch)
+        at("meta/0.papgt"),
+        Placement::Skip,
+        "Pylune generates game metadata"
     );
+    assert_eq!(at("0036/0.paz"), Placement::PrebuiltGroup);
+    assert_eq!(at("0036/0.pamt"), Placement::PrebuiltGroup);
+    assert_eq!(at("Mod/files/0012/ui/a.xml"), Placement::Pack);
+    assert_eq!(at("0012/ui/a.xml"), Placement::Pack);
     assert_eq!(
-        plan::placement(Path::new("Mod/files/0012/ui/a.xml")),
-        paz(PazFormat::Raw)
+        at("Mod/files/0012/ui/a.dds"),
+        Placement::NeedsPaz(PazFormat::Texture)
     );
-    assert_eq!(
-        plan::placement(Path::new("0012/ui/a.xml")),
-        paz(PazFormat::Loose)
-    );
-    assert_eq!(plan::placement(Path::new("0036/0.paz")), Placement::Mirror);
-    assert_eq!(
-        plan::placement(Path::new("Mod/manifest.json")),
-        Placement::Skip
-    );
-    assert_eq!(
-        plan::placement(Path::new("tex/hair.dds")),
-        paz(PazFormat::Loose)
-    );
-    assert_eq!(plan::placement(Path::new("readme.md")), Placement::Skip);
+    assert_eq!(at("cfg/a.json"), Placement::NeedsPaz(PazFormat::JsonPatch));
+    assert_eq!(at("Mod/manifest.json"), Placement::Skip);
+    assert_eq!(at("tex/hair.dds"), Placement::NeedsPaz(PazFormat::Unplaced));
+    assert_eq!(at("readme.md"), Placement::Skip);
 }
 
 #[test]
@@ -73,12 +64,18 @@ fn full_cycle_is_non_destructive() {
 
     let reg = enabled_registry(&fx);
     let kinds: Vec<ModKind> = reg.mods.iter().map(|m| m.kind).collect();
-    assert_eq!(kinds, vec![ModKind::Mixed, ModKind::Overlay]);
+    assert_eq!(kinds, vec![ModKind::Mixed, ModKind::Asi]);
     assert_eq!(b, "Overlay");
 
     let link_plan = plan::build(&fx.config, &fx.staging, &reg).unwrap();
     let mut manifest = Manifest::default();
-    let report = deploy::deploy(&link_plan, &fx.staging, &mut manifest, &mut NullJournal).unwrap();
+    let report = deploy::deploy(
+        &link_plan,
+        &[fx.staging.as_path()],
+        &mut manifest,
+        &mut NullJournal,
+    )
+    .unwrap();
     assert_eq!(
         report.linked, 3,
         "the JSON patch needs PAZ support and is not linked"
@@ -90,12 +87,12 @@ fn full_cycle_is_non_destructive() {
     ));
     assert!(!game.join("bin64/mods/patch.json").exists());
     assert_eq!(
-        fs::read_to_string(game.join("meta/0.papgt")).unwrap(),
-        "modded-papgt"
+        fs::read_to_string(game.join("bin64/winmm.dll")).unwrap(),
+        "modded-loader"
     );
     assert_eq!(
-        fs::read_to_string(game.join("meta/0.papgt.bak")).unwrap(),
-        "vanilla-papgt"
+        fs::read_to_string(game.join("bin64/winmm.dll.bak")).unwrap(),
+        "loader"
     );
     assert!(!game.join("bin64/readme.txt").exists());
 
@@ -103,11 +100,11 @@ fn full_cycle_is_non_destructive() {
     let report = reset::clean_slate(&info, &mut manifest, &mut NullJournal).unwrap();
     assert!(report.warnings.is_empty(), "{:?}", report.warnings);
     assert_eq!(
-        fs::read_to_string(game.join("meta/0.papgt")).unwrap(),
-        "vanilla-papgt"
+        fs::read_to_string(game.join("bin64/winmm.dll")).unwrap(),
+        "loader"
     );
     assert!(!game.join("bin64/CoolMod.asi").exists());
-    assert!(!game.join("0037").exists(), "created dirs removed");
+    assert!(!game.join("bin64/plugins").exists(), "created dirs removed");
     assert!(!game.join("bin64/mods").exists());
     assert!(game.join("0036.bak/0.paz").is_file());
     assert_eq!(snapshot::meta_backup_state(&info), MetaBackup::Current);
@@ -116,12 +113,12 @@ fn full_cycle_is_non_destructive() {
         "vanilla-archive"
     );
     assert!(
-        fx.staging.join("Overlay/meta/0.papgt").is_file(),
+        fx.staging.join("Overlay/bin64/winmm.dll").is_file(),
         "staging untouched"
     );
     assert_eq!(
-        fs::read_to_string(fx.staging.join("Overlay/meta/0.papgt")).unwrap(),
-        "modded-papgt"
+        fs::read_to_string(fx.staging.join("Overlay/bin64/winmm.dll")).unwrap(),
+        "modded-loader"
     );
 
     assert_eq!(reset::restore_overlays(&info).unwrap(), 1);
@@ -135,8 +132,14 @@ fn undeploy_leaves_foreign_replacements_alone() {
     let reg = enabled_registry(&fx);
     let link_plan = plan::build(&fx.config, &fx.staging, &reg).unwrap();
     let mut manifest = Manifest::default();
-    deploy::deploy(&link_plan, &fx.staging, &mut manifest, &mut NullJournal).unwrap();
-    let papgt = fx.config.game.dir.join("meta/0.papgt");
+    deploy::deploy(
+        &link_plan,
+        &[fx.staging.as_path()],
+        &mut manifest,
+        &mut NullJournal,
+    )
+    .unwrap();
+    let papgt = fx.config.game.dir.join("bin64/winmm.dll");
     fs::remove_file(&papgt).unwrap();
     fs::write(&papgt, "steam-update").unwrap();
     let report = undeploy::undeploy(&mut manifest, &mut NullJournal).unwrap();

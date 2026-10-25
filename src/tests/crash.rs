@@ -91,7 +91,7 @@ fn interrupted_deploys_are_fully_revertible() {
         };
         let outcome = deploy::deploy(
             &link_plan,
-            &fx.staging,
+            &[fx.staging.as_path()],
             &mut Manifest::default(),
             &mut journal,
         );
@@ -99,7 +99,7 @@ fn interrupted_deploys_are_fully_revertible() {
         let mut manifest = db::links::load(&conn).unwrap();
         assert_eq!(
             outcome.is_err(),
-            // 3 links + 1 created directory (0037) are journaled.
+            // 3 links + 1 created directory (bin64/plugins) are journaled.
             budget < 4,
             "budget {budget} after_write {after_write}"
         );
@@ -122,16 +122,22 @@ fn interrupted_deploys_are_fully_revertible() {
 fn orphan_links_from_older_runs_are_adopted() {
     let fx = fixture();
     install::import(&fx.sources.join("Overlay"), &fx.staging).unwrap();
-    let papgt = fx.config.game.dir.join("meta/0.papgt");
+    let papgt = fx.config.game.dir.join("bin64/winmm.dll");
     // An untracked earlier deploy: original in .bak, our link in place.
-    fs::rename(&papgt, papgt.with_file_name("0.papgt.bak")).unwrap();
-    std::os::unix::fs::symlink(fx.staging.join("Overlay/meta/0.papgt"), &papgt).unwrap();
+    fs::rename(&papgt, papgt.with_file_name("winmm.dll.bak")).unwrap();
+    std::os::unix::fs::symlink(fx.staging.join("Overlay/bin64/winmm.dll"), &papgt).unwrap();
     write(&fx.sources.join("unused"), "");
     let link_plan = plan::build(&fx.config, &fx.staging, &enabled_registry(&fx)).unwrap();
     let mut manifest = Manifest::default();
     let mut journal = crate::symlink::journal::NullJournal;
-    let report = deploy::deploy(&link_plan, &fx.staging, &mut manifest, &mut journal).unwrap();
+    let report = deploy::deploy(
+        &link_plan,
+        &[fx.staging.as_path()],
+        &mut manifest,
+        &mut journal,
+    )
+    .unwrap();
     assert!(report.warnings.is_empty(), "{:?}", report.warnings);
     undeploy::undeploy(&mut manifest, &mut journal).unwrap();
-    assert_eq!(fs::read_to_string(&papgt).unwrap(), "vanilla-papgt");
+    assert_eq!(fs::read_to_string(&papgt).unwrap(), "loader");
 }

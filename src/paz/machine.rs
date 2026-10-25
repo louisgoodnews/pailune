@@ -62,3 +62,25 @@ fn parses_the_installed_archives() {
         "decrypted XML"
     );
 }
+
+/// Extracts `PYLUNE_EXTRACT=<vpath>` into `PYLUNE_OUT=<dir>` for inspection.
+#[test]
+#[ignore = "reads the local game installation"]
+fn extract_for_inspection() {
+    let (Ok(vpath), Ok(out)) = (std::env::var("PYLUNE_EXTRACT"), std::env::var("PYLUNE_OUT"))
+    else {
+        return;
+    };
+    let game = game_dir();
+    let table = papgt::parse(&fs::read(game.join("meta/0.papgt")).unwrap()).unwrap();
+    let found = table.groups.iter().find_map(|g| {
+        let dir = game.join(&g.name);
+        let index = pamt::parse(&fs::read(dir.join("0.pamt")).ok()?).ok()?;
+        index.files.get(&vpath).map(|r| (dir.clone(), *r))
+    });
+    let (dir, record) = found.expect("file exists");
+    let data = extract::extract(&dir, &vpath, &record).unwrap();
+    let target = PathBuf::from(out).join(vpath.rsplit('/').next().unwrap());
+    fs::write(&target, data).unwrap();
+    println!("wrote {}", target.display());
+}

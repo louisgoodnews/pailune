@@ -70,7 +70,7 @@ fn job_pool_runs_shared_jobs_in_parallel_and_exclusive_ones_alone() {
 }
 
 /// Waits until every listed job finished, returning their results in order.
-fn wait_all(
+pub(crate) fn wait_all(
     pool: &crate::jobs::pool::JobPool,
     ids: &[u64],
 ) -> Vec<Result<crate::jobs::JobOutput, String>> {

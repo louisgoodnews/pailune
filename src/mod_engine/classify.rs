@@ -14,10 +14,12 @@ pub fn classify(placements: impl IntoIterator<Item = Placement>) -> ModKind {
 /// The kind a single placement contributes, if any.
 fn kind_of(place: Placement) -> Option<ModKind> {
     match place {
-        Placement::Mirror => Some(ModKind::Overlay),
-        Placement::Bin64 => Some(ModKind::Asi),
+        Placement::Mirror | Placement::Bin64 => Some(ModKind::Asi),
+        Placement::PrebuiltGroup => Some(ModKind::Overlay),
+        Placement::Pack | Placement::NeedsPaz(PazFormat::Texture | PazFormat::Unplaced) => {
+            Some(ModKind::Raw)
+        }
         Placement::NeedsPaz(PazFormat::JsonPatch) => Some(ModKind::Json),
-        Placement::NeedsPaz(PazFormat::Raw | PazFormat::Loose) => Some(ModKind::Raw),
         Placement::Skip => None,
     }
 }
@@ -44,7 +46,7 @@ mod tests {
             ModKind::Json
         );
         assert_eq!(
-            classify([Placement::Mirror, Placement::NeedsPaz(PazFormat::Raw)]),
+            classify([Placement::PrebuiltGroup, Placement::Pack]),
             ModKind::Mixed
         );
     }

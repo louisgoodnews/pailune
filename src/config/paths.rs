@@ -16,6 +16,8 @@ pub struct DataPaths {
     pub staging: PathBuf,
     /// Temporary location for downloads.
     pub downloads: PathBuf,
+    /// Pylune's generated archive group and `0.papgt`, linked into the game.
+    pub overlay: PathBuf,
     /// Rolling application log files.
     pub logs: PathBuf,
     /// One log file per mod.
@@ -36,6 +38,7 @@ impl DataPaths {
             database: data.join("pylune.sqlite3"),
             staging: data.join("staging"),
             downloads: data.join("downloads"),
+            overlay: data.join("overlay"),
             logs: data.join("logs"),
             mod_logs: data.join("logs").join("mods"),
             nexus_key: data.join("nexus_api_key"),

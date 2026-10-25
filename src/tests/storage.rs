@@ -17,7 +17,7 @@ fn database_round_trips_state() {
     let mut conn = db::open(&fx.staging.with_file_name("test.sqlite3")).unwrap();
     let staging = fx.staging.clone();
     let reg = db::mods::update(&mut conn, |r| registry::sync(r, &staging, 5)).unwrap();
-    assert_eq!(reg.mods[0].kind, ModKind::Overlay);
+    assert_eq!(reg.mods[0].kind, ModKind::Asi);
     let origin = NexusRef {
         mod_id: 1,
         file_id: 2,

@@ -77,14 +77,22 @@ If the active profile has no options, `[launch] default_options` is used.
 
 | Mod contains                                   | Result                                   |
 |------------------------------------------------|------------------------------------------|
-| `bin64/…`, `meta/…`                            | linked at the same path                  |
-| prebuilt archive groups `NNNN/*.paz`, `*.pamt` | linked at the same path                  |
+| `bin64/…`                                      | linked at the same path                  |
 | `*.asi`, `*.dll`, `*.ini` elsewhere            | linked into `bin64/`                     |
-| JSON patches, RAW `files/NNNN/…`, loose game files (`.xml`, `.dds`, …) | **needs PAZ support** — not deployed yet, flagged in the UI |
+| RAW `files/NNNN/<path>` or `NNNN/<path>` game files | packed into **Pylune's archive group** (encrypted/compressed like the game file they replace) |
+| prebuilt groups `NNNN/0.pamt` + `*.paz`        | registered under a free group number     |
+| `meta/*` shipped by a mod                      | ignored — Pylune generates `0.papgt` from your vanilla backup |
+| textures (`.dds`), JSON patches, unplaced game files | not supported yet — flagged in the UI |
 | readmes, images, `manifest.json`               | not deployed (shown in the details panel) |
 
-The game reads content only from its PAZ archives, so JSON/RAW/loose mods need Pylune's
-upcoming PAZ pipeline ([docs/paz-format.md](docs/paz-format.md)).
+### The archive overlay
+
+The game only loads content from PAZ archives listed in `meta/0.papgt`. On *Apply*, Pylune
+builds its own archive group (`0100`) in `~/.local/share/pylune/overlay/`, writes a new
+`0.papgt` that lists it **first** (from the vanilla backup, after checking it against every
+installed archive index), and links both into the game folder. Vanilla archives are never
+modified; *Unlink all* restores the original `0.papgt` byte for byte. Format details:
+[docs/paz-format.md](docs/paz-format.md).
 
 ASI mods need a loader (`winmm.dll`, `version.dll` or `dinput8.dll`) in `bin64/` plus
 `WINEDLLOVERRIDES="<loader>=n,b"` in Steam's launch options or a profile's launch options.

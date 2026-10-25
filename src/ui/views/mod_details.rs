@@ -3,7 +3,6 @@
 use super::clicked;
 use crate::mod_engine::conflicts::{Contest, ModConflicts};
 use crate::mod_engine::model::{ModDetails, ModEntry, MoveTo};
-use crate::mod_engine::plan::Placement;
 use crate::ui::theme::{self, ACCENT, DANGER, MUTED, SUCCESS, WARNING};
 use crate::ui::{Action, Confirm, ModAction, PyluneApp};
 use eframe::egui::{self, RichText};
@@ -177,30 +176,6 @@ fn conflicts(ui: &mut egui::Ui, report: Option<&ModConflicts>, enabled: bool, an
     }
 }
 
-fn files(ui: &mut egui::Ui, details: &ModDetails) -> Vec<Action> {
-    let readmes = clicked(details.readmes.iter().map(|rel| {
-        let open = ui.button(format!("📄 {}", rel.display())).clicked();
-        (open, Action::Mod(ModAction::ShowReadme(rel.clone())))
-    }));
-    egui::CollapsingHeader::new(format!("All files ({})", details.files.len())).show(ui, |ui| {
-        details.files.iter().for_each(|f| {
-            let color = match f.placement {
-                Placement::Mirror | Placement::Bin64 => ui.visuals().text_color(),
-                Placement::NeedsPaz(_) => WARNING,
-                Placement::Skip => MUTED,
-            };
-            ui.label(
-                RichText::new(format!("{}  ({} B)", f.rel.display(), f.bytes))
-                    .small()
-                    .monospace()
-                    .color(color),
-            )
-            .on_hover_text(f.placement.note());
-        });
-    });
-    readmes
-}
-
 /// Renders the details panel and returns triggered actions.
 pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
     let selected = app.mods.selected.as_ref();
@@ -241,7 +216,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
                         .color(MUTED),
                 );
             }
-            actions.extend(files(ui, details));
+            actions.extend(super::mod_files::show(ui, details));
             actions
         })
         .inner
