@@ -5,6 +5,7 @@ use super::{Encryption, extract, pamt, papgt, paver};
 use std::fs;
 use std::path::PathBuf;
 
+/// The installed game, found in the Steam libraries (tests on a real install only).
 fn game_dir() -> PathBuf {
     crate::steam::library::find_game(crate::config::CRIMSON_DESERT_APP_ID).expect("game installed")
 }

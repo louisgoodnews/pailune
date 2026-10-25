@@ -19,6 +19,7 @@ pub struct TrashItem {
     pub variant: Option<String>,
 }
 
+/// Metadata stored with a deleted mod (`entry.json`): name, time, origin, variant.
 fn metadata(entry: &ModEntry, deleted_at: i64) -> Value {
     json!({
         "name": entry.name,
@@ -29,6 +30,7 @@ fn metadata(entry: &ModEntry, deleted_at: i64) -> Value {
     })
 }
 
+/// Reads one trash entry, if it is complete.
 fn read_item(dir: &Path) -> Option<TrashItem> {
     let meta: Value =
         serde_json::from_str(&fs::read_to_string(dir.join("entry.json")).ok()?).ok()?;

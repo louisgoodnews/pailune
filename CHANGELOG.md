@@ -31,6 +31,10 @@
 - New options: confirm deletes, update check at start, enable new mods, trash size, automatic
   backups and how many to keep, days of logs kept.
 
+### Interface
+- Reworked against documented UX principles: Clean slate in a *More* menu, dialogs name their
+  action, larger text and checkboxes, consistent wording, contrast-checked colours.
+
 ### Packaging
 - AppImage build script and release CI job; `nxm://` links point at the AppImage file.
 

@@ -7,6 +7,7 @@ use eframe::egui::{self, RichText};
 
 const KEY_URL: &str = "https://www.nexusmods.com/users/myaccount?tab=api";
 
+/// Keeps the clicked buttons' actions, wrapped as Nexus intents.
 fn pick(pairs: impl IntoIterator<Item = (bool, NexusAction)>) -> Vec<Action> {
     pairs
         .into_iter()
@@ -15,6 +16,7 @@ fn pick(pairs: impl IntoIterator<Item = (bool, NexusAction)>) -> Vec<Action> {
         .collect()
 }
 
+/// API key, account state and the nxm:// handler.
 fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     let (text, color) = match &app.nexus.user {
         Some(user) if user.is_premium => (format!("{} · PREMIUM", user.name), success()),
@@ -49,10 +51,22 @@ fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         })
         .inner;
     match app.nexus.handler_registered {
-        true => drop(ui.label(RichText::new("✔ Pylune handles nxm:// links").color(success()))),
-        false => {
-            drop(ui.label(RichText::new("nxm:// links currently go to another app").color(muted())))
-        }
+        true => drop(
+            ui.label(
+                RichText::new(
+                    "✔ \"Mod manager download\" buttons on nexusmods.com send files to Pylune",
+                )
+                .color(success()),
+            ),
+        ),
+        false => drop(
+            ui.label(
+                RichText::new(
+                    "\"Mod manager download\" buttons on nexusmods.com do not reach Pylune yet",
+                )
+                .color(muted()),
+            ),
+        ),
     }
     let register = !app.nexus.handler_registered
         && ui
@@ -68,6 +82,7 @@ fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     ])
 }
 
+/// Mod number or address field with Fetch, Open and Check updates.
 fn lookup(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     ui.horizontal(|ui| {
         ui.add(
@@ -86,6 +101,7 @@ fn lookup(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     .inner
 }
 
+/// One downloadable file of the fetched mod.
 fn file_row(ui: &mut egui::Ui, file: &NexusFile, can_download: bool) -> Option<Action> {
     ui.label(RichText::new(&file.name).strong());
     ui.label(&file.version);
@@ -99,6 +115,7 @@ fn file_row(ui: &mut egui::Ui, file: &NexusFile, can_download: bool) -> Option<A
     clicked.then_some(Action::Nexus(NexusAction::Download(file.file_id)))
 }
 
+/// The fetched mod and its files.
 fn details(
     ui: &mut egui::Ui,
     info: &NexusMod,
@@ -149,6 +166,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     ui.separator();
     actions.extend(super::collections::show(ui, app));
     ui.separator();
+    ui.heading("Find a mod");
     actions.extend(lookup(ui, app));
     ui.add_space(6.0);
     let browsing = app.nexus.browsing.clone();
@@ -156,7 +174,10 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         .auto_shrink([false, false])
         .show(ui, |ui| match &browsing {
             Some((info, files)) => actions.extend(details(ui, info, files, app)),
-            None => drop(ui.label(RichText::new("Fetch a mod to see its files.").color(muted()))),
+            None => drop(ui.label(
+                RichText::new("Enter a mod's number or paste its address from nexusmods.com, then Fetch to see its files.")
+                    .color(muted()),
+            )),
         });
     actions
 }

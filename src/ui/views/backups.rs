@@ -6,6 +6,7 @@ use crate::ui::theme::muted;
 use crate::ui::{Action, BackupAction, Confirm, PyluneApp};
 use eframe::egui::{self, RichText};
 
+/// One backup: time, contents and its buttons.
 fn row(ui: &mut egui::Ui, b: &BackupInfo) -> Vec<Action> {
     let kind = match b.kind {
         BackupKind::Full => "full",

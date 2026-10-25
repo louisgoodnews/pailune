@@ -118,7 +118,16 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     )]));
     ui.add_space(8.0);
     if app.profiles.book.profiles.is_empty() {
-        ui.label(RichText::new("No profiles yet.").color(muted()));
+        // Teach the next step (R-19).
+        ui.label(RichText::new("No profiles yet").strong());
+        ui.label(
+            RichText::new(
+                "A profile remembers which mods are enabled and their order. Type a name above \
+                 and press \"Save current as\" to keep your current setup; load it later to switch \
+                 back.",
+            )
+            .color(muted()),
+        );
         return actions;
     }
     if let Some(active) = &app.profiles.book.active {

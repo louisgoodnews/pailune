@@ -5,6 +5,7 @@ use crate::ui::theme::{self, accent, muted};
 use crate::ui::{Action, Incoming, NexusAction};
 use eframe::egui::{self, RichText};
 
+/// Text for an incoming download, with names once they are known.
 fn describe(incoming: &Incoming) -> (String, String) {
     let link = &incoming.link;
     match &incoming.summary {

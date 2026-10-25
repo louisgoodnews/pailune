@@ -6,6 +6,7 @@ use crate::ui::theme::{self, accent, muted, success, warning};
 use crate::ui::{Action, Confirm, NexusAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
+/// Wraps a Nexus intent.
 fn nexus(action: NexusAction) -> Action {
     Action::Nexus(action)
 }

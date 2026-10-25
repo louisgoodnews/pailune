@@ -22,6 +22,7 @@ pub fn own_executable() -> Result<PathBuf> {
     pick_executable(std::env::var_os("APPIMAGE"), std::env::current_exe())
 }
 
+/// Prefers an existing AppImage file over the running binary.
 fn pick_executable(
     appimage: Option<std::ffi::OsString>,
     current: std::io::Result<PathBuf>,

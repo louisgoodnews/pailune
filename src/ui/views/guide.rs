@@ -37,6 +37,7 @@ fn step_actions(ui: &mut egui::Ui, step: Step) -> Vec<Action> {
     .inner
 }
 
+/// One step: its state mark, title, and for the current step the explanation and buttons.
 fn step_row(
     ui: &mut egui::Ui,
     facts: &Facts,
@@ -65,6 +66,7 @@ fn step_row(
     }
 }
 
+/// Concepts, progress and the steps; a finish state when all are done.
 fn getting_started(ui: &mut egui::Ui, facts: &Facts) -> Vec<Action> {
     ui.label(RichText::new("Three things to know").strong());
     CONCEPTS
@@ -96,6 +98,7 @@ fn getting_started(ui: &mut egui::Ui, facts: &Facts) -> Vec<Action> {
     actions
 }
 
+/// Search box and the matching topics (a single match opens by itself).
 fn topic_list(ui: &mut egui::Ui, query: &mut String) {
     ui.add(
         egui::TextEdit::singleline(query)

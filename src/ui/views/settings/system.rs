@@ -4,6 +4,7 @@ use super::setting;
 use crate::ui::{Action, SettingsDraft, Tab};
 use eframe::egui;
 
+/// A single-line text field of fixed width.
 fn text(ui: &mut egui::Ui, value: &mut String, hint: &str) {
     ui.add(
         egui::TextEdit::singleline(value)

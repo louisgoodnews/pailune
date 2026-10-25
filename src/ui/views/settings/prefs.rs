@@ -9,6 +9,7 @@ use eframe::egui;
 /// not move under the pointer while the interface resizes).
 const SCALES: [f32; 8] = [0.8, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0];
 
+/// A scale factor as a percentage.
 fn percent(scale: f32) -> String {
     format!("{:.0} %", scale * 100.0)
 }

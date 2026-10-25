@@ -16,6 +16,7 @@ const TABS: [(Tab, &str); 5] = [
     (Tab::Settings, "Settings"),
 ];
 
+/// Label and colour of the game indicator.
 fn game_badge(status: GameStatus, process: GameProcess) -> (&'static str, Color32) {
     match (status, process) {
         (_, GameProcess::Running) => ("GAME RUNNING", accent()),
@@ -25,6 +26,7 @@ fn game_badge(status: GameStatus, process: GameProcess) -> (&'static str, Color3
     }
 }
 
+/// Label and colour of the ASI loader indicator.
 fn loader_badge(loader: AsiLoader) -> (&'static str, Color32) {
     match loader {
         AsiLoader::Winmm => ("ASI LOADER: winmm.dll", success()),
@@ -53,7 +55,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             let ready = app.process == GameProcess::Stopped && app.game == GameStatus::Ready;
             let play = ui
                 .add_enabled_ui(ready && app.launch_after.is_none(), |ui| {
-                    theme::filled_button(ui, "▶  PLAY", success().linear_multiply(0.85))
+                    theme::filled_button(ui, "▶  PLAY", success())
                 })
                 .inner
                 .on_hover_text("Launch with the active profile's options (applies pending changes first if enabled)");
@@ -88,30 +90,34 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             };
             let free = blocked.is_none();
             let why = blocked.unwrap_or_default();
+            // Rare and destructive, so out of reach of slips (R-06).
             let reset = ui
                 .add_enabled_ui(free, |ui| {
-                    theme::filled_button(ui, "⚠ CLEAN SLATE", danger())
+                    ui.menu_button("More ⏷", |ui| {
+                        ui.button(RichText::new("⚠ Clean slate…").color(danger()))
+                            .on_hover_text(
+                                "Put the game back to its original state and disable every mod",
+                            )
+                            .clicked()
+                    })
                 })
-                .inner
-                .on_hover_text(
-                    "Remove all links, restore .bak originals and set foreign overlays aside",
-                )
-                .on_disabled_hover_text(why);
+                .inner;
+            let reset_clicked = reset.inner.unwrap_or(false);
+            reset.response.on_disabled_hover_text(why);
             let unlink = ui
                 .add_enabled(free, egui::Button::new("Unlink all"))
                 .on_disabled_hover_text(why);
-            let fill = if app.dirty {
-                accent()
-            } else {
-                accent().linear_multiply(0.45)
-            };
+            // The primary action only while changes are pending (R-01, R-10).
             let apply = ui
-                .add_enabled_ui(free, |ui| theme::filled_button(ui, "✔ Apply", fill))
+                .add_enabled_ui(free, |ui| match app.dirty {
+                    true => theme::filled_button(ui, "✔ Apply", accent()),
+                    false => ui.button("✔ Apply"),
+                })
                 .inner
-                .on_hover_text("Symlink all enabled mods into the game")
+                .on_hover_text("Link all enabled mods into the game (Ctrl+Enter)")
                 .on_disabled_hover_text(why);
             actions.extend(clicked([
-                (reset.clicked(), Action::Ask(Confirm::CleanSlate)),
+                (reset_clicked, Action::Ask(Confirm::CleanSlate)),
                 (unlink.clicked(), Action::Deploy(DeployAction::UnlinkAll)),
                 (apply.clicked(), Action::Deploy(DeployAction::Apply)),
             ]));

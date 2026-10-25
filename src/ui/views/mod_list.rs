@@ -71,6 +71,7 @@ fn row(ui: &mut egui::Ui, index: usize, entry: &ModEntry, app: &PyluneApp) -> Ve
     ])
 }
 
+/// Import, rescan and bulk enable buttons.
 fn toolbar(ui: &mut egui::Ui) -> Vec<Action> {
     ui.horizontal(|ui| {
         clicked([
@@ -81,13 +82,15 @@ fn toolbar(ui: &mut egui::Ui) -> Vec<Action> {
             (
                 ui.button("📦 Import archives / files…")
                     .on_hover_text(
-                        ".zip .7z .rar .asi .dll .json — several at once run in parallel",
+                        ".zip .7z .rar .asi .dll .json — several at once run in parallel (Ctrl+I)",
                     )
                     .clicked(),
                 Action::Mod(ModAction::ImportFiles),
             ),
             (
-                ui.button("⟳ Rescan").clicked(),
+                ui.button("⟳ Rescan")
+                    .on_hover_text("Look for changes in the staging folder (F5)")
+                    .clicked(),
                 Action::Mod(ModAction::Rescan),
             ),
             (

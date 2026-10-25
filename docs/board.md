@@ -42,7 +42,6 @@ Move a line between columns when its status changes.
 
 ## Backlog (large)
 
-- [ ] B-04 Evidence-based UI/UX rework — *L*
 - [ ] B-05 Full documentation: vision, architecture, code, extension guides — *L*
 - [ ] A-01 (rest) XML/HTML patches, new texture ids, table inserts, field-name JSON — *L*
 - [ ] A-28 (rest) FOMOD-style installer scripts — *L*
@@ -53,6 +52,14 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-04 UI/UX rework against `docs/ux-principles.md` (every main screen rendered and reviewed
+  in both themes): Clean slate moved into a *More* menu (R-06); confirmation buttons name their
+  action and texts are plain language (R-05, R-08); Apply is the filled primary only while changes
+  are pending (R-10); text no smaller than 11.5 pt, larger checkboxes (R-13, R-25); one vocabulary
+  (Enable/Disable); quieter, separated Delete; teaching empty states for profiles and Nexus;
+  shortcuts in tooltips; button labels pick black or white for contrast; contrast test for both
+  palettes (it caught light-theme badge colours that had not been applied); rustdoc on every UI
+  helper (rest of A-32).
 - [x] A-29 AppImage: `packaging/appimage.sh` assembles an AppDir (binary, desktop entry, SVG and
   256 px icons, AppStream metadata) and packs it with `appimagetool`; CI builds it on Ubuntu 22.04
   for tags `v*` (glibc ≥ 2.35; a local CachyOS build needs glibc 2.44) with a pinned, checksummed

@@ -53,6 +53,7 @@ pub(super) fn setting(ui: &mut egui::Ui, title: &str, help: &str, add: impl FnOn
     ui.label(RichText::new(help).color(muted()));
 }
 
+/// The category list on the left.
 fn category_list(ui: &mut egui::Ui, draft: &mut SettingsDraft) {
     ui.vertical(|ui| {
         ui.set_width(170.0);
@@ -81,6 +82,7 @@ fn save_bar(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     .inner
 }
 
+/// Heading, options and reset button of the selected category.
 fn page(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     let page = app.draft.page;
     let (_, title, purpose) = PAGES

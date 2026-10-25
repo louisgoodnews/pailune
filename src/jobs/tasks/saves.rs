@@ -21,6 +21,7 @@ pub fn save_folder(ctx: &JobContext) -> Result<PathBuf> {
         })
 }
 
+/// Records a save-backup event in the journal (best effort).
 fn journal(ctx: &JobContext, text: String) {
     if let Ok(conn) = ctx.db() {
         ctx.journal(

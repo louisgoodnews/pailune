@@ -4,14 +4,27 @@ use crate::ui::theme::{self, danger};
 use crate::ui::{Action, Confirm, DeployAction, ModAction, ProfileAction};
 use eframe::egui::{self, RichText};
 
-/// Title, explanation and the action to run on confirmation.
-fn describe(confirm: &Confirm) -> (String, String, Action) {
+/// Title, explanation, the action to run on confirmation and the button
+/// label naming it (R-05: never a bare "OK").
+fn describe(confirm: &Confirm) -> (String, String, Action, &'static str) {
+    let (title, body, action) = details(confirm);
+    let verb = match confirm {
+        Confirm::CleanSlate => "Clean slate",
+        Confirm::DeleteMod(_) | Confirm::DeleteProfile(_) => "Delete",
+        Confirm::UninstallCollection(_) => "Uninstall",
+        Confirm::RestoreBackup(_) | Confirm::RestoreSaves(_) => "Restore",
+    };
+    (title, body, action, verb)
+}
+
+/// Title, plain-language consequence and action of each confirmation.
+fn details(confirm: &Confirm) -> (String, String, Action) {
     match confirm {
         Confirm::CleanSlate => (
-            "Revert to a clean slate?".into(),
-            "All Pylune symlinks are removed, shadowed originals and meta/ files are restored \
-             from .bak, foreign overlay folders above 0035 are renamed to .bak and every mod is \
-             disabled. Staged mods are kept."
+            "Put the game back to its original state?".into(),
+            "Every mod is unlinked and disabled, the game's original files are restored, and \
+             archive folders added by other tools are set aside (you can restore them in \
+             Settings › Diagnostics). Your mods stay in Pylune."
                 .into(),
             Action::Deploy(DeployAction::CleanSlate),
         ),
@@ -62,7 +75,7 @@ pub fn show(ctx: &egui::Context, pending: Option<&Confirm>) -> Vec<Action> {
     let Some(confirm) = pending else {
         return Vec::new();
     };
-    let (title, body, action) = describe(confirm);
+    let (title, body, action, verb) = describe(confirm);
     let response = egui::Modal::new(egui::Id::unique("pylune_confirm")).show(ctx, |ui| {
         ui.set_max_width(380.0);
         ui.heading(title);
@@ -70,7 +83,7 @@ pub fn show(ctx: &egui::Context, pending: Option<&Confirm>) -> Vec<Action> {
         ui.label(RichText::new(body));
         ui.add_space(10.0);
         ui.horizontal(|ui| {
-            let yes = theme::filled_button(ui, "Confirm", danger()).clicked();
+            let yes = theme::filled_button(ui, verb, danger()).clicked();
             let no = ui.button("Cancel").clicked();
             match (yes, no) {
                 (true, _) => Some(action.clone()),

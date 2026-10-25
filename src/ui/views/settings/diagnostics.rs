@@ -9,6 +9,7 @@ use crate::ui::views::clicked;
 use crate::ui::{Action, DeployAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
+/// Label and colour of the metadata backup state.
 fn meta_badge(meta: MetaBackup) -> (&'static str, egui::Color32) {
     match meta {
         MetaBackup::Current => ("META BACKUP OK", success()),
@@ -17,6 +18,7 @@ fn meta_badge(meta: MetaBackup) -> (&'static str, egui::Color32) {
     }
 }
 
+/// Game version, registered pack groups and inactive archive folders.
 fn archive_section(ui: &mut egui::Ui, app: &PyluneApp) {
     ui.heading("Game archives");
     let status = &app.archives;
@@ -47,6 +49,7 @@ fn archive_section(ui: &mut egui::Ui, app: &PyluneApp) {
     }
 }
 
+/// Archives, Proton prefix and the launch options ASI mods need.
 fn proton_section(ui: &mut egui::Ui, app: &PyluneApp) {
     archive_section(ui, app);
     ui.separator();
@@ -88,6 +91,7 @@ fn proton_section(ui: &mut egui::Ui, app: &PyluneApp) {
     }
 }
 
+/// Metadata backup state and set-aside archive folders.
 fn backup_section(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
     ui.heading("Game metadata backup");
     let (text, color) = meta_badge(app.backup.meta);

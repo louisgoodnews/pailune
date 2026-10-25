@@ -142,6 +142,32 @@ when left alone and findable when needed.
 
 ---
 
+## Where the rules live in Pylune
+
+| Rules | Implementation |
+|-------|----------------|
+| R-01, R-10 | "Changes not applied" banner; Apply is the filled primary button only while changes are pending (`ui/views/header.rs`, `banner.rs`). |
+| R-02, R-03 | Jobs panel with progress; status line states outcomes (`ui/views/jobs.rs`, `status_bar.rs`). |
+| R-04, R-05 | Deletes go to the trash with Undo and skip the dialog unless *Ask before deleting* is on; confirmation buttons name the action (`ui/actions/mod.rs`, `ui/views/confirm.rs`). |
+| R-06 | Clean slate sits in the *More* menu, away from Apply; Delete is set apart in the details panel. |
+| R-07, R-28, R-29 | Settings use toggles, choices and bounded number fields, one-line help each, Save/Discard and per-page reset; appearance previews live (`ui/views/settings/`). |
+| R-08 | Plain-language dialogs and errors (e.g. Clean slate, Nexus handler). |
+| R-09, R-12 | Details panel, settings categories, Diagnostics page for technical state. |
+| R-11 | One vocabulary: Enable/Disable, Apply/Unlink; glossary in the guide. |
+| R-13 | Checkboxes enlarged (18 pt); primary buttons 30 pt high. |
+| R-14 | Shortcuts listed in tooltips and the guide (F1, Ctrl+F, Ctrl+I, Ctrl+Enter, F5, Delete). |
+| R-16 … R-20 | Guide window: three ideas, five real steps with progress and a head start, finish state, searchable topics; teaching empty states (`ui/guide/`, `ui/views/guide.rs`, `mod_list.rs`, `profiles.rs`). |
+| R-21, R-22 | Safe defaults in `config/prefs.rs`; "Nothing in the game folder changes until you press Apply" where users start. |
+| R-24 | Light and dark palettes; a unit test checks every text colour and button label for ≥ 4.5:1 (`ui/theme.rs`). |
+| R-25, R-26 | UI size 80–200 %, compact/comfortable density, reduce motion; no text below 11.5 pt. |
+| R-27 | egui keyboard focus (Tab) with visible focus rings. |
+
+Checks that keep the rules true: `ui::theme` contrast test, `tests::glyphs` (every UI symbol has a
+glyph in the bundled fonts), and `tests::screens` (renders every main screen in both themes for
+review: `PYLUNE_SHOTS=<dir> cargo test screens -- --ignored`).
+
+---
+
 ## References
 
 - Anderson, B. B., Kirwan, C. B., Jenkins, J. L., Eargle, D., Howard, S., & Vance, A. (2015).

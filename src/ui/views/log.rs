@@ -6,6 +6,7 @@ use crate::ui::theme::{danger, muted, warning};
 use crate::ui::{Action, PyluneApp};
 use eframe::egui::{self, RichText};
 
+/// Colour of a journal severity.
 fn severity_color(ui: &egui::Ui, severity: Severity) -> egui::Color32 {
     match severity {
         Severity::Info => ui.visuals().text_color(),
@@ -35,6 +36,7 @@ pub fn timestamp(ts: i64) -> String {
     )
 }
 
+/// One journal event.
 fn row(ui: &mut egui::Ui, event: &Event) {
     ui.label(
         RichText::new(timestamp(event.ts))

@@ -62,5 +62,20 @@ fn screens() {
             shoot(&mut h, &format!("{tag}-settings-appearance"));
             h.state_mut().draft.page = SettingsPage::Backups;
             shoot(&mut h, &format!("{tag}-settings-backups"));
+            let pages = [
+                ("details", Tab::Mods),
+                ("profiles", Tab::Profiles),
+                ("nexus", Tab::Nexus),
+                ("log", Tab::Log),
+            ];
+            pages.into_iter().for_each(|(name, tab)| {
+                let app = h.state_mut();
+                app.dispatch(Action::SwitchTab(tab));
+                app.dispatch(Action::Mod(ModAction::Select("Cool Mod".into())));
+                shoot(&mut h, &format!("{tag}-{name}"));
+            });
+            h.state_mut()
+                .dispatch(Action::Ask(crate::ui::Confirm::CleanSlate));
+            shoot(&mut h, &format!("{tag}-confirm"));
         });
 }

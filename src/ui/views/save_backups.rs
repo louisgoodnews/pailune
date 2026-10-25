@@ -7,6 +7,7 @@ use crate::ui::theme::muted;
 use crate::ui::{Action, BackupAction, Confirm, PyluneApp};
 use eframe::egui::{self, RichText};
 
+/// One save backup: time, contents and its buttons.
 fn row(ui: &mut egui::Ui, b: &SaveBackup) -> Vec<Action> {
     ui.label(super::log::timestamp(b.created_at));
     ui.label(

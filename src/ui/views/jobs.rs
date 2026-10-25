@@ -4,6 +4,7 @@ use crate::ui::theme::{danger, muted, success};
 use crate::ui::{JobState, JobView, PyluneApp};
 use eframe::egui::{self, RichText};
 
+/// One job: state, title and progress.
 fn row(ui: &mut egui::Ui, job: &JobView) {
     ui.horizontal(|ui| {
         match job.state {
@@ -30,6 +31,7 @@ fn row(ui: &mut egui::Ui, job: &JobView) {
     });
 }
 
+/// Bytes as MiB with one decimal.
 fn mib(bytes: u64) -> f32 {
     bytes as f32 / 1_048_576.0
 }

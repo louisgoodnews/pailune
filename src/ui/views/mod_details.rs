@@ -7,16 +7,13 @@ use crate::ui::theme::{self, accent, danger, muted, success, warning};
 use crate::ui::{Action, Confirm, ModAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
+/// Enable, order, update, open and delete buttons.
 fn actions_row(ui: &mut egui::Ui, entry: &ModEntry) -> Vec<Action> {
     let name = entry.name.clone();
     let mod_action = |a: ModAction| Action::Mod(a);
     let mut out = ui
         .horizontal_wrapped(|ui| {
-            let toggle_text = if entry.enabled {
-                "Deactivate"
-            } else {
-                "Activate"
-            };
+            let toggle_text = if entry.enabled { "Disable" } else { "Enable" };
             clicked([
                 (
                     ui.button(toggle_text).clicked(),
@@ -56,8 +53,14 @@ fn actions_row(ui: &mut egui::Ui, entry: &ModEntry) -> Vec<Action> {
                     ui.button("📂 Open folder").clicked(),
                     mod_action(ModAction::OpenFolder(name.clone())),
                 ),
+                // Undoable, so a plain button, set apart from the others (R-04, R-06).
                 (
-                    theme::filled_button(ui, "🗑 Delete", danger()).clicked(),
+                    {
+                        ui.add_space(12.0);
+                        ui.button(RichText::new("🗑 Delete").color(danger()))
+                            .on_hover_text("Moves the mod to Recently deleted; Undo brings it back")
+                            .clicked()
+                    },
                     Action::Ask(Confirm::DeleteMod(name.clone())),
                 ),
             ])
@@ -67,6 +70,7 @@ fn actions_row(ui: &mut egui::Ui, entry: &ModEntry) -> Vec<Action> {
     out
 }
 
+/// State, file counts, size and source of the mod.
 fn info_grid(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) {
     egui::Grid::new("mod_info")
         .num_columns(2)
@@ -81,9 +85,9 @@ fn info_grid(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) {
                 ui,
                 "State",
                 if entry.enabled {
-                    "active".into()
+                    "enabled".into()
                 } else {
-                    "inactive".into()
+                    "disabled".into()
                 },
             );
             row(
@@ -132,6 +136,7 @@ fn info_grid(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) {
         });
 }
 
+/// Files won or lost against other mods.
 fn contest_list(ui: &mut egui::Ui, title: &str, contests: &[Contest], verb: &str) {
     if contests.is_empty() {
         return;
@@ -149,6 +154,7 @@ fn contest_list(ui: &mut egui::Ui, title: &str, contests: &[Contest], verb: &str
         });
 }
 
+/// Conflict summary of the selected mod.
 fn conflicts(ui: &mut egui::Ui, report: Option<&ModConflicts>, enabled: bool, analysing: bool) {
     ui.label(RichText::new("File conflicts").strong());
     match (report, enabled) {
@@ -157,7 +163,7 @@ fn conflicts(ui: &mut egui::Ui, report: Option<&ModConflicts>, enabled: bool, an
         }
         (_, false) => drop(
             ui.label(
-                RichText::new("Activate the mod to analyse conflicts.")
+                RichText::new("Enable the mod to see its conflicts.")
                     .small()
                     .color(muted()),
             ),
