@@ -4,7 +4,7 @@ use crate::jobs::{JobId, JobKind};
 use crate::logging::Event;
 use crate::mod_engine::conflicts::ConflictReport;
 use crate::mod_engine::model::ModDetails;
-use crate::nexus::{NexusFile, NexusMod, NexusUser};
+use crate::nexus::{FileSummary, NexusFile, NexusMod, NexusUser, NxmLink};
 use crate::profiles::ProfileBook;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -56,6 +56,16 @@ pub struct NexusState {
     /// Staged mod name → newer version available on Nexus.
     pub updates: BTreeMap<String, String>,
     pub handler_registered: bool,
+    /// `nxm://` downloads waiting for the user's confirmation.
+    pub incoming: Vec<Incoming>,
+}
+
+/// An `nxm://` download request from the browser, not yet confirmed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Incoming {
+    pub link: NxmLink,
+    /// Names looked up from Nexus; `None` while the lookup runs.
+    pub summary: Option<FileSummary>,
 }
 
 /// Profile page state.

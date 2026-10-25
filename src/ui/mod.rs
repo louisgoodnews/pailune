@@ -9,7 +9,7 @@ mod state;
 mod theme;
 mod views;
 
-pub use state::{JobState, JobView, LogState, ModsState, NexusState, ProfilesState};
+pub use state::{Incoming, JobState, JobView, LogState, ModsState, NexusState, ProfilesState};
 
 use crate::backup::BackupStatus;
 use crate::config::Config;
@@ -121,6 +121,10 @@ pub enum NexusAction {
     CheckUpdates,
     OpenPage,
     RegisterHandler,
+    /// Start the confirmed incoming download at this index.
+    AcceptIncoming(usize),
+    /// Drop the incoming download at this index.
+    RejectIncoming(usize),
 }
 
 /// First-run setup dialog intents.

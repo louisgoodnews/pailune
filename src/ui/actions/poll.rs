@@ -58,6 +58,9 @@ impl PyluneApp {
                 if self.launch_after == Some(event.id) {
                     self.launch_after = None;
                 }
+                if let JobKind::DescribeFile { mod_id, file_id } = kind {
+                    self.lookup_failed(mod_id, file_id, &message);
+                }
                 self.status = StatusLine::new(Level::Error, message);
             }
         }
@@ -103,12 +106,31 @@ impl PyluneApp {
                 );
                 self.nexus.browsing = Some((mod_info, files));
             }
-            (_, JobOutput::Updates(outdated)) => {
+            (_, JobOutput::Updates { outdated, failed }) => {
                 self.nexus.updates = outdated.into_iter().collect();
-                self.status = match self.nexus.updates.len() {
-                    0 => StatusLine::new(Level::Success, "All Nexus mods are up to date"),
-                    n => StatusLine::new(Level::Warning, format!("{n} mod update(s) available")),
+                let failures = match failed {
+                    0 => String::new(),
+                    n => format!(" ({n} check(s) failed — see the Log tab)"),
                 };
+                self.status = match self.nexus.updates.len() {
+                    0 => StatusLine::new(
+                        Level::Success,
+                        format!("All Nexus mods are up to date{failures}"),
+                    ),
+                    n => StatusLine::new(
+                        Level::Warning,
+                        format!("{n} mod update(s) available{failures}"),
+                    ),
+                };
+            }
+            (_, JobOutput::Described(summary)) => {
+                self.nexus
+                    .incoming
+                    .iter_mut()
+                    .filter(|i| {
+                        i.link.mod_id == summary.mod_id && i.link.file_id == summary.file_id
+                    })
+                    .for_each(|i| i.summary = Some(summary.clone()));
             }
             (kind, JobOutput::Done(message)) => {
                 self.status = StatusLine::new(Level::Success, message);
@@ -170,5 +192,22 @@ impl PyluneApp {
             "A job is changing the game folder — wait for it, or close again to quit anyway \
              (the next Unlink/Apply repairs an interrupted run)",
         );
+    }
+
+    /// Shows the ids (and why names are missing) instead of a lookup spinner.
+    fn lookup_failed(&mut self, mod_id: u64, file_id: u64, message: &str) {
+        let summary = crate::nexus::FileSummary {
+            mod_id,
+            file_id,
+            mod_name: format!("Nexus mod {mod_id}"),
+            file_name: format!("file {file_id} (names unavailable: {message})"),
+            version: String::new(),
+            size_kb: 0,
+        };
+        self.nexus
+            .incoming
+            .iter_mut()
+            .filter(|i| i.link.mod_id == mod_id && i.link.file_id == file_id && i.summary.is_none())
+            .for_each(|i| i.summary = Some(summary.clone()));
     }
 }

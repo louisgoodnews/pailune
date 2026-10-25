@@ -5,7 +5,9 @@ use crate::error::{PyluneError, Result};
 
 /// Parses `nxm://<domain>/mods/<mod_id>/files/<file_id>[?key=..&expires=..]`.
 pub fn parse(url: &str) -> Result<NxmLink> {
-    let invalid = || PyluneError::Invalid(format!("not a valid nxm link: {url}"));
+    // Never echo the query: it carries the per-download key.
+    let shown = url.split('?').next().unwrap_or_default().to_string();
+    let invalid = || PyluneError::Invalid(format!("not a valid nxm link: {shown}"));
     let rest = url.trim().strip_prefix("nxm://").ok_or_else(invalid)?;
     let (path, query) = rest.split_once('?').unwrap_or((rest, ""));
     let segments: Vec<&str> = path.trim_end_matches('/').split('/').collect();
@@ -29,6 +31,19 @@ pub fn parse(url: &str) -> Result<NxmLink> {
     })
 }
 
+/// Accepts only links as the website's "Mod Manager Download" button makes
+/// them: with a download key and expiry. A page that merely crafts an
+/// `nxm://` URL cannot produce a valid key, so it cannot trigger downloads.
+pub fn validate(link: &NxmLink, domain: &str) -> Result<()> {
+    match (link.domain == domain, link.key.as_deref(), link.expires) {
+        (false, _, _) => Err(PyluneError::Invalid(format!("nxm link is for '{}', not this game", link.domain))),
+        (true, Some(key), Some(_)) if !key.is_empty() => Ok(()),
+        _ => Err(PyluneError::Invalid(
+            "ignored an nxm link without a download key — use the website's \"Mod Manager Download\" button".into(),
+        )),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -43,8 +58,18 @@ mod tests {
         );
         assert_eq!((link.key.as_deref(), link.expires), (Some("abc"), Some(99)));
         let bare = parse("nxm://crimsondesert/mods/1/files/2").unwrap();
-        assert_eq!((bare.key, bare.expires), (None, None));
+        assert_eq!((bare.key.as_deref(), bare.expires), (None, None));
         assert!(parse("nxm://crimsondesert/mods/x/files/2").is_err());
         assert!(parse("https://nexusmods.com").is_err());
+        assert!(validate(&link, "crimsondesert").is_ok());
+        assert!(
+            validate(&bare, "crimsondesert").is_err(),
+            "no key, no download"
+        );
+        assert!(validate(&link, "skyrim").is_err());
+        let err = parse("nxm://x/mods/a/files/1?key=SECRET")
+            .unwrap_err()
+            .to_string();
+        assert!(!err.contains("SECRET"));
     }
 }

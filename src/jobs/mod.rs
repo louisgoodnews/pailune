@@ -10,7 +10,7 @@ pub mod tasks;
 
 use crate::mod_engine::conflicts::ConflictReport;
 use crate::nexus::download::DownloadJob;
-use crate::nexus::{NexusFile, NexusMod, NexusUser};
+use crate::nexus::{FileSummary, NexusFile, NexusMod, NexusUser};
 use std::path::PathBuf;
 
 /// Identifies a submitted job.
@@ -35,6 +35,11 @@ pub enum JobKind {
     Remove(String),
     ValidateKey,
     FetchMod(u64),
+    /// Look up names for an incoming `nxm://` download.
+    DescribeFile {
+        mod_id: u64,
+        file_id: u64,
+    },
     CheckUpdates,
     /// Conflict analysis; the generation lets the UI drop stale results.
     AnalyzeConflicts(u64),
@@ -54,8 +59,12 @@ pub enum JobOutput {
     Done(String),
     User(NexusUser),
     Mod(NexusMod, Vec<NexusFile>),
-    /// `(mod name, newer version)` for every outdated mod.
-    Updates(Vec<(String, String)>),
+    /// `(mod name, newer file)` for every outdated mod, plus failed checks.
+    Updates {
+        outdated: Vec<(String, String)>,
+        failed: usize,
+    },
+    Described(FileSummary),
     Conflicts(u64, ConflictReport),
 }
 
@@ -112,6 +121,7 @@ impl JobKind {
             JobKind::Remove(name) => format!("Delete {name}"),
             JobKind::ValidateKey => "Validate Nexus key".into(),
             JobKind::FetchMod(id) => format!("Fetch Nexus mod {id}"),
+            JobKind::DescribeFile { file_id, .. } => format!("Look up Nexus file {file_id}"),
             JobKind::CheckUpdates => "Check updates".into(),
             JobKind::AnalyzeConflicts(_) => "Analyze conflicts".into(),
         }

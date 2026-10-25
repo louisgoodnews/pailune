@@ -31,6 +31,19 @@ impl std::fmt::Debug for Client {
     }
 }
 
+/// Percent-encodes a query value (RFC 3986 unreserved characters pass).
+fn encode(value: &str) -> String {
+    value
+        .bytes()
+        .map(|b| match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                (b as char).to_string()
+            }
+            b => format!("%{b:02X}"),
+        })
+        .collect()
+}
+
 /// Builds an agent with the Pylune user agent and the given limits.
 fn agent(global: Option<Duration>, per_read: Option<Duration>) -> ureq::Agent {
     let config = ureq::Agent::config_builder()
@@ -112,7 +125,7 @@ impl Client {
     ) -> Result<Vec<DownloadLink>> {
         let query = nxm
             .and_then(|link| link.key.as_ref().zip(link.expires))
-            .map(|(key, expires)| format!("?key={key}&expires={expires}"))
+            .map(|(key, expires)| format!("?key={}&expires={expires}", encode(key)))
             .unwrap_or_default();
         self.get_json(&format!(
             "/games/{}/mods/{mod_id}/files/{file_id}/download_link.json{query}",

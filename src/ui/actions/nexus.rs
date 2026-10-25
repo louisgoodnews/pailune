@@ -1,10 +1,14 @@
 //! Nexus page actions; network work runs as background jobs.
 
+use crate::db;
 use crate::error::{PyluneError, Result};
 use crate::jobs::JobKind;
 use crate::nexus::download::DownloadJob;
 use crate::nexus::{handler, key, nxm};
-use crate::ui::{Level, NexusAction, PyluneApp, StatusLine};
+use crate::ui::{Incoming, Level, NexusAction, PyluneApp, StatusLine};
+
+/// Key/value entry remembering the `nxm://` handler Pylune replaced.
+const PREVIOUS_HANDLER: &str = "previous_nxm_handler";
 
 /// Accepts a bare id or a `nexusmods.com/<game>/mods/<id>` URL.
 fn parse_mod_id(input: &str) -> Result<u64> {
@@ -64,15 +68,26 @@ impl PyluneApp {
                 self.open_path(std::path::Path::new(&url))?;
                 Ok(info(format!("Opened {url}")))
             }
+            NexusAction::AcceptIncoming(index) => self.resolve_incoming(index, true),
+            NexusAction::RejectIncoming(index) => self.resolve_incoming(index, false),
             NexusAction::RegisterHandler => {
                 let exe =
                     std::env::current_exe().map_err(|e| PyluneError::Invalid(e.to_string()))?;
-                handler::register(&exe)?;
+                if exe.to_string_lossy().contains("/target/") {
+                    tracing::warn!(exe = %exe.display(), "registering a development build as nxm handler");
+                }
+                let previous = handler::register(&exe)?;
+                if let Some(previous) = &previous {
+                    db::set_value(&self.conn, PREVIOUS_HANDLER, Some(previous))?;
+                }
                 self.nexus.handler_registered = handler::is_registered();
-                Ok(Some(StatusLine::new(
-                    Level::Success,
-                    "Pylune now handles nxm:// links",
-                )))
+                let text = match previous {
+                    Some(p) => {
+                        format!("Pylune now handles nxm:// links; links for other games go to {p}")
+                    }
+                    None => "Pylune now handles nxm:// links".into(),
+                };
+                Ok(Some(StatusLine::new(Level::Success, text)))
             }
         }
     }
@@ -106,29 +121,77 @@ impl PyluneApp {
         Ok(StatusLine::new(Level::Info, "Download started…"))
     }
 
-    /// Queues a download received as an `nxm://` link.
+    /// Holds an `nxm://` link for confirmation and looks up its names.
     pub(super) fn handle_nxm(&mut self, url: &str) -> StatusLine {
-        let parsed =
-            nxm::parse(url).and_then(|link| match link.domain == self.config.nexus.domain {
-                true => Ok(link),
-                false => Err(PyluneError::Invalid(format!(
-                    "nxm link is for '{}', not this game",
-                    link.domain
-                ))),
-            });
-        match parsed {
+        let foreign = nxm::parse(url).is_ok_and(|link| link.domain != self.config.nexus.domain);
+        if foreign {
+            return self.forward_nxm(url);
+        }
+        let checked = nxm::parse(url)
+            .and_then(|link| nxm::validate(&link, &self.config.nexus.domain).map(|()| link));
+        match checked {
             Ok(link) => {
-                let job = DownloadJob {
+                self.submit(JobKind::DescribeFile {
                     mod_id: link.mod_id,
                     file_id: link.file_id,
-                    nxm: Some(link),
-                    replace: None,
-                };
-                self.submit(JobKind::Download(job));
-                StatusLine::new(Level::Info, "Downloading from nxm:// link…")
+                });
+                self.nexus.incoming.push(Incoming {
+                    link,
+                    summary: None,
+                });
+                self.focus_requested = true;
+                StatusLine::new(
+                    Level::Info,
+                    "Download request from the browser — confirm it in the dialog",
+                )
             }
             Err(err) => StatusLine::new(Level::Error, err.to_string()),
         }
+    }
+
+    /// Hands a link for another game to the handler Pylune replaced.
+    fn forward_nxm(&self, url: &str) -> StatusLine {
+        let previous = db::get_value(&self.conn, PREVIOUS_HANDLER).ok().flatten();
+        match previous.map(|p| handler::forward(&p, url).map(|()| p)) {
+            Some(Ok(p)) => StatusLine::new(
+                Level::Info,
+                format!("Passed a link for another game to {p}"),
+            ),
+            Some(Err(err)) => StatusLine::new(Level::Error, err.to_string()),
+            None => StatusLine::new(
+                Level::Warning,
+                "Ignored an nxm link for another game (no other handler known)",
+            ),
+        }
+    }
+
+    /// Starts or drops a confirmed incoming download.
+    fn resolve_incoming(&mut self, index: usize, accept: bool) -> Result<Option<StatusLine>> {
+        if index >= self.nexus.incoming.len() {
+            return Ok(None);
+        }
+        let incoming = self.nexus.incoming.remove(index);
+        if !accept {
+            return Ok(Some(StatusLine::new(
+                Level::Info,
+                "Download request ignored",
+            )));
+        }
+        let link = incoming.link;
+        // "Update…" on a free account: the next file of that mod replaces it.
+        let replace = self.nexus.replace_target.clone().filter(|name| {
+            self.registry.mods.iter().any(|m| {
+                &m.name == name && m.nexus.as_ref().is_some_and(|n| n.mod_id == link.mod_id)
+            })
+        });
+        let job = DownloadJob {
+            mod_id: link.mod_id,
+            file_id: link.file_id,
+            nxm: Some(link),
+            replace,
+        };
+        self.submit(JobKind::Download(job));
+        Ok(Some(StatusLine::new(Level::Info, "Download started…")))
     }
 }
 

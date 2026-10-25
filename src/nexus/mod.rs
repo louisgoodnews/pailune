@@ -10,6 +10,7 @@ pub mod download;
 pub mod handler;
 pub mod key;
 pub mod nxm;
+pub mod updates;
 
 use serde::Deserialize;
 
@@ -57,6 +58,29 @@ pub struct NexusFile {
 pub struct FileList {
     #[serde(default)]
     pub files: Vec<NexusFile>,
+    /// Successor chain: `old_file_id` was superseded by `new_file_id`.
+    #[serde(default)]
+    pub file_updates: Vec<FileUpdate>,
+}
+
+/// One link of a file's update chain.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct FileUpdate {
+    pub old_file_id: u64,
+    pub new_file_id: u64,
+    #[serde(default)]
+    pub new_file_name: String,
+}
+
+/// Names and size of one file, for confirming a download.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FileSummary {
+    pub mod_id: u64,
+    pub file_id: u64,
+    pub mod_name: String,
+    pub file_name: String,
+    pub version: String,
+    pub size_kb: u64,
 }
 
 /// One CDN mirror returned by `download_link.json`.

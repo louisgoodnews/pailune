@@ -172,6 +172,7 @@ impl eframe::App for PyluneApp {
         actions.extend(page);
         actions.extend(views::readme::show(ui.ctx(), self.mods.readme.as_ref()));
         actions.extend(views::confirm::show(ui.ctx(), self.confirm.as_ref()));
+        actions.extend(views::incoming::show(ui.ctx(), &self.nexus.incoming));
         if self.setup_open {
             actions.extend(views::setup::show(ui.ctx(), self));
         }

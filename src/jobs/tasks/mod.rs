@@ -24,6 +24,7 @@ pub fn run(ctx: &JobContext, kind: JobKind) -> Result<JobOutput> {
         JobKind::Remove(name) => staging::remove(ctx, &name),
         JobKind::ValidateKey => nexus::validate(ctx),
         JobKind::FetchMod(id) => nexus::fetch_mod(ctx, id),
+        JobKind::DescribeFile { mod_id, file_id } => nexus::describe_file(ctx, mod_id, file_id),
         JobKind::CheckUpdates => nexus::check_updates(ctx),
         JobKind::AnalyzeConflicts(generation) => analyze::conflicts(ctx, generation),
     }

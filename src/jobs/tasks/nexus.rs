@@ -10,7 +10,7 @@ use crate::mod_engine::install;
 use crate::mod_engine::model::NexusRef;
 use crate::nexus::api::Client;
 use crate::nexus::download::{self, DownloadJob};
-use crate::nexus::key;
+use crate::nexus::{FileSummary, key, updates};
 use std::fs;
 use std::thread;
 
@@ -74,8 +74,18 @@ pub fn download(ctx: &JobContext, job: &DownloadJob) -> Result<JobOutput> {
     register(ctx, &name, &source, Some(&reference), replace).map(JobOutput::Done)
 }
 
-/// Compares every Nexus-installed mod with its current version, querying
-/// several mods concurrently.
+/// Result of checking one mod: `Some(label)` when a newer file exists.
+fn check_one(client: &Client, origin: &NexusRef) -> Result<Option<String>> {
+    let list = client.files(origin.mod_id)?;
+    Ok(
+        updates::latest_successor(&list.file_updates, origin.file_id)
+            .map(|id| updates::describe(&list, id)),
+    )
+}
+
+/// Follows each Nexus-installed file's update chain, several mods at a
+/// time. A failing mod (hidden, deleted, rate limit) is reported on its own
+/// instead of aborting the whole check.
 pub fn check_updates(ctx: &JobContext) -> Result<JobOutput> {
     let client = client(ctx)?;
     let conn = ctx.db()?;
@@ -85,49 +95,72 @@ pub fn check_updates(ctx: &JobContext) -> Result<JobOutput> {
         .filter_map(|m| m.nexus.map(|n| (m.name, n)))
         .collect();
     let total = refs.len() as u64;
-    let latest: Vec<(String, String, String)> = refs
+    let results: Vec<(String, Result<Option<String>>)> = refs
         .chunks(UPDATE_CHECK_PARALLELISM)
         .enumerate()
-        .map(|(chunk_index, chunk)| {
+        .flat_map(|(chunk_index, chunk)| {
             ctx.progress((chunk_index * UPDATE_CHECK_PARALLELISM) as u64, Some(total));
             thread::scope(|scope| {
-                chunk
+                let handles: Vec<_> = chunk
                     .iter()
-                    .map(|(name, r)| {
-                        let client = &client;
-                        scope.spawn(move || {
-                            client
-                                .mod_info(r.mod_id)
-                                .map(|info| (name.clone(), r.version.clone(), info.version))
-                        })
+                    .map(|(name, origin)| {
+                        (name.clone(), scope.spawn(|| check_one(&client, origin)))
+                    })
+                    .collect();
+                handles
+                    .into_iter()
+                    .map(|(name, handle)| {
+                        let crashed = || Err(PyluneError::Invalid("update check crashed".into()));
+                        (name, handle.join().unwrap_or_else(|_| crashed()))
                     })
                     .collect::<Vec<_>>()
-                    .into_iter()
-                    .map(|handle| {
-                        handle.join().unwrap_or_else(|_| {
-                            Err(PyluneError::Invalid("update check crashed".into()))
-                        })
-                    })
-                    .collect::<Result<Vec<_>>>()
             })
         })
-        .collect::<Result<Vec<_>>>()?
-        .into_iter()
-        .flatten()
         .collect();
-    let outdated: Vec<(String, String)> = latest
-        .into_iter()
-        .filter(|(_, have, now)| !now.is_empty() && have != now)
-        .map(|(name, _, now)| (name, now))
-        .collect();
-    outdated.iter().for_each(|(name, version)| {
-        let event = Event::new(
-            Severity::Info,
-            EventKind::Update,
-            Some(name),
-            format!("version {version} available"),
+    let journal = |name: &str, severity, message: String| {
+        ctx.journal(
+            &conn,
+            Event::new(severity, EventKind::Update, Some(name), message),
         );
-        ctx.journal(&conn, event);
-    });
-    Ok(JobOutput::Updates(outdated))
+    };
+    let (outdated, failed) =
+        results
+            .into_iter()
+            .fold(
+                (Vec::new(), 0),
+                |(mut outdated, failed), (name, result)| match result {
+                    Ok(Some(label)) => {
+                        journal(&name, Severity::Info, format!("update available: {label}"));
+                        outdated.push((name, label));
+                        (outdated, failed)
+                    }
+                    Ok(None) => (outdated, failed),
+                    Err(err) => {
+                        journal(&name, Severity::Warn, format!("update check failed: {err}"));
+                        (outdated, failed + 1)
+                    }
+                },
+            );
+    Ok(JobOutput::Updates { outdated, failed })
+}
+
+/// Names and size of one file, shown before an `nxm://` download starts.
+pub fn describe_file(ctx: &JobContext, mod_id: u64, file_id: u64) -> Result<JobOutput> {
+    let client = client(ctx)?;
+    let info = client.mod_info(mod_id)?;
+    let file = client
+        .files(mod_id)?
+        .files
+        .into_iter()
+        .find(|f| f.file_id == file_id);
+    Ok(JobOutput::Described(FileSummary {
+        mod_id,
+        file_id,
+        mod_name: info.name,
+        file_name: file
+            .as_ref()
+            .map_or_else(|| format!("file {file_id}"), |f| f.name.clone()),
+        version: file.as_ref().map(|f| f.version.clone()).unwrap_or_default(),
+        size_kb: file.map_or(0, |f| f.size_kb),
+    }))
 }
