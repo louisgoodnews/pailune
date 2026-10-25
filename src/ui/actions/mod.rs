@@ -85,10 +85,25 @@ impl PyluneApp {
     }
 
     /// Starts a conflict analysis; older pending results will be ignored.
+    ///
+    /// At most one analysis is in flight: further requests only mark it for a
+    /// re-run, so rapid toggling does not flood the pool (A-19).
     pub(super) fn request_conflicts(&mut self) {
+        if self.analysis_active() {
+            self.mods.conflicts_rerun = true;
+            return;
+        }
         self.mods.conflict_generation += 1;
         let generation = self.mods.conflict_generation;
         self.submit(JobKind::AnalyzeConflicts(generation));
+    }
+
+    /// Whether a conflict analysis is queued or running.
+    pub fn analysis_active(&self) -> bool {
+        self.jobs.iter().any(|j| {
+            matches!(j.kind, JobKind::AnalyzeConflicts(_))
+                && matches!(j.state, JobState::Queued | JobState::Running)
+        })
     }
 
     /// Atomically changes the registry and marks the deployment stale.
@@ -114,6 +129,11 @@ impl PyluneApp {
             self.mods.selected = None;
             self.mods.details = None;
             self.mods.readme = None;
+        }
+        // Keep the details panel in step with updates and re-imports (A-22).
+        if let Some(name) = self.mods.selected.clone() {
+            let details = crate::mod_engine::info::details(&self.paths.staging.join(&name))?;
+            self.mods.details = Some((name, details));
         }
         self.refresh_log()
     }

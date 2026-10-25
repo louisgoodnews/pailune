@@ -150,9 +150,12 @@ fn contest_list(ui: &mut egui::Ui, title: &str, contests: &[Contest], verb: &str
         });
 }
 
-fn conflicts(ui: &mut egui::Ui, report: Option<&ModConflicts>, enabled: bool) {
+fn conflicts(ui: &mut egui::Ui, report: Option<&ModConflicts>, enabled: bool, analysing: bool) {
     ui.label(RichText::new("File conflicts").strong());
     match (report, enabled) {
+        (None, true) if analysing => {
+            drop(ui.label(RichText::new("Analysing…").small().color(MUTED)))
+        }
         (_, false) => drop(
             ui.label(
                 RichText::new("Activate the mod to analyse conflicts.")
@@ -223,7 +226,12 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             ui.separator();
             info_grid(ui, entry, details);
             ui.separator();
-            conflicts(ui, app.mods.conflicts.get(&entry.name), entry.enabled);
+            conflicts(
+                ui,
+                app.mods.conflicts.get(&entry.name),
+                entry.enabled,
+                app.analysis_active(),
+            );
             ui.separator();
             ui.label(RichText::new("Readme & documentation").strong());
             if details.readmes.is_empty() {

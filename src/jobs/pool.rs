@@ -1,4 +1,8 @@
-//! A fixed-size worker pool with an exclusive lane for game-directory jobs.
+//! A fixed-size worker pool plus one dedicated lane for game-directory jobs.
+//!
+//! Exclusive jobs get their own single thread and queue, so they run in the
+//! order they were submitted (FIFO) and never occupy the shared workers that
+//! run downloads, imports and analyses.
 
 use super::context::JobContext;
 use super::{Access, JobEvent, JobId, JobKind, JobOutput, JobUpdate};
@@ -25,6 +29,7 @@ struct Queued {
 /// Handle owned by the UI.
 pub struct JobPool {
     queue: Sender<Queued>,
+    exclusive: Sender<Queued>,
     events: Receiver<JobEvent>,
     next_id: AtomicU64,
 }
@@ -48,6 +53,7 @@ impl JobPool {
         notify: Arc<dyn Fn() + Send + Sync>,
     ) -> Self {
         let (queue_tx, queue_rx) = channel();
+        let (exclusive_tx, exclusive_rx) = channel();
         let (events_tx, events_rx) = channel();
         let shared = Arc::new(Shared {
             queue: Mutex::new(queue_rx),
@@ -61,10 +67,16 @@ impl JobPool {
             let shared = Arc::clone(&shared);
             let _ = thread::Builder::new()
                 .name(format!("pylune-job-{n}"))
-                .spawn(move || work(&shared));
+                .spawn(move || work(&shared, &shared.queue));
         });
+        let lane = Arc::clone(&shared);
+        let exclusive_rx = Mutex::new(exclusive_rx);
+        let _ = thread::Builder::new()
+            .name("pylune-game".into())
+            .spawn(move || work(&lane, &exclusive_rx));
         Self {
             queue: queue_tx,
+            exclusive: exclusive_tx,
             events: events_rx,
             next_id: AtomicU64::new(1),
         }
@@ -73,7 +85,11 @@ impl JobPool {
     /// Queues a job with a snapshot of the configuration; returns its id.
     pub fn submit(&self, kind: JobKind, config: &Config) -> JobId {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
-        let _ = self.queue.send(Queued {
+        let lane = match kind.access() {
+            Access::Exclusive => &self.exclusive,
+            Access::Shared => &self.queue,
+        };
+        let _ = lane.send(Queued {
             id,
             kind,
             config: config.clone(),
@@ -87,10 +103,10 @@ impl JobPool {
     }
 }
 
-/// Worker loop: take the next job until the pool is dropped.
-fn work(shared: &Shared) {
+/// Worker loop: take the next job from `queue` until the pool is dropped.
+fn work(shared: &Shared, queue: &Mutex<Receiver<Queued>>) {
     // The receiver lock is released as soon as one job has been taken.
-    let next = || shared.queue.lock().ok().and_then(|rx| rx.recv().ok());
+    let next = || queue.lock().ok().and_then(|rx| rx.recv().ok());
     std::iter::from_fn(next).for_each(|job| run_one(shared, job));
 }
 

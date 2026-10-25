@@ -41,6 +41,8 @@ pub struct ModsState {
     pub conflicts: ConflictReport,
     /// Generation of the newest requested analysis.
     pub conflict_generation: u64,
+    /// The mod list changed while an analysis was in flight; run again after it.
+    pub conflicts_rerun: bool,
 }
 
 /// Nexus page state.

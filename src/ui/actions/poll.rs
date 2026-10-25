@@ -52,6 +52,11 @@ impl PyluneApp {
         };
         view.finished_at = Some(Instant::now());
         let kind = view.kind.clone();
+        if matches!(kind, JobKind::AnalyzeConflicts(_))
+            && std::mem::take(&mut self.mods.conflicts_rerun)
+        {
+            self.request_conflicts();
+        }
         match result {
             Ok(output) => self.on_success(event.id, kind, output),
             Err(message) => {
