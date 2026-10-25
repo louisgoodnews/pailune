@@ -35,6 +35,12 @@ fn settings_section(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
             .color(MUTED),
     );
     ui.text_edit_singleline(&mut app.draft.json_subdir);
+    ui.label(RichText::new("Nexus game domain").small().color(MUTED));
+    ui.text_edit_singleline(&mut app.draft.nexus_domain);
+    ui.checkbox(
+        &mut app.draft.apply_before_launch,
+        "Apply pending changes before Play",
+    );
     let save = ui.button("Save settings").clicked();
     [
         (browse, Action::BrowseGameDir),

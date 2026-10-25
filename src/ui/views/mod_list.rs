@@ -1,18 +1,40 @@
 //! Central table of staged mods with checkboxes and load-order controls.
 
 use crate::mod_engine::model::ModEntry;
-use crate::ui::theme::{self, MUTED};
-use crate::ui::{Action, Confirm, PyluneApp};
+use crate::ui::theme::{self, MUTED, WARNING};
+use crate::ui::{Action, Confirm, NexusAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
+/// Nexus column: origin marker or an update button.
+fn nexus_cell(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) -> Option<Action> {
+    let from_nexus = app.nexus.meta.refs.contains_key(&entry.name);
+    match (app.nexus.updates.get(&entry.name), from_nexus) {
+        (Some(version), _) => ui
+            .button(RichText::new(format!("⬆ {version}")).color(WARNING))
+            .on_hover_text("Update available on Nexus")
+            .clicked()
+            .then(|| Action::Nexus(NexusAction::Update(entry.name.clone()))),
+        (None, true) => {
+            theme::badge(ui, "NEXUS", MUTED);
+            None
+        }
+        (None, false) => {
+            ui.label("");
+            None
+        }
+    }
+}
+
 /// Renders one row and returns the actions it triggered.
-fn row(ui: &mut egui::Ui, index: usize, entry: &ModEntry, last: usize) -> Vec<Action> {
+fn row(ui: &mut egui::Ui, index: usize, entry: &ModEntry, app: &PyluneApp) -> Vec<Action> {
+    let last = app.registry.mods.len().saturating_sub(1);
     let mut enabled = entry.enabled;
     let toggled = ui.checkbox(&mut enabled, "").changed();
     ui.label(RichText::new(&entry.name).strong());
     let (kind, color) = theme::kind_style(entry.kind);
     theme::badge(ui, kind, color);
     ui.label(RichText::new(entry.file_count.to_string()).color(MUTED));
+    let nexus = nexus_cell(ui, entry, app);
     let up = ui
         .add_enabled(index > 0, egui::Button::new("▲").small())
         .clicked();
@@ -45,6 +67,7 @@ fn row(ui: &mut egui::Ui, index: usize, entry: &ModEntry, last: usize) -> Vec<Ac
     .into_iter()
     .filter(|(clicked, _)| *clicked)
     .map(|(_, action)| action)
+    .chain(nexus)
     .collect()
 }
 
@@ -73,22 +96,21 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         empty_hint(ui);
         return Vec::new();
     }
-    let last = mods.len() - 1;
     egui::ScrollArea::vertical()
         .auto_shrink([false, false])
         .show(ui, |ui| {
             egui::Grid::new("mod_grid")
                 .striped(true)
-                .num_columns(7)
+                .num_columns(8)
                 .spacing([12.0, 8.0])
                 .show(ui, |ui| {
-                    ["On", "Name", "Type", "Files", "", "", ""]
+                    ["On", "Name", "Type", "Files", "Nexus", "", "", ""]
                         .iter()
                         .for_each(|h| drop(ui.label(RichText::new(*h).small().color(MUTED))));
                     ui.end_row();
                     mods.iter()
                         .enumerate()
-                        .flat_map(|(i, entry)| row(ui, i, entry, last))
+                        .flat_map(|(i, entry)| row(ui, i, entry, app))
                         .collect()
                 })
                 .inner

@@ -179,3 +179,30 @@ fn outdated_meta_backup_blocks_restore() {
     assert_eq!(snapshot::meta_backup_state(&info), MetaBackup::Outdated);
     assert!(reset::clean_slate(&info, &mut Manifest::default()).is_err());
 }
+
+#[test]
+#[ignore = "talks to api.nexusmods.com"]
+fn nexus_rejects_bad_key() {
+    let client = crate::nexus::api::Client::new("not-a-real-key", "crimsondesert");
+    let err = client.validate().unwrap_err().to_string();
+    assert!(err.contains("rejected"), "{err}");
+}
+
+#[test]
+fn import_as_replaces_only_when_asked() {
+    let fx = fixture();
+    let v1 = fx.sources.join("v1.asi");
+    let v2 = fx.sources.join("v2.asi");
+    write(&v1, "one");
+    write(&v2, "two");
+    install::import_as(&v1, &fx.staging, "Camera", false).unwrap();
+    assert!(install::import_as(&v2, &fx.staging, "Camera", false).is_err());
+    install::import_as(&v2, &fx.staging, "Camera", true).unwrap();
+    assert!(fx.staging.join("Camera/v2.asi").is_file());
+    assert!(!fx.staging.join("Camera/v1.asi").exists());
+    let archive = fx.sources.join("mod.7z");
+    write(&archive, "7z");
+    assert!(install::import(&archive, &fx.staging).is_err());
+    assert!(!fx.staging.join("mod").exists(), "failed import leaves nothing behind");
+    assert_eq!(install::sanitize_name("../A: B?"), "_A_ B_");
+}

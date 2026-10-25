@@ -18,6 +18,9 @@ pub enum PyluneError {
     /// Directory traversal failed.
     #[error("walk error: {0}")]
     Walk(#[from] walkdir::Error),
+    /// An HTTP request to Nexus Mods failed.
+    #[error("network error: {0}")]
+    Http(#[from] ureq::Error),
     /// A precondition was not met (bad input, missing game, ...).
     #[error("{0}")]
     Invalid(String),

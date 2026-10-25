@@ -22,6 +22,10 @@ pub struct Config {
     pub app_id: u32,
     /// Game-relative directory that loose JSON mods are linked into.
     pub json_subdir: PathBuf,
+    /// Nexus Mods game domain (`nexusmods.com/<domain>`).
+    pub nexus_domain: String,
+    /// Deploy pending mod changes automatically before launching the game.
+    pub apply_before_launch: bool,
 }
 
 impl Default for Config {
@@ -30,6 +34,8 @@ impl Default for Config {
             game_dir: PathBuf::from(DEFAULT_GAME_DIR),
             app_id: CRIMSON_DESERT_APP_ID,
             json_subdir: PathBuf::from("bin64/mods"),
+            nexus_domain: "crimsondesert".into(),
+            apply_before_launch: true,
         }
     }
 }

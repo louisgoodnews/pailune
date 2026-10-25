@@ -12,6 +12,8 @@ impl SettingsDraft {
             game_dir: config.game_dir.display().to_string(),
             app_id: config.app_id.to_string(),
             json_subdir: config.json_subdir.display().to_string(),
+            nexus_domain: config.nexus_domain.clone(),
+            apply_before_launch: config.apply_before_launch,
         }
     }
 
@@ -29,6 +31,8 @@ impl SettingsDraft {
                 game_dir: PathBuf::from(self.game_dir.trim()),
                 app_id,
                 json_subdir,
+                nexus_domain: self.nexus_domain.trim().to_lowercase(),
+                apply_before_launch: self.apply_before_launch,
             }),
         }
     }

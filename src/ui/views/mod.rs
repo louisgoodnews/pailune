@@ -5,5 +5,7 @@
 pub mod confirm;
 pub mod header;
 pub mod mod_list;
+pub mod nexus;
+pub mod profiles;
 pub mod settings;
 pub mod status_bar;

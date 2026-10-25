@@ -2,11 +2,11 @@
 
 use crate::mod_engine::model::Registry;
 use crate::ui::theme::{self, DANGER};
-use crate::ui::{Action, Confirm};
+use crate::ui::{Action, Confirm, ProfileAction};
 use eframe::egui::{self, RichText};
 
 /// Title, explanation and the action to run on confirmation.
-fn describe(confirm: Confirm, registry: &Registry) -> (String, String, Action) {
+fn describe(confirm: &Confirm, registry: &Registry) -> (String, String, Action) {
     match confirm {
         Confirm::CleanSlate => (
             "Revert to a clean slate?".into(),
@@ -16,7 +16,13 @@ fn describe(confirm: Confirm, registry: &Registry) -> (String, String, Action) {
                 .into(),
             Action::CleanSlate,
         ),
+        Confirm::DeleteProfile(name) => (
+            format!("Delete profile '{name}'?"),
+            "Only the profile is deleted; staged mods stay untouched.".into(),
+            Action::Profile(ProfileAction::Delete(name.clone())),
+        ),
         Confirm::Remove(i) => {
+            let i = *i;
             let name = registry.mods.get(i).map_or("?", |m| m.name.as_str());
             (
                 format!("Delete '{name}'?"),
@@ -29,7 +35,7 @@ fn describe(confirm: Confirm, registry: &Registry) -> (String, String, Action) {
 }
 
 /// Shows the dialog if a confirmation is pending; returns the user's choice.
-pub fn show(ctx: &egui::Context, pending: Option<Confirm>, registry: &Registry) -> Vec<Action> {
+pub fn show(ctx: &egui::Context, pending: Option<&Confirm>, registry: &Registry) -> Vec<Action> {
     let Some(confirm) = pending else {
         return Vec::new();
     };

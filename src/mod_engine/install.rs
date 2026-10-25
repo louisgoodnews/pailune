@@ -12,6 +12,7 @@ enum SourceKind {
     Directory,
     Zip,
     LooseFile,
+    Unsupported,
 }
 
 /// Copies or extracts `source` into a new folder under `staging`.
@@ -19,34 +20,74 @@ enum SourceKind {
 /// Returns the mod name (the staging sub-directory). The source is never
 /// modified or moved.
 pub fn import(source: &Path, staging: &Path) -> Result<String> {
-    let name = mod_name(source)?;
-    let dest = staging.join(&name);
-    if dest.exists() {
+    import_as(source, staging, &mod_name(source)?, false)
+}
+
+/// Like [`import`] but with an explicit mod name.
+///
+/// With `replace`, an existing mod of that name is swapped out only after the
+/// new contents were staged successfully (used for Nexus updates).
+pub fn import_as(source: &Path, staging: &Path, name: &str, replace: bool) -> Result<String> {
+    let dest = staging.join(name);
+    if dest.exists() && !replace {
         return Err(PyluneError::Invalid(format!(
             "a mod named '{name}' is already staged"
         )));
     }
-    fs::create_dir_all(&dest).at(&dest)?;
+    let work = staging.join(format!(".pylune-incoming-{name}"));
+    let _ = fs::remove_dir_all(&work);
+    fs::create_dir_all(&work).at(&work)?;
     let outcome = match source_kind(source) {
-        SourceKind::Directory => copy_tree(source, &dest),
-        SourceKind::Zip => extract_zip(source, &dest),
-        SourceKind::LooseFile => copy_file(source, &dest),
+        SourceKind::Directory => copy_tree(source, &work),
+        SourceKind::Zip => extract_zip(source, &work),
+        SourceKind::LooseFile => copy_file(source, &work),
+        SourceKind::Unsupported => Err(PyluneError::Invalid(format!(
+            "{} is a 7z/rar archive — extract it and import the folder",
+            source.display()
+        ))),
     }
-    .and_then(|()| hoist_wrapper_dirs(&dest));
+    .and_then(|()| hoist_wrapper_dirs(&work))
+    .and_then(|()| swap_into_place(&work, &dest));
     // Leave no half-imported mod behind.
-    outcome.map(|()| name).inspect_err(|_| {
-        let _ = fs::remove_dir_all(&dest);
+    outcome.map(|()| name.to_string()).inspect_err(|_| {
+        let _ = fs::remove_dir_all(&work);
     })
 }
 
+/// Replaces `dest` with the freshly staged `work` directory.
+fn swap_into_place(work: &Path, dest: &Path) -> Result<()> {
+    if dest.exists() {
+        fs::remove_dir_all(dest).at(dest)?;
+    }
+    fs::rename(work, dest).at(dest)
+}
+
+/// Makes an arbitrary title safe to use as a staging directory name.
+pub fn sanitize_name(raw: &str) -> String {
+    let cleaned: String = raw
+        .chars()
+        .map(|c| match c {
+            '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => '_',
+            c if c.is_control() => '_',
+            c => c,
+        })
+        .collect();
+    match cleaned.trim().trim_start_matches('.') {
+        "" => "Unnamed mod".to_string(),
+        name => name.to_string(),
+    }
+}
+
 fn source_kind(source: &Path) -> SourceKind {
-    let is_zip = source
+    let ext = source
         .extension()
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("zip"));
-    match (source.is_dir(), is_zip) {
+        .map(|e| e.to_string_lossy().to_lowercase())
+        .unwrap_or_default();
+    match (source.is_dir(), ext.as_str()) {
         (true, _) => SourceKind::Directory,
-        (false, true) => SourceKind::Zip,
-        (false, false) => SourceKind::LooseFile,
+        (false, "zip") => SourceKind::Zip,
+        (false, "7z" | "rar") => SourceKind::Unsupported,
+        (false, _) => SourceKind::LooseFile,
     }
 }
 
@@ -54,7 +95,7 @@ fn source_kind(source: &Path) -> SourceKind {
 fn mod_name(source: &Path) -> Result<String> {
     let raw = match source_kind(source) {
         SourceKind::Directory => source.file_name(),
-        SourceKind::Zip | SourceKind::LooseFile => source.file_stem(),
+        _ => source.file_stem(),
     };
     raw.map(|n| n.to_string_lossy().trim().to_string())
         .filter(|n| !n.is_empty() && !n.starts_with('.'))

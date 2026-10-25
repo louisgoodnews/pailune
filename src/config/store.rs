@@ -17,6 +17,18 @@ pub struct DataPaths {
     pub registry: PathBuf,
     /// Record of every symlink currently deployed into the game.
     pub manifest: PathBuf,
+    /// Named installation sets.
+    pub profiles: PathBuf,
+    /// Nexus origin of staged mods.
+    pub nexus_meta: PathBuf,
+    /// Nexus API key (mode 0600).
+    pub nexus_key: PathBuf,
+    /// Temporary location for Nexus downloads.
+    pub downloads: PathBuf,
+    /// `nxm://` links handed over by secondary instances.
+    pub nxm_queue: PathBuf,
+    /// PID of the running primary instance.
+    pub pid: PathBuf,
 }
 
 /// Resolves (and creates) the data directory layout.
@@ -29,6 +41,12 @@ pub fn data_paths() -> Result<DataPaths> {
         config: root.join("config.json"),
         registry: root.join("registry.json"),
         manifest: root.join("manifest.json"),
+        profiles: root.join("profiles.json"),
+        nexus_meta: root.join("nexus_meta.json"),
+        nexus_key: root.join("nexus_api_key"),
+        downloads: root.join("downloads"),
+        nxm_queue: root.join("nxm_queue.txt"),
+        pid: root.join("pylune.pid"),
     };
     fs::create_dir_all(&paths.staging).at(&paths.staging)?;
     Ok(paths)

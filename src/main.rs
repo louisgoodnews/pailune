@@ -7,15 +7,26 @@
 mod backup;
 mod config;
 mod error;
+mod instance;
+mod launch;
 mod mod_engine;
+mod nexus;
+mod profiles;
 mod steam;
 mod symlink;
 #[cfg(test)]
 mod tests;
 mod ui;
 
-/// Starts the eframe event loop with the Pylune application.
+/// Hands `nxm://` links to a running instance, or starts the GUI.
 fn main() -> eframe::Result<()> {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let startup = config::store::data_paths().and_then(|paths| instance::bootstrap(&paths, &args));
+    match startup {
+        Ok(instance::Startup::HandedOff) => return Ok(()),
+        Ok(instance::Startup::RunGui) => {}
+        Err(err) => eprintln!("pylune: start-up coordination failed: {err}"),
+    }
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_title("Pylune — Crimson Desert Mod Manager")
