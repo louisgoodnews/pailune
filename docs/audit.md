@@ -160,3 +160,83 @@ Requested after the A-items were largely done. Sizes: **S** small, **M** medium,
 | B-04 | L | Evidence-based UI/UX rework | Apply findings from HCI, cognitive psychology, pedagogy and behavioural economics (see `docs/ux-principles.md`). |
 | B-05 | L | Full documentation | Vision, architecture, data model, module and extension guides, decision records, user guide. |
 | B-06 | S | Recoverable deletes | Deleted mods move to a trash folder and can be restored (error recovery; supports B-01 and B-04). |
+
+---
+
+## Addendum 2 — 2026-10-25: owner requests (B-07 … B-14)
+
+| ID | Size | Request | Scope |
+|----|------|---------|-------|
+| B-07 | L (research first) | Save-game analysis and editing | Reverse-engineer the save format and document what it holds (read-only); editing only after the format is understood and round-trips byte for byte. |
+| B-08 | L | Platform agnosticism | Run on Windows (and possibly macOS/Steam Deck desktop variants) without losing Linux guarantees. |
+| B-09 | S | `CONTRIBUTING.md` | Setup, conventions, checks, commit style, how to propose changes; links `docs/extending.md`. |
+| B-10 | S | `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1 with a contact address chosen by the owner. |
+| B-11 | S | Issue templates | Bug report and feature request forms (GitHub's `.github/ISSUE_TEMPLATE/` folder; a single root `ISSUE_TEMPLATE.md` is the legacy form) plus a PR template. |
+| B-12 | S–M | Mod list backup, export and import | A portable mod list (order, enabled flags, chosen options, Nexus origins, collection membership) that can be exported, shared and imported to reinstall the same setup elsewhere. |
+| B-13 | Research | Script bridge | Find out whether scripts can be injected into the running game, and how. |
+| B-14 | M–L | MCP server for agentic use | A command-line mode that exposes Pylune's actions as Model Context Protocol tools, so agents can manage mods without the window. |
+
+### B-07 — Save files: what we know (read-only look, build 2.3.2)
+
+- Location: `<prefix>/drive_c/users/steamuser/AppData/Local/Pearl Abyss/CD/save/<Steam account id>/slot<N>/`
+  with `save.save` (~830 KB) and `lobby.save` (~500 B, likely the slot summary shown in menus);
+  `steam_autocloud.vdf` marks Steam Cloud sync. Slots seen: 0, 1, 2, 100, 101 (100+ probably
+  autosaves).
+- Both files start with the same 128-byte header: magic `SAVE`, `u16` version `2`, `u16` `0x80`
+  (header size), then at offset `0x12` a `u32` that looks like the **uncompressed size**
+  (3 153 700 for `save.save`) and at `0x16` a `u32` equal to **file size − 128** (payload size),
+  followed by 16 opaque bytes (IV, nonce or hash).
+- The payload's entropy is 8.0 bits/byte: it is encrypted (and probably compressed — the size
+  ratio is about 3.8 : 1). The archive crypto (ChaCha20 + LZ4, `docs/paz-format.md`) is the first
+  candidate to test.
+- **Risks.** A wrong write corrupts progress; Steam Cloud can propagate a broken save; checksums
+  may be validated. Therefore: decode read-only first, prove a byte-identical re-encode, edit
+  only copies, always back up (B-07 builds on the A-28 save backups).
+- **Deliverables, in order:** format notes in `docs/save-format.md`; a read-only inspector
+  (header, decoded size, sections); a viewer for decoded content; editing behind explicit
+  confirmation only once round-trips are proven.
+
+### B-08 — Platform agnosticism: what blocks it today
+
+- Deployment uses Unix symlinks (`std::os::unix::fs::symlink`); Windows symlinks need Developer
+  Mode or admin rights → needs a strategy (hard links on the same volume, or copies with
+  checksums, journaled the same way).
+- `flock` single-instance lock and the spool → a cross-platform lock crate (e.g. `fs4`) and the
+  same spool design.
+- Steam/Proton discovery, prefix paths, launch through the Steam Linux Runtime, save location
+  in the prefix, `nxm://` registration via `.desktop`/`xdg-mime` → per-platform modules behind
+  one trait (`Platform`: locate game, saves dir, launch, register URL handler, open path).
+- Packaging: AppImage only → add MSI/zip for Windows.
+- **Conflicts with `docs/vision.md`**, which lists Windows/macOS as a non-goal; the owner's
+  request supersedes it — the vision and decision D-01 (symlinks) need revisiting.
+- First step (useful even on Linux only): isolate platform code behind the trait, so the core
+  stays testable and Linux behaviour is unchanged.
+
+### B-12 — Mod lists: what exists
+
+Profiles already export/import JSON (enabled flags and order, launch options), and B-01 backups
+contain the full database. Missing: chosen variants, Nexus origins (mod/file ids, versions) and
+collection membership in the export, and an import that offers to download missing Nexus mods.
+
+### B-13 — Script bridge: starting points
+
+- The installed game already loads ASI plugins through `winmm.dll` (see the install notes);
+  that is a native-code entry point inside the game process, which a bridge could use to host
+  a script runtime (e.g. Lua) and expose hooks.
+- Unknown: whether the engine has its own scripting layer (data/UI scripts inside the PAZ
+  archives would hint at it), anti-tamper measures, and what the community already uses.
+- Research output: a short report (engine scripting, existing ASI frameworks for the game,
+  hook points, risks incl. anti-cheat and ToS), then a decision record before any code.
+  Pylune's part would be installing/configuring the bridge like any ASI mod.
+
+### B-14 — MCP: shape
+
+- `pylune mcp` runs headless over stdio (JSON-RPC, MCP spec) and exposes tools mirroring the
+  existing intents: list mods/profiles/collections, import, enable/disable, reorder, apply,
+  unlink, backup/restore, Nexus lookup/download, launch, read the event journal.
+- Reuses `jobs` and the database; must respect the single-instance lock (forward requests to
+  the running window through the spool, or run only when no window is open).
+- Destructive tools (clean slate, restore, delete) require an explicit `confirm: true`
+  argument; Nexus downloads stay subject to the account's rules.
+- A plain CLI (`pylune list`, `pylune apply` …) falls out of the same layer and is useful on
+  its own.

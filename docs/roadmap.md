@@ -20,10 +20,31 @@ the large reworks that build on them. Day-to-day status lives in [board.md](boar
    (B-01, B-02, B-03, A-28 part, A-29).
 10. **Reworks** — evidence-based UI/UX rework, full documentation (B-04, B-05).
 
-## Phase 11 — Remaining large items (L)
+## Phase 11 — Project hygiene (S)
+
+- B-09 `CONTRIBUTING.md`.
+- B-10 `CODE_OF_CONDUCT.md` (needs a contact address from the owner).
+- B-11 Issue and pull request templates.
+
+## Phase 12 — Medium features (M)
+
+- B-12 Portable mod lists: export/import with variants, Nexus origins and collections;
+  offer to download what is missing.
+- B-14 Headless core + CLI, then an MCP server (`pylune mcp`) on top of it.
+- B-08 (step 1) Platform layer: move Linux-specific code behind a `Platform` trait.
+
+## Phase 13 — Research
+
+- B-07 Save format: read-only decoding and documentation (`docs/save-format.md`).
+- B-13 Script bridge: report and decision record before any code.
+
+## Phase 14 — Remaining large items (L)
 
 - A-01 rest: XML/HTML patches, new texture ids, table inserts, field-name JSON (format 3).
 - A-28 FOMOD-style installer scripts.
+- B-07 (step 2) Save viewer, then editing once re-encoding is proven byte-identical.
+- B-08 (step 2) Windows support (deployment without symlinks, packaging); revisit the vision.
+- B-13 (step 2) Bridge installation, if the research says it is viable.
 
 ## Owner tasks
 

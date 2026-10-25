@@ -39,14 +39,26 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
+- [ ] B-09 `CONTRIBUTING.md` — *S*
+- [ ] B-11 Issue and PR templates — *S*
+- [ ] B-12 Portable mod lists (export/import with variants, Nexus origins, collections) — *S–M*
+- [ ] B-14 Headless core + CLI, then MCP server — *M–L*
+- [ ] B-08 (step 1) `Platform` trait around Linux-specific code — *M*
+- [ ] B-07 (research) Save format: read-only decoding, `docs/save-format.md` — *L*
+- [ ] B-13 (research) Script bridge report + decision record
 
 ## Backlog (large)
 
+- [ ] B-07 (step 2) Save viewer, then editing — *L*
+- [ ] B-08 (step 2) Windows support — *L*
+- [ ] B-13 (step 2) Script bridge installation — *L*
 - [ ] A-01 (rest) XML/HTML patches, new texture ids, table inserts, field-name JSON — *L*
 - [ ] A-28 (rest) FOMOD-style installer scripts — *L*
 
 ## Owner
 
+- [ ] B-10 Choose the contact address for `CODE_OF_CONDUCT.md` enforcement
+- [ ] B-08 Confirm Windows/macOS as goals (the vision lists them as non-goals)
 - [ ] A-21 (rest) Register Pylune with Nexus (AUP) before a public release
 
 ## Done
