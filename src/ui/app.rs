@@ -1,5 +1,6 @@
 //! Bootstrapping and the eframe [`App`](eframe::App) implementation.
 
+use super::guide::GuideState;
 use super::{
     Action, Level, LogState, ModsState, NexusState, ProfilesState, PyluneApp, SettingsDraft,
     StatusLine, Tab,
@@ -99,6 +100,10 @@ impl PyluneApp {
             close_refused: false,
             focus_requested: false,
             setup_open: discovery == Discovery::NotFound,
+            guide: GuideState {
+                open: config.behavior.show_guide && discovery != Discovery::NotFound,
+                ..GuideState::default()
+            },
             archives: Default::default(),
             backups: Vec::new(),
             pool,
@@ -225,6 +230,7 @@ impl eframe::App for PyluneApp {
             self.nexus.preview.as_ref(),
             installed,
         ));
+        actions.extend(views::guide::show(ui.ctx(), self));
         if self.setup_open {
             actions.extend(views::setup::show(ui.ctx(), self));
         }

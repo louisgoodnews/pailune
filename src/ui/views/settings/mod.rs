@@ -34,11 +34,11 @@ const PAGES: [(SettingsPage, &str, &str); 8] = [
         "🌐 Nexus Mods",
         "Downloads and updates",
     ),
-    (SettingsPage::Backups, "🛟 Backups", "Pylune's own state"),
+    (SettingsPage::Backups, "🗄 Backups", "Pylune's own state"),
     (SettingsPage::Advanced, "🔧 Advanced", "Jobs and logs"),
     (
         SettingsPage::Diagnostics,
-        "🩺 Diagnostics",
+        "🔬 Diagnostics",
         "Archives, Proton, paths",
     ),
 ];
@@ -50,7 +50,7 @@ pub(super) fn setting(ui: &mut egui::Ui, title: &str, help: &str, add: impl FnOn
         ui.label(RichText::new(title).strong());
         add(ui);
     });
-    ui.label(RichText::new(help).small().color(muted()));
+    ui.label(RichText::new(help).color(muted()));
 }
 
 fn category_list(ui: &mut egui::Ui, draft: &mut SettingsDraft) {
@@ -69,7 +69,7 @@ fn save_bar(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         return Vec::new();
     }
     ui.horizontal(|ui| {
-        ui.label(RichText::new("● Unsaved changes").color(warning()));
+        ui.label(RichText::new("⏺ Unsaved changes").color(warning()));
         let save = theme::filled_button(ui, "Save", accent()).clicked();
         if ui.button("Discard").clicked() {
             let page = app.draft.page;
@@ -121,7 +121,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         ui.separator();
         let inner = egui::ScrollArea::vertical()
             .auto_shrink([false, false])
-            .show(ui, |ui| page(ui, app))
+            .show(ui, |ui| ui.vertical(|ui| page(ui, app)).inner)
             .inner;
         actions.extend(inner);
     });

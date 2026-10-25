@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] B-03 Onboarding: guided first run + built-in guide — *M*
 - [ ] A-28 (rest) Save-game backup — *M*
 - [ ] A-29 (rest) AppImage — *M*
 
@@ -56,6 +55,15 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-03 onboarding (`src/ui/guide/`, `src/ui/views/guide.rs`): a non-modal guide window opens
+  on first start with three core ideas (R-18) and five real steps checked against the app's state
+  (find game → add mod → enable → apply → play) with progress and a head start (R-17), buttons that
+  perform each step, a finish state (R-23); searchable "How do I…" topics (17, incl. glossary and
+  shortcuts); ❓ Guide button and F1; teaching empty mod list (R-19); finished guides stop opening
+  at start.
+- [x] Rendering checks: bundled emoji font (icons no longer depend on system fonts), a test that
+  every UI symbol has a glyph, and on-demand screenshots of key screens in both themes
+  (`PYLUNE_SHOTS=<dir> cargo test screens -- --ignored`).
 - [x] B-02 settings menu (`src/ui/views/settings/`, `src/config/prefs.rs`): eight categories
   with one-line help per option, constrained controls (R-07), Save/Discard bar, per-page reset;
   appearance (theme incl. System, scale, density, reduced motion) previewed live; WCAG-checked

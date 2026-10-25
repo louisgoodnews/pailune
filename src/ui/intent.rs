@@ -128,6 +128,7 @@ pub enum Action {
     Nexus(NexusAction),
     Setup(SetupAction),
     Backup(BackupAction),
+    Guide(super::guide::GuideAction),
     SwitchTab(Tab),
     BrowseGameDir,
     SaveSettings,

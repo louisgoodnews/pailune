@@ -3,6 +3,7 @@
 use super::clicked;
 use crate::launch::GameProcess;
 use crate::steam::{AsiLoader, GameStatus};
+use crate::ui::guide::{GuideAction, GuidePage};
 use crate::ui::theme::{self, accent, danger, muted, success, warning};
 use crate::ui::{Action, Confirm, DeployAction, PyluneApp, Tab};
 use eframe::egui::{self, Color32, RichText};
@@ -56,7 +57,16 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
                 })
                 .inner
                 .on_hover_text("Launch with the active profile's options (applies pending changes first if enabled)");
-            actions.extend(clicked([(play.clicked(), Action::Deploy(DeployAction::Launch))]));
+            let guide = ui
+                .button("❓ Guide")
+                .on_hover_text("Getting started and how-to topics (F1)");
+            actions.extend(clicked([
+                (play.clicked(), Action::Deploy(DeployAction::Launch)),
+                (
+                    guide.clicked(),
+                    Action::Guide(GuideAction::Open(GuidePage::GettingStarted)),
+                ),
+            ]));
         });
     });
     ui.add_space(4.0);

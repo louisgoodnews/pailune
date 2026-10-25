@@ -5,6 +5,7 @@ mod actions;
 mod app;
 mod draft;
 pub mod fatal;
+pub mod guide;
 pub mod icon;
 mod intent;
 mod shortcuts;
@@ -108,6 +109,8 @@ pub struct PyluneApp {
     pub setup_open: bool,
     /// Backups of Pylune's state, newest first.
     pub backups: Vec<crate::app_backup::BackupInfo>,
+    /// Onboarding window.
+    pub guide: guide::GuideState,
     /// Version and pack groups of the installed archives.
     pub archives: crate::paz::status::ArchiveStatus,
 }

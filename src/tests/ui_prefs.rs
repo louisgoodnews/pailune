@@ -73,3 +73,33 @@ fn backups_restore_the_mod_list_and_settings() {
         "safety backup taken"
     );
 }
+
+#[test]
+fn the_guide_follows_progress_and_remembers_the_choice() {
+    use crate::ui::guide::steps::Step;
+    use crate::ui::guide::{GuideAction, GuidePage};
+    use crate::ui::{DeployAction, Tab};
+    let fx = fixture();
+    let mut app = app(&fx);
+    assert!(app.guide.open, "opens on first start");
+    assert_eq!(app.guide_facts().current(), Some(Step::AddMod));
+    app.dispatch(Action::Mod(ModAction::ImportPaths(vec![
+        fx.sources.join("Overlay"),
+    ])));
+    settle(&mut app);
+    assert_eq!(app.guide_facts().current(), Some(Step::EnableMod));
+    app.dispatch(Action::Mod(ModAction::SetAll(true)));
+    app.dispatch(Action::Deploy(DeployAction::Apply));
+    settle(&mut app);
+    assert_eq!(app.guide_facts().current(), Some(Step::Play));
+    // Closing an unfinished guide keeps it for the next start.
+    app.dispatch(Action::Guide(GuideAction::Close));
+    assert!(!app.guide.open && app.config.behavior.show_guide);
+    app.dispatch(Action::Guide(GuideAction::Open(GuidePage::Topics)));
+    assert_eq!((app.guide.open, app.guide.page), (true, GuidePage::Topics));
+    app.dispatch(Action::Guide(GuideAction::ShowAtStart(false)));
+    let saved = crate::config::file::load_or_create(&app.paths.config_file).unwrap();
+    assert!(!saved.behavior.show_guide && !app.draft.config.behavior.show_guide);
+    app.dispatch(Action::SwitchTab(Tab::Settings));
+    assert!(!app.draft.is_changed(&app.config));
+}

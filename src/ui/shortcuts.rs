@@ -1,5 +1,6 @@
 //! Keyboard shortcuts and drag-and-drop import.
 
+use super::guide::{GuideAction, GuidePage};
 use super::{Action, Confirm, DeployAction, ModAction, PyluneApp, Tab};
 use eframe::egui::{self, Key, Modifiers};
 
@@ -11,13 +12,14 @@ pub fn search_id() -> egui::Id {
 /// Reads shortcuts and dropped files for this frame.
 pub fn collect(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
     let typing = ctx.memory(|m| m.focused().is_some());
-    let (search, rescan, apply, import, delete) = ctx.input_mut(|i| {
+    let (search, rescan, apply, import, delete, help) = ctx.input_mut(|i| {
         (
             i.consume_key(Modifiers::COMMAND, Key::F),
             i.consume_key(Modifiers::NONE, Key::F5),
             i.consume_key(Modifiers::COMMAND, Key::Enter),
             i.consume_key(Modifiers::COMMAND, Key::I),
             !typing && i.consume_key(Modifiers::NONE, Key::Delete),
+            i.consume_key(Modifiers::NONE, Key::F1),
         )
     });
     if search {
@@ -37,6 +39,10 @@ pub fn collect(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
         (rescan, Action::Mod(ModAction::Rescan)),
         (apply, Action::Deploy(DeployAction::Apply)),
         (import, Action::Mod(ModAction::ImportFiles)),
+        (
+            help,
+            Action::Guide(GuideAction::Open(GuidePage::GettingStarted)),
+        ),
         (
             !dropped.is_empty(),
             Action::Mod(ModAction::ImportPaths(dropped)),

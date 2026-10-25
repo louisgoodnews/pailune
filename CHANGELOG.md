@@ -31,6 +31,11 @@
 - New options: confirm deletes, update check at start, enable new mods, trash size, automatic
   backups and how many to keep, days of logs kept.
 
+### Onboarding
+- Getting-started guide with real, checkable steps and progress; searchable "How do I…" topics;
+  ❓ Guide button and F1; the empty mod list explains what to do next.
+- Icons render everywhere (emoji font bundled).
+
 ### Storage
 - SQLite application state (`~/.local/share/pylune/pylune.sqlite3`), TOML settings
   (`~/.config/pylune/config.toml`).

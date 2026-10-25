@@ -86,6 +86,7 @@ impl PyluneApp {
                 match self.game {
                     GameStatus::Ready => {
                         self.setup_open = false;
+                        self.guide.open = self.config.behavior.show_guide;
                         snapshot::ensure_meta_backup(&self.info)?;
                         Ok(Some(line))
                     }

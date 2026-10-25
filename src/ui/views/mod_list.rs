@@ -54,10 +54,10 @@ fn row(ui: &mut egui::Ui, index: usize, entry: &ModEntry, app: &PyluneApp) -> Ve
     ui.label(RichText::new(files).color(muted()));
     status_cell(ui, entry, app);
     let up = ui
-        .add_enabled(index > 0, egui::Button::new("▲").small())
+        .add_enabled(index > 0, egui::Button::new("⏶").small())
         .clicked();
     let down = ui
-        .add_enabled(index < last, egui::Button::new("▼").small())
+        .add_enabled(index < last, egui::Button::new("⏷").small())
         .clicked();
     ui.end_row();
     clicked([
@@ -126,10 +126,19 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     let mods = &app.registry.mods;
     if mods.is_empty() {
         ui.add_space(40.0);
-        ui.vertical_centered(|ui| {
-            ui.label(RichText::new("No mods staged yet").size(18.0));
-            ui.label(RichText::new("Import a folder or a .zip/.7z/.rar/.asi/.dll/.json file, or download from Nexus.").color(muted()));
+        // An empty list teaches the next step and offers it (R-19).
+        let empty = ui.vertical_centered(|ui| {
+            ui.label(RichText::new("No mods yet").size(18.0));
+            ui.label(RichText::new("Import a downloaded mod (.zip, .7z, .rar, folder, .asi, .dll, .json), drop it onto this window, or download one from Nexus Mods.").color(muted()));
+            ui.label(RichText::new("Nothing in the game folder changes until you press Apply.").color(muted()));
+            ui.add_space(6.0);
+            clicked([
+                (theme::filled_button(ui, "📦 Import archives / files…", accent()).clicked(), Action::Mod(ModAction::ImportFiles)),
+                (ui.button("🌐 Find mods on Nexus").clicked(), Action::SwitchTab(crate::ui::Tab::Nexus)),
+                (ui.button("❓ Getting started").clicked(), Action::Guide(crate::ui::guide::GuideAction::Open(crate::ui::guide::GuidePage::GettingStarted))),
+            ])
         });
+        actions.extend(empty.inner);
         actions.extend(trash(ui, app));
         return actions;
     }

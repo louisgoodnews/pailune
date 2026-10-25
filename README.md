@@ -30,6 +30,12 @@ unlink → verify files in Steam → refresh backup before mods can be applied a
 - **Clean Slate:** removes all links, restores `meta/` from `.bak` and renames foreign archive
   folders above `0035` to `NNNN.bak` (restorable in *Settings*).
 
+## Getting started
+
+On first start Pylune opens a short guide: three ideas to know, then five steps you do for real
+(find the game, add a mod, enable it, apply, play) with buttons for each. The guide's
+*How do I…* page answers common tasks and can be searched; reopen it with **❓ Guide** or **F1**.
+
 ## Settings
 
 The *Settings* tab groups every option into categories, each with a one-line explanation:

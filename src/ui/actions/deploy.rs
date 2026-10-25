@@ -10,7 +10,11 @@ impl PyluneApp {
     /// Handles game-folder actions (mostly by queueing exclusive jobs).
     pub(super) fn deploy_action(&mut self, action: DeployAction) -> Result<Option<StatusLine>> {
         let (kind, text) = match action {
-            DeployAction::Launch => return self.launch().map(Some),
+            DeployAction::Launch => {
+                let line = self.launch()?;
+                self.guide.played = true;
+                return Ok(Some(line));
+            }
             DeployAction::VerifyGame => {
                 run::verify_files(self.config.game.app_id)?;
                 return Ok(Some(StatusLine::new(

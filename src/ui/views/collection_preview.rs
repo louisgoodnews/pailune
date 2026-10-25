@@ -30,7 +30,7 @@ pub fn show(
                 Some(old) if old.revision == c.revision => {
                     format!("installed (revision {})", c.revision)
                 }
-                Some(old) => format!("update revision {} → {}", old.revision, c.revision),
+                Some(old) => format!("update revision {} to {}", old.revision, c.revision),
                 None => format!("revision {}", c.revision),
             };
             ui.label(

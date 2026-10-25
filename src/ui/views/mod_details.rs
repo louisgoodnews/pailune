@@ -27,11 +27,11 @@ fn actions_row(ui: &mut egui::Ui, entry: &ModEntry) -> Vec<Action> {
                     mod_action(ModAction::Move(name.clone(), MoveTo::Top)),
                 ),
                 (
-                    ui.button("▲").clicked(),
+                    ui.button("⏶").clicked(),
                     mod_action(ModAction::Move(name.clone(), MoveTo::Up)),
                 ),
                 (
-                    ui.button("▼").clicked(),
+                    ui.button("⏷").clicked(),
                     mod_action(ModAction::Move(name.clone(), MoveTo::Down)),
                 ),
                 (

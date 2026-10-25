@@ -62,7 +62,7 @@ pub fn nexus(ui: &mut egui::Ui, draft: &mut SettingsDraft) -> Vec<Action> {
         |ui| text(ui, &mut draft.config.nexus.domain, "crimsondesert"),
     );
     ui.add_space(8.0);
-    match ui.button("Set up the API key on the Nexus tab →").clicked() {
+    match ui.button("Set up the API key on the Nexus tab ›").clicked() {
         true => vec![Action::SwitchTab(Tab::Nexus)],
         false => Vec::new(),
     }
