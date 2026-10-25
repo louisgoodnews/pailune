@@ -138,6 +138,15 @@ pub fn fetch(
         install::sanitize_name(&file.file_name)
     ));
     download_any(client, &mirrors, &archive, progress)?;
+    // A truncated or substituted file is caught before it is staged.
+    let size = fs::metadata(&archive).at(&archive)?.len();
+    if let Some(expected) = file.size_in_bytes.filter(|e| *e != size) {
+        let _ = fs::remove_file(&archive);
+        return Err(PyluneError::Invalid(format!(
+            "{}: downloaded {size} bytes, Nexus lists {expected}",
+            file.file_name
+        )));
+    }
     Ok(Fetched {
         archive,
         info,

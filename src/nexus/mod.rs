@@ -10,6 +10,7 @@ pub mod collection;
 pub mod download;
 pub mod handler;
 pub mod key;
+pub mod limits;
 pub mod nxm;
 pub mod updates;
 
@@ -52,6 +53,9 @@ pub struct NexusFile {
     pub file_name: String,
     #[serde(default)]
     pub size_kb: u64,
+    /// Exact size, when Nexus reports it.
+    #[serde(default)]
+    pub size_in_bytes: Option<u64>,
 }
 
 /// Envelope of `/mods/{id}/files.json`.

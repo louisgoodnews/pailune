@@ -94,16 +94,17 @@ impl Client {
 
     /// Performs an authenticated GET and decodes the JSON body.
     fn get_json<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
-        self.agent
+        super::limits::allow().map_err(PyluneError::Invalid)?;
+        let mut response = self
+            .agent
             .get(format!("{BASE}{path}"))
             .header("apikey", &self.key)
             .header("Application-Name", APP_NAME)
             .header("Application-Version", APP_VERSION)
             .call()
-            .map_err(explain)?
-            .body_mut()
-            .read_json()
-            .map_err(explain)
+            .map_err(explain)?;
+        super::limits::record(response.headers());
+        response.body_mut().read_json().map_err(explain)
     }
 
     /// Checks the API key and returns the account.
@@ -156,17 +157,17 @@ impl Client {
             "query": COLLECTION_QUERY,
             "variables": { "slug": slug, "domain": self.domain, "revision": revision },
         });
-        let response: serde_json::Value = self
+        super::limits::allow().map_err(PyluneError::Invalid)?;
+        let mut reply = self
             .agent
             .post(GRAPHQL)
             .header("apikey", &self.key)
             .header("Application-Name", APP_NAME)
             .header("Application-Version", APP_VERSION)
             .send_json(&body)
-            .map_err(explain)?
-            .body_mut()
-            .read_json()
             .map_err(explain)?;
+        super::limits::record(reply.headers());
+        let response: serde_json::Value = reply.body_mut().read_json().map_err(explain)?;
         super::collection::from_graphql(slug, &response).ok_or_else(|| {
             let detail = response
                 .get("errors")

@@ -24,7 +24,17 @@ fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         ),
         None => ("NOT SIGNED IN".to_string(), MUTED),
     };
-    theme::badge(ui, &text, color);
+    ui.horizontal(|ui| {
+        theme::badge(ui, &text, color);
+        let limits = crate::nexus::limits::current();
+        if let (Some(hourly), Some(daily)) = (limits.hourly, limits.daily) {
+            ui.label(
+                RichText::new(format!("API budget left: {hourly}/hour, {daily}/day"))
+                    .small()
+                    .color(MUTED),
+            );
+        }
+    });
     let (save, validate) = ui
         .horizontal(|ui| {
             ui.add(

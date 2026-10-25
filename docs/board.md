@@ -35,8 +35,8 @@ Move a line between columns when its status changes.
 
 ## Next
 
-- [ ] A-21 Rate limits + AUP registration — *Phase 5*
-- [ ] A-24 Download size/MD5 verification, resume — *Phase 2*
+- [ ] A-24 (rest) Download resume; MD5 check — *Phase 2*
+- [ ] A-21 (rest) Register Pylune with Nexus (AUP) before a public release — *Phase 5*
 
 ## Backlog
 
@@ -49,6 +49,9 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-21 `X-RL-*` budget recorded after every API/GraphQL call and shown on the Nexus page;
+  calls stop with a clear message when the hourly budget is nearly spent.
+- [x] A-24 (part) downloads are checked against Nexus' exact file size before staging.
 - [x] A-17 Nexus collections: v2 GraphQL fetch (slug, URL or `nxm://…/collections/<slug>/revisions/<n>`),
   review dialog with optional members, install in the curator's load order (Premium: parallel
   downloads; free: pending list with links, matching `nxm://` downloads accepted automatically),
