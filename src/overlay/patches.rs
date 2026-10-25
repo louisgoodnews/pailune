@@ -190,3 +190,38 @@ pub fn apply_all(
     });
     (files, notes)
 }
+
+/// Applies CSS patches in load order on top of `files` (patched content),
+/// the mod's own shipped stylesheet, or vanilla.
+pub fn apply_css(
+    game_dir: &Path,
+    base: &Vanilla,
+    patches: &[(String, String, PathBuf)],
+    packed: &BTreeMap<String, PathBuf>,
+    files: &mut BTreeMap<String, Vec<u8>>,
+    notes: &mut Vec<PatchNote>,
+) {
+    patches.iter().for_each(|(mod_name, target, file)| {
+        let current = match (files.get(target), packed.get(target)) {
+            (Some(bytes), _) => Ok(bytes.clone()),
+            (None, Some(source)) => fs::read(source).at(source),
+            (None, None) => vanilla_bytes(game_dir, base, target),
+        };
+        let result = current.and_then(|base_bytes| {
+            let patch = fs::read_to_string(file).at(file)?;
+            Ok(patch::css::apply(&String::from_utf8_lossy(&base_bytes), &patch).into_bytes())
+        });
+        let (ok, message) = match result {
+            Ok(bytes) => {
+                files.insert(target.clone(), bytes);
+                (true, format!("{target}: CSS patch applied"))
+            }
+            Err(err) => (false, format!("{target}: {err}")),
+        };
+        notes.push(PatchNote {
+            mod_name: mod_name.clone(),
+            ok,
+            message,
+        });
+    });
+}

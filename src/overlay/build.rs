@@ -123,10 +123,24 @@ pub fn build_from(
     let patch_mods = super::patches::read_all(&input.patches);
     let mut wanted = super::patches::wanted(&patch_mods);
     wanted.paths.extend(input.packs.keys().cloned());
+    wanted.paths.extend(
+        input
+            .css_patches
+            .iter()
+            .map(|(_, target, _)| target.clone()),
+    );
     let base = vanilla::load(&info.game_dir, vanilla_bytes, &wanted)?;
     let _ = fs::remove_dir_all(out_dir);
-    let (patched, patch_notes) =
+    let (mut patched, mut patch_notes) =
         super::patches::apply_all(&info.game_dir, &base, &patch_mods, &input.packs);
+    super::patches::apply_css(
+        &info.game_dir,
+        &base,
+        &input.css_patches,
+        &input.packs,
+        &mut patched,
+        &mut patch_notes,
+    );
     let own = !input.packs.is_empty() || !patched.is_empty();
     let names = free_names(
         &info.game_dir,

@@ -130,3 +130,65 @@ fn json_patches_apply_in_load_order_and_revert() {
     let restored = game_lookup_bytes(&game, BODY).unwrap();
     assert_eq!(restored, body);
 }
+
+#[test]
+fn css_patches_merge_in_load_order() {
+    let fx = fixture();
+    let game = fx.config.game.dir.clone();
+    let css = "ui/xml/gamemain/title/titleview.css";
+    let vanilla = "#Copyright { color: #acacac; font-size: 15px; }\r\n.keep { x: 1 }\r\n";
+    let crc = write_group(&game.join("0012"), &[(css, vanilla, 0x32)]);
+    let table = Papgt {
+        unknown0: 1,
+        unknown1: 2,
+        groups: vec![GroupEntry {
+            is_optional: false,
+            lang_mask: 0x7FFF,
+            name: "0012".into(),
+            pamt_crc: crc,
+        }],
+    };
+    fs::write(game.join("meta/0.papgt"), papgt::serialize(&table).unwrap()).unwrap();
+    write(
+        &fx.sources
+            .join("A Red/files/0012/ui/xml/gamemain/title/titleview.css.patch"),
+        "#Copyright { color: #ff3030 }",
+    );
+    write(
+        &fx.sources
+            .join("B Big/0012/ui/xml/gamemain/title/titleview.css.merge"),
+        "#Copyright { font-size: 30px }\n/* @add */\n.extra { y: 2 }",
+    );
+
+    let root = fx.staging.parent().unwrap().to_path_buf();
+    let paths = DataPaths::under(&root, &root);
+    paths.create_dirs().unwrap();
+    let pool = JobPool::spawn(1, paths.clone(), Arc::new(tasks::run), Arc::new(|| {}));
+    let imports: Vec<_> = ["A Red", "B Big"]
+        .iter()
+        .map(|m| {
+            pool.submit(
+                JobKind::Import {
+                    source: fx.sources.join(m),
+                    replace: None,
+                },
+                &fx.config,
+            )
+        })
+        .collect();
+    assert!(wait_all_jobs(&pool, &imports).iter().all(Result::is_ok));
+    let mut conn = db::open(&paths.database).unwrap();
+    db::mods::update(&mut conn, |r| Ok(registry::with_all(r, true))).unwrap();
+    let apply = pool.submit(JobKind::Apply, &fx.config);
+    assert!(wait_all_jobs(&pool, &[apply]).remove(0).is_ok());
+
+    let out = String::from_utf8(game_lookup_bytes(&game, css).unwrap()).unwrap();
+    assert!(
+        out.contains("#Copyright { color: #ff3030; font-size: 30px; }"),
+        "{out}"
+    );
+    assert!(
+        out.contains(".keep { x: 1 }\r\n") && out.ends_with(".extra { y: 2 }\r\n"),
+        "{out:?}"
+    );
+}

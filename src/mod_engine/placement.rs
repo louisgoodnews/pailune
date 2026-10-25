@@ -22,6 +22,8 @@ pub enum Placement {
     PrebuiltGroup,
     /// A byte-patch JSON mod applied to game data inside the archives.
     JsonPatch,
+    /// A `*.css.patch` / `*.css.merge` file applied to an archived stylesheet.
+    CssPatch,
     /// Not deployable yet.
     NeedsPaz(PazFormat),
     /// Documentation, screenshots and mod metadata.
@@ -36,6 +38,7 @@ impl Placement {
             Placement::Pack => "packed into Pylune's archive group",
             Placement::PrebuiltGroup => "prebuilt archive group, registered by Pylune",
             Placement::JsonPatch => "JSON patch, applied into Pylune's archive group",
+            Placement::CssPatch => "CSS patch, merged into the game's stylesheet",
             Placement::NeedsPaz(PazFormat::Unplaced) => {
                 "game file with unknown location — not deployed"
             }
@@ -80,6 +83,14 @@ pub fn virtual_path(rel: &Path) -> Option<String> {
     Some(parts[start..].join("/")).filter(|p| !p.is_empty())
 }
 
+/// The stylesheet a `*.css.patch` / `*.css.merge` file changes.
+pub fn css_target(rel: &Path) -> Option<String> {
+    let vpath = virtual_path(rel)?;
+    [".css.patch", ".css.merge"]
+        .iter()
+        .find_map(|s| vpath.strip_suffix(s).map(|t| format!("{t}.css")))
+}
+
 /// Decides the [`Placement`] of a file from its path relative to the mod root.
 pub fn placement(rel: &Path) -> Placement {
     let parts = lower_parts(rel);
@@ -97,6 +108,7 @@ pub fn placement(rel: &Path) -> Placement {
         (dir, "paz" | "pamt", _) if is_archive_dir(dir) && parts.len() == 2 => {
             Placement::PrebuiltGroup
         }
+        _ if css_target(rel).is_some() => Placement::CssPatch,
         (_, _, Some(_)) => Placement::Pack,
         _ if MANIFESTS.contains(&name.as_str()) => Placement::Skip,
         (_, "asi" | "dll" | "ini", None) => Placement::Bin64,

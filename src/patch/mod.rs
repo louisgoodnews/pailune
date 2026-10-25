@@ -4,6 +4,7 @@
 //! vanilla bytes and packs the result into its overlay.
 
 pub mod apply;
+pub mod css;
 pub mod parse;
 pub mod table;
 

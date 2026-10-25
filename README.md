@@ -91,7 +91,8 @@ If the active profile has no options, `[launch] default_options` is used.
 | prebuilt groups `NNNN/0.pamt` + `*.paz`        | registered under a free group number     |
 | byte-patch JSON mods (`"patches": [{ "game_file", "changes" }]`) | applied to the game file, packed into Pylune's archive group; every change is checked against the original bytes, results per mod in the Log tab |
 | `meta/*` shipped by a mod                      | ignored — Pylune generates `0.papgt` from your vanilla backup |
-| field-name JSON (format 3), game files with unknown location | not supported yet — reported in the UI/Log |
+| CSS patch files (`<file>.css.patch`, `<file>.css.merge`) in RAW layouts | merged into the stylesheet in load order (`@merge`, `@replace`, `@add`, `@remove`) |
+| field-name JSON (format 3), XML/HTML patch files, game files with unknown location | not supported yet — reported in the UI/Log |
 | readmes, images, `manifest.json`               | not deployed (shown in the details panel) |
 
 ### The archive overlay

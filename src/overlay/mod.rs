@@ -28,6 +28,8 @@ pub struct OverlayInput {
     pub prebuilt: Vec<PathBuf>,
     /// Byte-patch JSON files `(mod name, file)`, in load order.
     pub patches: Vec<(String, PathBuf)>,
+    /// CSS patches `(mod name, target stylesheet, file)`, in load order.
+    pub css_patches: Vec<(String, String, PathBuf)>,
     /// Virtual paths provided by more than one mod.
     pub conflicts: usize,
 }
@@ -51,6 +53,9 @@ pub struct OverlayPlan {
 
 impl OverlayInput {
     pub fn is_empty(&self) -> bool {
-        self.packs.is_empty() && self.prebuilt.is_empty() && self.patches.is_empty()
+        self.packs.is_empty()
+            && self.prebuilt.is_empty()
+            && self.patches.is_empty()
+            && self.css_patches.is_empty()
     }
 }

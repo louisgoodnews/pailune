@@ -30,7 +30,10 @@ Move a line between columns when its status changes.
     or unique file name; patched files packed with vanilla flags; results journaled per
     mod. Dry run on the real item table changes exactly the targeted byte.
   - not yet: field-name JSON (format 3, needs per-table schemas — reported as
-    unsupported), inserts into tables, XML/HTML/CSS patch files, new texture ids.
+    unsupported), inserts into tables, XML/HTML patch files, new texture ids.
+  - done: CSS patch/merge files (`*.css.patch`, `*.css.merge`: @merge/@replace/@add/@remove),
+    applied in load order on top of shipped or vanilla stylesheets; untouched rules stay
+    byte-identical (checked on the real title stylesheet).
   - done: conflicts between packed archive files are reported like linked ones
     (`[archive]/<path>` in the details panel).
 

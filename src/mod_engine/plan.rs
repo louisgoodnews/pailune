@@ -1,7 +1,9 @@
 //! Maps staged mod files onto their destination inside the game directory.
 
 use super::model::Registry;
-pub use super::placement::{PazFormat, Placement, is_archive_dir, placement, virtual_path};
+pub use super::placement::{
+    PazFormat, Placement, css_target, is_archive_dir, placement, virtual_path,
+};
 use crate::config::Config;
 use crate::error::Result;
 use std::collections::BTreeMap;
@@ -36,6 +38,7 @@ fn destination(config: &Config, rel: &Path, place: Placement) -> Option<PathBuf>
         Placement::Pack
         | Placement::PrebuiltGroup
         | Placement::JsonPatch
+        | Placement::CssPatch
         | Placement::NeedsPaz(_)
         | Placement::Skip => None,
     };

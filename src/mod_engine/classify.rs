@@ -18,6 +18,7 @@ fn kind_of(place: Placement) -> Option<ModKind> {
         Placement::PrebuiltGroup => Some(ModKind::Overlay),
         Placement::Pack | Placement::NeedsPaz(PazFormat::Unplaced) => Some(ModKind::Raw),
         Placement::JsonPatch => Some(ModKind::Json),
+        Placement::CssPatch => Some(ModKind::Raw),
         Placement::Skip => None,
     }
 }
