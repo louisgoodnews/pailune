@@ -31,6 +31,9 @@
 - New options: confirm deletes, update check at start, enable new mods, trash size, automatic
   backups and how many to keep, days of logs kept.
 
+### Save games
+- Save files are backed up before every Play and on request; restore keeps a safety copy.
+
 ### Onboarding
 - Getting-started guide with real, checkable steps and progress; searchable "How do I…" topics;
   ❓ Guide button and F1; the empty mod list explains what to do next.

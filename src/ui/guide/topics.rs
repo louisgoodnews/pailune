@@ -116,6 +116,15 @@ pub const TOPICS: &[Topic] = &[
         ],
     },
     Topic {
+        title: "Protect my save games",
+        keywords: "save savegame slot progress backup restore cloud",
+        body: &[
+            "Pylune copies the game's save files every time you press Play (Settings › Backups).",
+            "Settings › Backups › Save games: Back up saves now, or Restore… an older copy. The current saves are backed up first.",
+            "If Steam reports a cloud conflict after a restore, keep the local files.",
+        ],
+    },
+    Topic {
         title: "After a game update",
         keywords: "game update patch broken version verify",
         body: &[

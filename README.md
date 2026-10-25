@@ -17,6 +17,7 @@ unlink → verify files in Steam → refresh backup before mods can be applied a
 | Staged mods | `~/.local/share/pylune/staging/<mod>/` |
 | Application log (daily) | `~/.local/share/pylune/logs/pylune.log.YYYY-MM-DD` |
 | Per-mod log (installs, updates, deployments, file lists) | `~/.local/share/pylune/logs/mods/<mod>.log` |
+| Save-game backups | `~/.local/share/pylune/save-backups/saves-<time>-….zip` |
 | Nexus API key (mode `0600`) | `~/.local/share/pylune/nexus_api_key` |
 
 ## How it works
@@ -101,12 +102,18 @@ If the active profile has no options, `[launch] default_options` is used.
 
 ## Backups
 
-*Settings → Pylune backups* saves your settings, mod list (order, enabled flags, chosen options),
+*Settings → Backups* saves your settings, mod list (order, enabled flags, chosen options),
 profiles and collections into one `.zip` in `~/.local/share/pylune/backups/`; a **full backup**
 also contains every mod file. One automatic backup is taken per day (the newest 10 are kept).
 Restoring needs the mods to be unlinked, takes a safety backup first and keeps the replaced mod
 folder aside. Deleted mods go to *Recently deleted* on the Mods page and can be restored (or
 undone right away from the status bar). The Nexus API key is never part of a backup.
+
+**Save games:** every time you press *Play*, Pylune copies the game's save files (from
+`<Proton prefix>/drive_c/users/steamuser/AppData/Local/Pearl Abyss/CD/save/`) to
+`~/.local/share/pylune/save-backups/` (the newest 10 automatic copies are kept). *Settings →
+Backups → Save games* backs them up on request and restores an older copy; the current saves
+are backed up first. If Steam reports a cloud conflict afterwards, keep the local files.
 
 ## File placement
 

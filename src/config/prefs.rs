@@ -101,6 +101,10 @@ pub struct BackupConfig {
     pub auto_daily: bool,
     /// Automatic backups kept; older ones are pruned.
     pub keep_auto: usize,
+    /// Back up the game's saves every time Play is pressed.
+    pub saves_before_play: bool,
+    /// Automatic save backups kept.
+    pub keep_saves: usize,
 }
 
 impl Default for BackupConfig {
@@ -108,6 +112,8 @@ impl Default for BackupConfig {
         Self {
             auto_daily: true,
             keep_auto: 10,
+            saves_before_play: true,
+            keep_saves: 10,
         }
     }
 }

@@ -72,6 +72,7 @@ impl PyluneApp {
         let text = self.launch_options();
         let spec = options::parse(&text);
         let setup = proton::setup(&self.info);
+        let warning = self.backup_saves_before_play();
         let method = run::launch(&self.info, setup.as_ref(), &spec)?;
         let via = match method {
             LaunchMethod::SteamCli => "Steam",
@@ -85,9 +86,12 @@ impl PyluneApp {
             None,
             format!("launched via {via} ({profile}); options: {text:?}"),
         ));
-        Ok(StatusLine::new(
-            Level::Success,
-            format!("Launching Crimson Desert via {via}…"),
-        ))
+        Ok(match warning {
+            Some(w) => StatusLine::new(Level::Warning, format!("Launching via {via}; {w}")),
+            None => StatusLine::new(
+                Level::Success,
+                format!("Launching Crimson Desert via {via}…"),
+            ),
+        })
     }
 }

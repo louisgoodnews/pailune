@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] A-28 (rest) Save-game backup — *M*
 - [ ] A-29 (rest) AppImage — *M*
 
 ## Backlog (large)
@@ -55,6 +54,11 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-28 (part) save-game backups (`src/save_backup/`): the save folder in the Proton prefix
+  (`…/AppData/Local/Pearl Abyss/CD/save/<id>/slot<N>/`, verified on the installed game) is zipped
+  before every Play (default on, newest 10 kept) and on request; restore backs up the current
+  saves first and swaps folders by rename; Settings › Backups › Save games. Read-only check on
+  the real saves: 13 files, byte-identical after extraction.
 - [x] B-03 onboarding (`src/ui/guide/`, `src/ui/views/guide.rs`): a non-modal guide window opens
   on first start with three core ideas (R-18) and five real steps checked against the app's state
   (find game → add mod → enable → apply → play) with progress and a head start (R-17), buttons that

@@ -19,6 +19,7 @@ mod overlay;
 mod patch;
 mod paz;
 mod profiles;
+mod save_backup;
 mod steam;
 mod symlink;
 #[cfg(test)]

@@ -18,6 +18,7 @@ pub mod mod_list;
 pub mod nexus;
 pub mod profiles;
 pub mod readme;
+pub mod save_backups;
 pub mod settings;
 pub mod setup;
 pub mod status_bar;

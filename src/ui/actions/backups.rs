@@ -4,6 +4,7 @@ use crate::app_backup::{AUTO_LABEL, create};
 use crate::config::file;
 use crate::error::{PyluneError, Result};
 use crate::jobs::JobKind;
+use crate::save_backup;
 use crate::ui::{BackupAction, Confirm, Level, PyluneApp, SettingsDraft, StatusLine};
 
 impl PyluneApp {
@@ -44,6 +45,58 @@ impl PyluneApp {
                 Ok(None)
             }
             BackupAction::OpenFolder => self.open_path(&self.paths.backups.clone()).map(|()| None),
+            BackupAction::BackUpSaves => {
+                self.submit(JobKind::BackupSaves);
+                Ok(Some(StatusLine::new(Level::Info, "Backing up save games…")))
+            }
+            BackupAction::RestoreSaves(path) => {
+                self.confirm = None;
+                if self.process == crate::launch::GameProcess::Running {
+                    return Err(PyluneError::Invalid(
+                        "close Crimson Desert before restoring save games".into(),
+                    ));
+                }
+                self.submit(JobKind::RestoreSaves(path));
+                Ok(None)
+            }
+            BackupAction::OpenSaveFolder => {
+                let folder = self.save_folder()?;
+                self.open_path(&folder).map(|()| None)
+            }
+        }
+    }
+
+    /// The game's save folder, if the Proton prefix is known.
+    pub(super) fn save_folder(&self) -> Result<std::path::PathBuf> {
+        self.info
+            .prefix_dir
+            .as_ref()
+            .map(|p| save_backup::save_dir(p))
+            .ok_or_else(|| {
+                PyluneError::Invalid(
+                    "the game's Proton prefix was not found — start the game once from Steam"
+                        .into(),
+                )
+            })
+    }
+
+    /// Backs up the saves right before Play (synchronously, so the copy
+    /// precedes the game). Returns a warning when that failed; the game
+    /// still starts, since a missing prefix is normal before the first run.
+    pub(super) fn backup_saves_before_play(&mut self) -> Option<String> {
+        if !self.config.backup.saves_before_play {
+            return None;
+        }
+        let dest = self.paths.save_backups.clone();
+        let made = self.save_folder().and_then(|saves| {
+            save_backup::create(&saves, &dest, save_backup::AUTO_LABEL, crate::db::now())
+        });
+        self.save_backups = save_backup::list(&dest);
+        match made {
+            Ok(_) => save_backup::prune_auto(&dest, self.config.backup.keep_saves.max(1))
+                .err()
+                .map(|e| format!("pruning save backups failed: {e}")),
+            Err(err) => Some(format!("save games not backed up: {err}")),
         }
     }
 

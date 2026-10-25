@@ -46,6 +46,10 @@ pub enum JobKind {
     /// Restore a backup archive (needs nothing deployed).
     RestoreBackup(PathBuf),
     DeleteBackup(PathBuf),
+    /// Back up the game's save files.
+    BackupSaves,
+    /// Replace the game's save files with a backup.
+    RestoreSaves(PathBuf),
     ValidateKey,
     FetchMod(u64),
     /// Fetch a collection revision (latest when `revision` is `None`).
@@ -146,6 +150,8 @@ impl JobKind {
             JobKind::CreateBackup { .. } => "Back up settings and mod list".into(),
             JobKind::RestoreBackup(_) => "Restore backup".into(),
             JobKind::DeleteBackup(_) => "Delete backup".into(),
+            JobKind::BackupSaves => "Back up save games".into(),
+            JobKind::RestoreSaves(_) => "Restore save games".into(),
             JobKind::ValidateKey => "Validate Nexus key".into(),
             JobKind::FetchMod(id) => format!("Fetch Nexus mod {id}"),
             JobKind::DescribeFile { file_id, .. } => format!("Look up Nexus file {file_id}"),

@@ -87,3 +87,26 @@ fn full_backups_restore_mods_profiles_and_settings() {
 fn create_label() -> &'static str {
     "settings only"
 }
+
+#[test]
+fn save_games_are_backed_up_and_restored_through_the_ui() {
+    use super::ui::{app, settle};
+    use crate::ui::{Action, BackupAction, Level};
+    let fx = super::fixture();
+    let mut app = app(&fx);
+    settle(&mut app);
+    let saves = crate::save_backup::save_dir(app.info.prefix_dir.as_ref().unwrap());
+    std::fs::create_dir_all(saves.join("7/slot1")).unwrap();
+    std::fs::write(saves.join("7/slot1/save.save"), "chapter 1").unwrap();
+    app.dispatch(Action::Backup(BackupAction::BackUpSaves));
+    settle(&mut app);
+    assert_eq!(app.save_backups.len(), 1, "{:?}", app.status);
+    std::fs::write(saves.join("7/slot1/save.save"), "chapter 9").unwrap();
+    let backup = app.save_backups[0].path.clone();
+    app.dispatch(Action::Backup(BackupAction::RestoreSaves(backup)));
+    settle(&mut app);
+    assert_eq!(app.status.level, Level::Success, "{:?}", app.status);
+    let text = std::fs::read_to_string(saves.join("7/slot1/save.save")).unwrap();
+    assert_eq!(text, "chapter 1");
+    assert_eq!(app.save_backups.len(), 2, "safety copy of chapter 9 kept");
+}

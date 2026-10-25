@@ -22,6 +22,7 @@ pub enum Confirm {
     DeleteProfile(String),
     UninstallCollection(String),
     RestoreBackup(PathBuf),
+    RestoreSaves(PathBuf),
 }
 
 /// Mod management intents.
@@ -151,4 +152,10 @@ pub enum BackupAction {
     RestoreFromFile,
     Delete(PathBuf),
     OpenFolder,
+    /// Back up the game's save files now.
+    BackUpSaves,
+    /// Put a save backup back in place (after confirmation).
+    RestoreSaves(PathBuf),
+    /// Open the game's save folder.
+    OpenSaveFolder,
 }

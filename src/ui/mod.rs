@@ -109,6 +109,8 @@ pub struct PyluneApp {
     pub setup_open: bool,
     /// Backups of Pylune's state, newest first.
     pub backups: Vec<crate::app_backup::BackupInfo>,
+    /// Backups of the game's save files, newest first.
+    pub save_backups: Vec<crate::save_backup::SaveBackup>,
     /// Onboarding window.
     pub guide: guide::GuideState,
     /// Version and pack groups of the installed archives.

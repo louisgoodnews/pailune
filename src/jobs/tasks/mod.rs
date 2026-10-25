@@ -4,6 +4,7 @@ mod analyze;
 mod backups;
 mod deploy;
 mod nexus;
+mod saves;
 mod staging;
 
 use super::context::JobContext;
@@ -28,6 +29,8 @@ pub fn run(ctx: &JobContext, kind: JobKind) -> Result<JobOutput> {
         JobKind::CreateBackup { full, label } => backups::create(ctx, full, &label),
         JobKind::RestoreBackup(path) => backups::restore(ctx, &path),
         JobKind::DeleteBackup(path) => backups::delete(&path),
+        JobKind::BackupSaves => saves::backup(ctx),
+        JobKind::RestoreSaves(path) => saves::restore(ctx, &path),
         JobKind::ValidateKey => nexus::validate(ctx),
         JobKind::FetchMod(id) => nexus::fetch_mod(ctx, id),
         JobKind::DescribeFile { mod_id, file_id } => nexus::describe_file(ctx, mod_id, file_id),

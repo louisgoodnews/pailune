@@ -13,7 +13,7 @@ use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
 
 /// Adds one file to the archive.
-fn add_file(zip: &mut zip::ZipWriter<fs::File>, name: &str, path: &Path) -> Result<()> {
+pub(crate) fn add_file(zip: &mut zip::ZipWriter<fs::File>, name: &str, path: &Path) -> Result<()> {
     zip.start_file(name, SimpleFileOptions::default())?;
     let mut source = fs::File::open(path).at(path)?;
     std::io::copy(&mut source, zip).at(path).map(drop)

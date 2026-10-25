@@ -41,6 +41,14 @@ fn describe(confirm: &Confirm) -> (String, String, Action) {
             ),
             Action::Backup(crate::ui::BackupAction::Restore(path.clone())),
         ),
+        Confirm::RestoreSaves(path) => (
+            "Restore these save games?".into(),
+            "The game's current save files are replaced with the backup's. They are backed up \
+             first, so this can be undone by restoring that backup. If Steam later reports a \
+             cloud conflict, keep the local files."
+                .into(),
+            Action::Backup(crate::ui::BackupAction::RestoreSaves(path.clone())),
+        ),
         Confirm::DeleteProfile(name) => (
             format!("Delete profile '{name}'?"),
             "Only the profile is deleted; staged mods stay untouched.".into(),

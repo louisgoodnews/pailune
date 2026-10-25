@@ -134,6 +134,7 @@ impl PyluneApp {
         self.profiles.book = db::profiles::load(&self.conn)?;
         self.mods.trash = crate::mod_engine::trash::list(&self.paths.trash);
         self.backups = crate::app_backup::create::list(&self.paths.backups);
+        self.save_backups = crate::save_backup::list(&self.paths.save_backups);
         let selected_gone = self
             .mods
             .selected

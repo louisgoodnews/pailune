@@ -106,6 +106,21 @@ pub fn backups(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         "Older automatic backups are deleted; manual ones are always kept.",
         |ui| drop(ui.add(egui::DragValue::new(&mut prefs.keep_auto).range(1..=100))),
     );
+    setting(
+        ui,
+        "Back up save games before Play",
+        "Copies the game's save files each time you press Play (they are small).",
+        |ui| drop(ui.checkbox(&mut prefs.saves_before_play, "")),
+    );
+    setting(
+        ui,
+        "Save backups kept",
+        "Older automatic save backups are deleted; manual ones are always kept.",
+        |ui| drop(ui.add(egui::DragValue::new(&mut prefs.keep_saves).range(1..=100))),
+    );
     ui.add_space(12.0);
-    crate::ui::views::backups::show(ui, app)
+    let mut actions = crate::ui::views::backups::show(ui, app);
+    ui.add_space(12.0);
+    actions.extend(crate::ui::views::save_backups::show(ui, app));
+    actions
 }

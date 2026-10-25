@@ -106,6 +106,7 @@ impl PyluneApp {
             },
             archives: Default::default(),
             backups: Vec::new(),
+            save_backups: Vec::new(),
             pool,
             paths,
             config,
@@ -115,6 +116,7 @@ impl PyluneApp {
         };
         app.refresh_environment();
         app.backups = crate::app_backup::create::list(&app.paths.backups);
+        app.save_backups = crate::save_backup::list(&app.paths.save_backups);
         app.schedule_auto_backup();
         app.request_conflicts();
         if key::load(&app.paths.nexus_key).is_some() {
