@@ -7,6 +7,18 @@ use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 use walkdir::WalkDir;
 
+/// Mod content the game only reads from inside its PAZ archives. It cannot
+/// be deployed as a symlink and waits for the PAZ pipeline (audit A-01).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PazFormat {
+    /// Byte-patch or field-name JSON applied to archived game data.
+    JsonPatch,
+    /// `files/<group>/<virtual path>` trees (plus `manifest.json`).
+    Raw,
+    /// Loose game files (textures, XML, UI) outside any known layout.
+    Loose,
+}
+
 /// Where a single staged file belongs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Placement {
@@ -14,10 +26,23 @@ pub enum Placement {
     Mirror,
     /// Flattened into `bin64/` (ASI plugins, DLLs, their INIs).
     Bin64,
-    /// Into the configured JSON mod directory, keeping its relative path.
-    JsonDir,
-    /// Documentation, screenshots and other non-game files.
+    /// Needs packing into a PAZ archive group; not deployable yet.
+    NeedsPaz(PazFormat),
+    /// Documentation, screenshots and mod metadata.
     Skip,
+}
+
+impl Placement {
+    /// Short note on how the file is used, for logs and the file list.
+    pub fn note(self) -> &'static str {
+        match self {
+            Placement::Mirror | Placement::Bin64 => "linked",
+            Placement::NeedsPaz(PazFormat::JsonPatch) => "JSON patch — needs PAZ support",
+            Placement::NeedsPaz(PazFormat::Raw) => "RAW file — needs PAZ support",
+            Placement::NeedsPaz(PazFormat::Loose) => "loose game file — needs PAZ support",
+            Placement::Skip => "not deployed",
+        }
+    }
 }
 
 /// A single symlink to create: `target` -> `source`.
@@ -43,11 +68,29 @@ pub fn is_archive_dir(name: &str) -> bool {
     name.len() == 4 && name.bytes().all(|b| b.is_ascii_digit())
 }
 
+/// Extensions of documentation and preview files that are never deployed.
+const DOCS: [&str; 11] = [
+    "txt", "md", "nfo", "pdf", "png", "jpg", "jpeg", "webp", "gif", "url", "rtf",
+];
+
+/// Whether the path contains a RAW-mod `files/<group>/` segment.
+fn is_raw_tree(parts: &[String]) -> bool {
+    parts
+        .windows(2)
+        .any(|w| w[0] == "files" && is_archive_dir(&w[1]))
+}
+
 /// Decides the [`Placement`] of a file from its path relative to the mod root.
 pub fn placement(rel: &Path) -> Placement {
-    let first = match rel.components().next() {
-        Some(Component::Normal(name)) => name.to_string_lossy().to_lowercase(),
-        _ => return Placement::Skip,
+    let parts: Vec<String> = rel
+        .components()
+        .filter_map(|c| match c {
+            Component::Normal(name) => Some(name.to_string_lossy().to_lowercase()),
+            _ => None,
+        })
+        .collect();
+    let (Some(first), Some(name)) = (parts.first(), parts.last()) else {
+        return Placement::Skip;
     };
     let ext = rel
         .extension()
@@ -55,10 +98,16 @@ pub fn placement(rel: &Path) -> Placement {
         .unwrap_or_default();
     match (first.as_str(), ext.as_str()) {
         ("bin64" | "meta", _) => Placement::Mirror,
-        (dir, _) if is_archive_dir(dir) => Placement::Mirror,
+        // A prebuilt archive group ships its own index and data.
+        (dir, "paz" | "pamt") if is_archive_dir(dir) => Placement::Mirror,
+        // Loose files in a group folder are never read by the game.
+        (dir, _) if is_archive_dir(dir) => Placement::NeedsPaz(PazFormat::Loose),
+        _ if is_raw_tree(&parts) => Placement::NeedsPaz(PazFormat::Raw),
+        _ if name == "manifest.json" => Placement::Skip,
         (_, "asi" | "dll" | "ini") => Placement::Bin64,
-        (_, "json") => Placement::JsonDir,
-        _ => Placement::Skip,
+        (_, "json") => Placement::NeedsPaz(PazFormat::JsonPatch),
+        (_, ext) if DOCS.contains(&ext) => Placement::Skip,
+        _ => Placement::NeedsPaz(PazFormat::Loose),
     }
 }
 
@@ -68,8 +117,7 @@ fn destination(config: &Config, rel: &Path, place: Placement) -> Option<PathBuf>
     let inside = match place {
         Placement::Mirror => Some(rel.to_path_buf()),
         Placement::Bin64 => rel.file_name().map(|name| Path::new("bin64").join(name)),
-        Placement::JsonDir => Some(config.game.json_subdir.join(rel)),
-        Placement::Skip => None,
+        Placement::NeedsPaz(_) | Placement::Skip => None,
     };
     inside.map(|inside| resolve_case(game, &inside))
 }

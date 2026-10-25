@@ -11,7 +11,6 @@ impl SettingsDraft {
         Self {
             game_dir: config.game.dir.display().to_string(),
             app_id: config.game.app_id.to_string(),
-            json_subdir: config.game.json_subdir.display().to_string(),
             nexus_domain: config.nexus.domain.clone(),
             apply_before_launch: config.launch.apply_before_launch,
             default_options: config.launch.default_options.clone(),
@@ -35,17 +34,13 @@ impl SettingsDraft {
             .ok()
             .filter(|n| (1..=16).contains(n))
             .ok_or_else(|| invalid("parallel jobs must be between 1 and 16"))?;
-        let json_subdir = PathBuf::from(self.json_subdir.trim());
-        if json_subdir.is_absolute() || self.game_dir.trim().is_empty() {
-            return Err(invalid(
-                "game directory is required and the JSON folder must be relative",
-            ));
+        if self.game_dir.trim().is_empty() {
+            return Err(invalid("the game directory is required"));
         }
         Ok(Config {
             game: GameConfig {
                 dir: PathBuf::from(self.game_dir.trim()),
                 app_id,
-                json_subdir,
             },
             nexus: NexusConfig {
                 domain: self.nexus_domain.trim().to_lowercase(),

@@ -59,6 +59,12 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
         );
     });
     let mut text = summarise(ctx, conn, EventKind::Deploy, "Applied", &report);
+    let waiting = enabled.iter().filter(|m| m.paz_files > 0).count();
+    if waiting > 0 {
+        text.push_str(&format!(
+            " — {waiting} mod(s) contain content that needs PAZ support and was skipped"
+        ));
+    }
     if link_plan.conflicts > 0 {
         text.push_str(&format!(
             " — {} file conflict(s), later mods won",

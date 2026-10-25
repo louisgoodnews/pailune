@@ -99,7 +99,8 @@ fn interrupted_deploys_are_fully_revertible() {
         let mut manifest = db::links::load(&conn).unwrap();
         assert_eq!(
             outcome.is_err(),
-            budget < 6,
+            // 3 links + 1 created directory (0037) are journaled.
+            budget < 4,
             "budget {budget} after_write {after_write}"
         );
         let report = undeploy::undeploy(&mut manifest, &mut DbJournal { conn: &conn }).unwrap();

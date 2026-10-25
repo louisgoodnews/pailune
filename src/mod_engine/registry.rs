@@ -2,7 +2,7 @@
 
 use super::classify::classify;
 use super::model::{ModEntry, ModKind, MoveTo, Registry, Scan, Scanned};
-use super::plan::deployable_files;
+use super::plan::{Placement, deployable_files};
 use crate::error::{IoContext, Result};
 use std::fs;
 use std::path::Path;
@@ -11,15 +11,23 @@ use std::path::Path;
 /// warning in the log) instead of failing the whole scan.
 fn scan_one(staging: &Path, name: &str) -> Scanned {
     match deployable_files(&staging.join(name)) {
-        Ok(files) => Scanned {
-            kind: classify(files.iter().map(|(_, place)| *place)),
-            file_count: files.len(),
-        },
+        Ok(files) => {
+            let paz_files = files
+                .iter()
+                .filter(|(_, p)| matches!(p, Placement::NeedsPaz(_)))
+                .count();
+            Scanned {
+                kind: classify(files.iter().map(|(_, place)| *place)),
+                file_count: files.len() - paz_files,
+                paz_files,
+            }
+        }
         Err(err) => {
             tracing::warn!(mod_name = name, %err, "could not scan staged mod");
             Scanned {
                 kind: ModKind::Empty,
                 file_count: 0,
+                paz_files: 0,
             }
         }
     }
@@ -43,6 +51,7 @@ fn discovered(name: &str, now: i64) -> ModEntry {
         kind: ModKind::Empty,
         enabled: false,
         file_count: 0,
+        paz_files: 0,
         installed_at: now,
         source: String::new(),
         nexus: None,
@@ -71,6 +80,7 @@ pub fn merge(registry: &Registry, scan: &Scan, now: i64) -> Registry {
         scan.get(&m.name).map(|s| ModEntry {
             kind: s.kind,
             file_count: s.file_count,
+            paz_files: s.paz_files,
             ..m
         })
     };
@@ -81,6 +91,7 @@ pub fn merge(registry: &Registry, scan: &Scan, now: i64) -> Registry {
         .map(|(n, s)| ModEntry {
             kind: s.kind,
             file_count: s.file_count,
+            paz_files: s.paz_files,
             ..discovered(n, now)
         });
     Registry {

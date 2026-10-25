@@ -127,7 +127,7 @@ fn real_jobs_import_apply_remove_and_reset() {
     let apply = pool.submit(JobKind::Apply, &fx.config);
     let analyze = pool.submit(JobKind::AnalyzeConflicts(1), &fx.config);
     assert!(wait_all(&pool, &[apply, analyze]).iter().all(Result::is_ok));
-    assert_eq!(db::links::load(&conn).unwrap().links.len(), 4);
+    assert_eq!(db::links::load(&conn).unwrap().links.len(), 3);
     assert!(
         paths.mod_logs.join("Cool Mod.log").is_file(),
         "per-mod log written"

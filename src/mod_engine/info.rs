@@ -1,7 +1,7 @@
 //! Mod details: file listing, sizes and readme discovery.
 
 use super::model::{ModDetails, StagedFile};
-use super::plan::{Placement, placement};
+use super::plan::placement;
 use crate::error::{IoContext, Result};
 use std::fs;
 use std::io::Read;
@@ -41,11 +41,11 @@ pub fn details(mod_root: &Path) -> Result<ModDetails> {
                 .unwrap_or(entry.path())
                 .to_path_buf();
             let bytes = entry.metadata().map(|m| m.len()).unwrap_or(0);
-            let deployable = placement(&rel) != Placement::Skip;
+            let placement = placement(&rel);
             Ok(StagedFile {
                 rel,
                 bytes,
-                deployable,
+                placement,
             })
         })
         .collect::<Result<Vec<_>>>()?;

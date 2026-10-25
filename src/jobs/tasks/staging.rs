@@ -31,10 +31,10 @@ pub(super) fn register(
         .iter()
         .map(|f| {
             format!(
-                "{} ({} bytes{})",
+                "{} ({} bytes, {})",
                 f.rel.display(),
                 f.bytes,
-                if f.deployable { "" } else { ", not deployed" }
+                f.placement.note()
             )
         })
         .collect();

@@ -7,6 +7,7 @@ use rusqlite::{Connection, Row, TransactionBehavior, params};
 fn kind_to_str(kind: ModKind) -> &'static str {
     match kind {
         ModKind::Json => "json",
+        ModKind::Raw => "raw",
         ModKind::Asi => "asi",
         ModKind::Overlay => "overlay",
         ModKind::Mixed => "mixed",
@@ -17,6 +18,7 @@ fn kind_to_str(kind: ModKind) -> &'static str {
 fn kind_from_str(text: &str) -> ModKind {
     match text {
         "json" => ModKind::Json,
+        "raw" => ModKind::Raw,
         "asi" => ModKind::Asi,
         "overlay" => ModKind::Overlay,
         "mixed" => ModKind::Mixed,
@@ -33,6 +35,7 @@ fn entry_from_row(row: &Row) -> rusqlite::Result<ModEntry> {
         kind: kind_from_str(&row.get::<_, String>("kind")?),
         enabled: row.get("enabled")?,
         file_count: row.get::<_, i64>("file_count")? as usize,
+        paz_files: row.get::<_, i64>("paz_files")? as usize,
         installed_at: row.get("installed_at")?,
         source: row.get("source")?,
         nexus: nexus_mod.zip(nexus_file).map(|(m, f)| NexusRef {
@@ -62,8 +65,8 @@ fn write(conn: &Connection, registry: &Registry) -> Result<()> {
         .try_for_each(|(position, m)| {
             conn.execute(
                 "INSERT INTO mods (name, position, enabled, kind, file_count, installed_at, source,
-                               nexus_mod_id, nexus_file_id, nexus_version)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                               nexus_mod_id, nexus_file_id, nexus_version, paz_files)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
                 params![
                     m.name,
                     position as i64,
@@ -75,6 +78,7 @@ fn write(conn: &Connection, registry: &Registry) -> Result<()> {
                     m.nexus.as_ref().map(|n| n.mod_id as i64),
                     m.nexus.as_ref().map(|n| n.file_id as i64),
                     m.nexus.as_ref().map(|n| n.version.clone()),
+                    m.paz_files as i64,
                 ],
             )
             .map(|_| ())

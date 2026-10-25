@@ -3,7 +3,8 @@
 use super::clicked;
 use crate::mod_engine::conflicts::{Contest, ModConflicts};
 use crate::mod_engine::model::{ModDetails, ModEntry, MoveTo};
-use crate::ui::theme::{self, ACCENT, DANGER, MUTED, SUCCESS};
+use crate::mod_engine::plan::Placement;
+use crate::ui::theme::{self, ACCENT, DANGER, MUTED, SUCCESS, WARNING};
 use crate::ui::{Action, Confirm, ModAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
@@ -90,11 +91,24 @@ fn info_grid(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) {
                 ui,
                 "Files",
                 format!(
-                    "{} deployable / {} total",
+                    "{} linkable / {} total",
                     entry.file_count,
                     details.files.len()
                 ),
             );
+            if entry.paz_files > 0 {
+                ui.label(RichText::new("Needs PAZ").color(WARNING));
+                ui.label(
+                    RichText::new(format!(
+                        "{} file(s) are JSON patches or RAW/loose game files. The game only reads \
+                     these from its PAZ archives, so they are not deployed until Pylune can \
+                     pack archives (roadmap phase 3).",
+                        entry.paz_files
+                    ))
+                    .color(WARNING),
+                );
+                ui.end_row();
+            }
             row(
                 ui,
                 "Size",
@@ -167,17 +181,18 @@ fn files(ui: &mut egui::Ui, details: &ModDetails) -> Vec<Action> {
     }));
     egui::CollapsingHeader::new(format!("All files ({})", details.files.len())).show(ui, |ui| {
         details.files.iter().for_each(|f| {
-            let color = if f.deployable {
-                ui.visuals().text_color()
-            } else {
-                MUTED
+            let color = match f.placement {
+                Placement::Mirror | Placement::Bin64 => ui.visuals().text_color(),
+                Placement::NeedsPaz(_) => WARNING,
+                Placement::Skip => MUTED,
             };
             ui.label(
                 RichText::new(format!("{}  ({} B)", f.rel.display(), f.bytes))
                     .small()
                     .monospace()
                     .color(color),
-            );
+            )
+            .on_hover_text(f.placement.note());
         });
     });
     readmes

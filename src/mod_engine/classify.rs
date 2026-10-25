@@ -1,7 +1,7 @@
 //! Derives a [`ModKind`] from the placements of a mod's files.
 
 use super::model::ModKind;
-use super::plan::Placement;
+use super::plan::{PazFormat, Placement};
 
 /// Folds file placements into a single [`ModKind`].
 pub fn classify(placements: impl IntoIterator<Item = Placement>) -> ModKind {
@@ -16,7 +16,8 @@ fn kind_of(place: Placement) -> Option<ModKind> {
     match place {
         Placement::Mirror => Some(ModKind::Overlay),
         Placement::Bin64 => Some(ModKind::Asi),
-        Placement::JsonDir => Some(ModKind::Json),
+        Placement::NeedsPaz(PazFormat::JsonPatch) => Some(ModKind::Json),
+        Placement::NeedsPaz(PazFormat::Raw | PazFormat::Loose) => Some(ModKind::Raw),
         Placement::Skip => None,
     }
 }
@@ -38,9 +39,12 @@ mod tests {
     fn classifies_by_placement() {
         assert_eq!(classify([]), ModKind::Empty);
         assert_eq!(classify([Placement::Bin64, Placement::Skip]), ModKind::Asi);
-        assert_eq!(classify([Placement::JsonDir; 3]), ModKind::Json);
         assert_eq!(
-            classify([Placement::Mirror, Placement::JsonDir]),
+            classify([Placement::NeedsPaz(PazFormat::JsonPatch); 3]),
+            ModKind::Json
+        );
+        assert_eq!(
+            classify([Placement::Mirror, Placement::NeedsPaz(PazFormat::Raw)]),
             ModKind::Mixed
         );
     }

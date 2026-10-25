@@ -53,12 +53,6 @@ fn settings_section(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
             field(ui, "Steam app id", &mut draft.app_id, "3321460");
             field(
                 ui,
-                "JSON mod folder",
-                &mut draft.json_subdir,
-                "relative to the game, e.g. bin64/mods",
-            );
-            field(
-                ui,
                 "Nexus game domain",
                 &mut draft.nexus_domain,
                 "crimsondesert",

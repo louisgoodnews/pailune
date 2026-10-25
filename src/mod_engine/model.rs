@@ -5,8 +5,10 @@ use std::path::PathBuf;
 /// Broad category of a mod, derived from the files it contains.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ModKind {
-    /// Only JSON patch files.
+    /// JSON patches for archived game data (needs the PAZ pipeline).
     Json,
+    /// RAW trees or loose game files (needs the PAZ pipeline).
+    Raw,
     /// ASI plugins and/or DLLs destined for `bin64/`.
     Asi,
     /// Files mirroring the game layout (archive folders, `meta/`, ...).
@@ -35,8 +37,10 @@ pub struct ModEntry {
     pub kind: ModKind,
     /// Whether the mod should be linked into the game on the next apply.
     pub enabled: bool,
-    /// Number of deployable files.
+    /// Number of files that can be linked into the game.
     pub file_count: usize,
+    /// Number of files that need packing into PAZ archives (not deployable yet).
+    pub paz_files: usize,
     /// Unix timestamp of the (last) installation.
     pub installed_at: i64,
     /// Original file, folder or Nexus link the mod was installed from.
@@ -57,6 +61,7 @@ pub struct Registry {
 pub struct Scanned {
     pub kind: ModKind,
     pub file_count: usize,
+    pub paz_files: usize,
 }
 
 /// Staging scan result: mod folder name → classification.
@@ -76,8 +81,8 @@ pub enum MoveTo {
 pub struct StagedFile {
     pub rel: PathBuf,
     pub bytes: u64,
-    /// `false` for documentation and other files that are never linked.
-    pub deployable: bool,
+    /// How the file is used.
+    pub placement: crate::mod_engine::plan::Placement,
 }
 
 /// Everything the details panel shows about one mod.

@@ -20,7 +20,29 @@ fn placement_rules() {
         plan::placement(Path::new("bin64/foo.txt")),
         Placement::Mirror
     );
-    assert_eq!(plan::placement(Path::new("cfg/a.json")), Placement::JsonDir);
+    use crate::mod_engine::plan::PazFormat;
+    let paz = |f| Placement::NeedsPaz(f);
+    assert_eq!(
+        plan::placement(Path::new("cfg/a.json")),
+        paz(PazFormat::JsonPatch)
+    );
+    assert_eq!(
+        plan::placement(Path::new("Mod/files/0012/ui/a.xml")),
+        paz(PazFormat::Raw)
+    );
+    assert_eq!(
+        plan::placement(Path::new("0012/ui/a.xml")),
+        paz(PazFormat::Loose)
+    );
+    assert_eq!(plan::placement(Path::new("0036/0.paz")), Placement::Mirror);
+    assert_eq!(
+        plan::placement(Path::new("Mod/manifest.json")),
+        Placement::Skip
+    );
+    assert_eq!(
+        plan::placement(Path::new("tex/hair.dds")),
+        paz(PazFormat::Loose)
+    );
     assert_eq!(plan::placement(Path::new("readme.md")), Placement::Skip);
 }
 
@@ -57,16 +79,16 @@ fn full_cycle_is_non_destructive() {
     let link_plan = plan::build(&fx.config, &fx.staging, &reg).unwrap();
     let mut manifest = Manifest::default();
     let report = deploy::deploy(&link_plan, &fx.staging, &mut manifest, &mut NullJournal).unwrap();
-    assert_eq!(report.linked, 4);
+    assert_eq!(
+        report.linked, 3,
+        "the JSON patch needs PAZ support and is not linked"
+    );
     assert!(report.warnings.is_empty(), "{:?}", report.warnings);
     assert!(matches!(
         path_state(&game.join("bin64/CoolMod.asi")),
         PathState::Symlink(_)
     ));
-    assert!(matches!(
-        path_state(&game.join("bin64/mods/patch.json")),
-        PathState::Symlink(_)
-    ));
+    assert!(!game.join("bin64/mods/patch.json").exists());
     assert_eq!(
         fs::read_to_string(game.join("meta/0.papgt")).unwrap(),
         "modded-papgt"

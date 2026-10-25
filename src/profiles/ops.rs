@@ -73,6 +73,7 @@ mod tests {
             kind: ModKind::Asi,
             enabled,
             file_count: 1,
+            paz_files: 0,
             installed_at: 0,
             source: String::new(),
             nexus: None,

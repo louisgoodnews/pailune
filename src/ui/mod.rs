@@ -45,7 +45,6 @@ pub struct StatusLine {
 pub struct SettingsDraft {
     pub game_dir: String,
     pub app_id: String,
-    pub json_subdir: String,
     pub nexus_domain: String,
     pub apply_before_launch: bool,
     pub default_options: String,

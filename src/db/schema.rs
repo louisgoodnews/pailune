@@ -4,7 +4,8 @@ use crate::error::Result;
 use rusqlite::{Connection, TransactionBehavior};
 
 /// Migration `n` upgrades the schema from version `n` to `n + 1`.
-const MIGRATIONS: [&str; 1] = [r#"
+const MIGRATIONS: [&str; 2] = [
+    r#"
     CREATE TABLE mods (
         name          TEXT PRIMARY KEY,
         position      INTEGER NOT NULL,
@@ -51,7 +52,11 @@ const MIGRATIONS: [&str; 1] = [r#"
         key   TEXT PRIMARY KEY,
         value TEXT NOT NULL
     );
-"#];
+"#,
+    r#"
+    ALTER TABLE mods ADD COLUMN paz_files INTEGER NOT NULL DEFAULT 0;
+"#,
+];
 
 /// Applies every migration newer than the database's `user_version`.
 ///
@@ -70,4 +75,37 @@ pub fn migrate(conn: &mut Connection) -> Result<()> {
     }
     tx.commit()?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::MIGRATIONS;
+
+    /// A database created by an older Pylune keeps its rows when upgraded.
+    #[test]
+    fn upgrades_a_version_1_database() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("old.sqlite3");
+        {
+            let conn = rusqlite::Connection::open(&path).unwrap();
+            conn.execute_batch(MIGRATIONS[0]).unwrap();
+            conn.execute_batch(
+                "PRAGMA user_version = 1;
+                 INSERT INTO mods (name, position, enabled, kind, file_count, installed_at)
+                 VALUES ('Old', 0, 1, 'asi', 2, 7);",
+            )
+            .unwrap();
+        }
+        let conn = crate::db::open(&path).unwrap();
+        let registry = crate::db::mods::load(&conn).unwrap();
+        assert_eq!(registry.mods.len(), 1);
+        assert_eq!(
+            (registry.mods[0].file_count, registry.mods[0].paz_files),
+            (2, 0)
+        );
+        let version: i64 = conn
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(version, MIGRATIONS.len() as i64);
+    }
 }

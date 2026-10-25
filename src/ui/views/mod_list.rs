@@ -36,7 +36,11 @@ fn row(ui: &mut egui::Ui, index: usize, entry: &ModEntry, app: &PyluneApp) -> Ve
         .clicked();
     let (kind, color) = theme::kind_style(entry.kind);
     theme::badge(ui, kind, color);
-    ui.label(RichText::new(entry.file_count.to_string()).color(MUTED));
+    let files = match entry.paz_files {
+        0 => entry.file_count.to_string(),
+        paz => format!("{} (+{paz} PAZ)", entry.file_count),
+    };
+    ui.label(RichText::new(files).color(MUTED));
     status_cell(ui, entry, app);
     let up = ui
         .add_enabled(index > 0, egui::Button::new("▲").small())

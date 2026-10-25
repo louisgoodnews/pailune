@@ -41,7 +41,8 @@ pub fn level_color(level: Level) -> Color32 {
 /// Label and colour for a mod category.
 pub fn kind_style(kind: ModKind) -> (&'static str, Color32) {
     match kind {
-        ModKind::Json => ("JSON", Color32::from_rgb(0x4a, 0x90, 0xd9)),
+        ModKind::Json => ("JSON · NEEDS PAZ", WARNING),
+        ModKind::Raw => ("RAW · NEEDS PAZ", WARNING),
         ModKind::Asi => ("ASI", Color32::from_rgb(0xa8, 0x6b, 0xd6)),
         ModKind::Overlay => ("OVERLAY", Color32::from_rgb(0x3f, 0xa8, 0x9a)),
         ModKind::Mixed => ("MIXED", ACCENT),

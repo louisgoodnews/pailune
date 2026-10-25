@@ -45,6 +45,6 @@ mod tests {
         fs::write(&path, "[game]\napp_id = 7\n").unwrap();
         let partial = load_or_create(&path).unwrap();
         assert_eq!(partial.game.app_id, 7);
-        assert_eq!(partial.game.json_subdir, Config::default().game.json_subdir);
+        assert_eq!(partial.nexus.domain, Config::default().nexus.domain);
     }
 }
