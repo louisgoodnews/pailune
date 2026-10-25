@@ -3,6 +3,7 @@
 use super::{OverlayInput, OverlayPlan};
 use crate::error::{IoContext, PyluneError, Result};
 use crate::mod_engine::plan::LinkOp;
+use crate::paz::pathc::{self, Pathc};
 use crate::paz::write::{self, Packed};
 use crate::paz::{encode, pamt, papgt, vanilla};
 use crate::steam::SteamInfo;
@@ -28,25 +29,46 @@ fn free_names(game_dir: &Path, taken: &BTreeSet<String>, count: usize) -> Vec<St
         .collect()
 }
 
-/// Encodes each packable file with the flags of the game file it replaces.
-fn pack(input: &OverlayInput, base: &vanilla::Vanilla) -> Result<(Vec<Packed>, Vec<String>)> {
+/// Encodes each packable file with the flags of the game file it replaces;
+/// textures are also registered in `textures` (the PATHC being rebuilt).
+fn pack(
+    input: &OverlayInput,
+    base: &vanilla::Vanilla,
+    textures: &mut Pathc,
+) -> Result<(Vec<Packed>, Vec<String>)> {
     input.packs.iter().try_fold(
         (Vec::new(), Vec::new()),
         |(mut packed, mut skipped), (vpath, source)| {
             let data = fs::read(source).at(source)?;
             let flags = base.flags_for(vpath);
-            match encode::encode(vpath, &data, flags) {
-                Ok(stored) => packed.push(Packed {
+            let result = match is_texture(vpath) {
+                true => super::textures::pack(vpath, &data, flags, textures),
+                false => encode::encode(vpath, &data, flags).map(|stored| Packed {
                     vpath: vpath.clone(),
                     stored,
                     orig_size: data.len() as u32,
                     flags,
                 }),
-                Err(err) => skipped.push(err.to_string()),
+            };
+            match result {
+                Ok(file) => packed.push(file),
+                Err(err) => skipped.push(format!("{vpath}: {err}")),
             }
             Ok((packed, skipped))
         },
     )
+}
+
+fn is_texture(vpath: &str) -> bool {
+    vpath.ends_with(".dds")
+}
+
+/// Reads a vanilla `.bak` snapshot of a metadata file.
+fn snapshot(info: &SteamInfo, name: &str) -> Result<Vec<u8>> {
+    let path = bak_path(&info.meta_dir.join(name));
+    fs::read(&path).map_err(|_| {
+        PyluneError::Invalid(format!("no vanilla metadata backup (meta/{name}.bak) yet"))
+    })
 }
 
 /// Writes `bytes` to `path`, creating the parent folder.
@@ -69,17 +91,25 @@ fn prebuilt_crc(group: &Path) -> Result<u32> {
 /// Requires the vanilla `meta/0.papgt.bak` snapshot; nothing in the game
 /// directory is touched here.
 pub fn build(info: &SteamInfo, input: &OverlayInput, out_dir: &Path) -> Result<OverlayPlan> {
-    let snapshot = bak_path(&info.meta_dir.join("0.papgt"));
-    let vanilla_bytes = fs::read(&snapshot).map_err(|_| {
-        PyluneError::Invalid("no vanilla metadata backup (meta/0.papgt.bak) yet".into())
-    })?;
-    build_from(info, &vanilla_bytes, input, out_dir)
+    let textures = input.packs.keys().any(|v| is_texture(v));
+    let pathc = match textures {
+        true => Some(snapshot(info, "0.pathc")?),
+        false => None,
+    };
+    build_from(
+        info,
+        &snapshot(info, "0.papgt")?,
+        pathc.as_deref(),
+        input,
+        out_dir,
+    )
 }
 
 /// [`build`] with explicit vanilla `0.papgt` bytes (used for dry runs).
 pub fn build_from(
     info: &SteamInfo,
     vanilla_bytes: &[u8],
+    vanilla_pathc: Option<&[u8]>,
     input: &OverlayInput,
     out_dir: &Path,
 ) -> Result<OverlayPlan> {
@@ -92,10 +122,15 @@ pub fn build_from(
         &base.group_names(),
         usize::from(own) + input.prebuilt.len(),
     );
+    let mut textures = match vanilla_pathc {
+        Some(bytes) => pathc::parse(bytes)?,
+        None => Pathc::empty(),
+    };
     let (packed, skipped) = match own {
-        true => pack(input, &base)?,
+        true => pack(input, &base, &mut textures)?,
         false => (Vec::new(), Vec::new()),
     };
+    let texture_count = packed.iter().filter(|p| is_texture(&p.vpath)).count();
     let replaced = packed.iter().filter(|p| base.replaces(&p.vpath)).count();
     let packed_count = packed.len();
     // (name, crc, folder to link) — own group first, then prebuilt groups,
@@ -124,6 +159,18 @@ pub fn build_from(
     let table = papgt::serialize(&vanilla::register(&base.papgt, &entries))?;
     let papgt_path = out_dir.join("meta/0.papgt");
     write_file(&papgt_path, &table)?;
+    // A rebuilt texture table is deployed only when textures were packed.
+    let pathc_link = match (texture_count, vanilla_pathc) {
+        (0, _) | (_, None) => None,
+        (_, Some(_)) => {
+            let path = out_dir.join("meta/0.pathc");
+            write_file(&path, &pathc::serialize(&textures))?;
+            Some(LinkOp {
+                source: path,
+                target: info.meta_dir.join("0.pathc"),
+            })
+        }
+    };
     let links = groups
         .iter()
         .map(|(name, _, dir)| LinkOp {
@@ -134,6 +181,7 @@ pub fn build_from(
             source: papgt_path,
             target: info.meta_dir.join("0.papgt"),
         }))
+        .chain(pathc_link)
         .collect();
     Ok(OverlayPlan {
         links,

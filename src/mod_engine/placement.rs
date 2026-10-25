@@ -7,8 +7,6 @@ use std::path::{Component, Path};
 pub enum PazFormat {
     /// Byte-patch or field-name JSON applied to archived game data.
     JsonPatch,
-    /// DDS textures (need the texture header table, `0.pathc`).
-    Texture,
     /// Game files whose location inside the archives is unknown.
     Unplaced,
 }
@@ -38,7 +36,6 @@ impl Placement {
             Placement::Pack => "packed into Pylune's archive group",
             Placement::PrebuiltGroup => "prebuilt archive group, registered by Pylune",
             Placement::NeedsPaz(PazFormat::JsonPatch) => "JSON patch — needs JSON patch support",
-            Placement::NeedsPaz(PazFormat::Texture) => "texture — needs texture support",
             Placement::NeedsPaz(PazFormat::Unplaced) => {
                 "game file with unknown location — not deployed"
             }
@@ -97,7 +94,6 @@ pub fn placement(rel: &Path) -> Placement {
         (dir, "paz" | "pamt", _) if is_archive_dir(dir) && parts.len() == 2 => {
             Placement::PrebuiltGroup
         }
-        (_, "dds", Some(_)) => Placement::NeedsPaz(PazFormat::Texture),
         (_, _, Some(_)) => Placement::Pack,
         _ if name == "manifest.json" => Placement::Skip,
         (_, "asi" | "dll" | "ini", None) => Placement::Bin64,

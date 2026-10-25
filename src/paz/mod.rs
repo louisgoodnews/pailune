@@ -7,11 +7,13 @@
 #![allow(dead_code)]
 
 pub mod crypto;
+pub mod dds;
 pub mod encode;
 pub mod extract;
 pub mod hash;
 pub mod pamt;
 pub mod papgt;
+pub mod pathc;
 pub mod paver;
 mod reader;
 pub mod status;

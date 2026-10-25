@@ -27,10 +27,7 @@ fn placement_rules() {
     assert_eq!(at("0036/0.pamt"), Placement::PrebuiltGroup);
     assert_eq!(at("Mod/files/0012/ui/a.xml"), Placement::Pack);
     assert_eq!(at("0012/ui/a.xml"), Placement::Pack);
-    assert_eq!(
-        at("Mod/files/0012/ui/a.dds"),
-        Placement::NeedsPaz(PazFormat::Texture)
-    );
+    assert_eq!(at("Mod/files/0012/ui/a.dds"), Placement::Pack);
     assert_eq!(at("cfg/a.json"), Placement::NeedsPaz(PazFormat::JsonPatch));
     assert_eq!(at("Mod/manifest.json"), Placement::Skip);
     assert_eq!(at("tex/hair.dds"), Placement::NeedsPaz(PazFormat::Unplaced));

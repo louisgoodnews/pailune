@@ -33,7 +33,8 @@ fn dry_run_against_the_installed_game() {
     };
     let vanilla = fs::read(info.meta_dir.join("0.papgt")).unwrap();
     let out = PathBuf::from(out);
-    let plan = build::build_from(&info, &vanilla, &input, &out).unwrap();
+    let pathc = fs::read(info.meta_dir.join("0.pathc")).unwrap();
+    let plan = build::build_from(&info, &vanilla, Some(&pathc), &input, &out).unwrap();
     println!("{plan:#?}");
     let table = papgt::parse(&fs::read(out.join("meta/0.papgt")).unwrap()).unwrap();
     assert_eq!(

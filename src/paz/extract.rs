@@ -8,7 +8,7 @@ use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 
 /// The stored bytes of `record` inside `group_dir/<paz_index>.paz`.
-fn read_stored(group_dir: &Path, record: &FileRecord) -> Result<Vec<u8>> {
+pub fn read_stored(group_dir: &Path, record: &FileRecord) -> Result<Vec<u8>> {
     let path = group_dir.join(format!("{}.paz", record.paz_index));
     let mut file = File::open(&path).at(&path)?;
     file.seek(SeekFrom::Start(u64::from(record.offset)))
@@ -33,9 +33,8 @@ pub fn decode(vpath: &str, record: &FileRecord, mut stored: Vec<u8>) -> Result<V
         Compression::None => Ok(stored),
         Compression::Lz4 => lz4_flex::block::decompress(&stored, record.orig_size as usize)
             .map_err(|e| PyluneError::Archive(format!("{vpath}: LZ4: {e}"))),
-        Compression::DdsPartial => Err(PyluneError::Archive(format!(
-            "{vpath}: DDS textures are not supported yet"
-        ))),
+        Compression::DdsPartial => super::dds::decode(&stored, record.orig_size as usize)
+            .map_err(|e| PyluneError::Archive(format!("{vpath}: {e}"))),
         Compression::Unknown(n) => Err(PyluneError::Archive(format!(
             "{vpath}: unknown compression {n}"
         ))),

@@ -9,6 +9,7 @@
 
 pub mod build;
 pub mod collect;
+pub mod textures;
 
 #[cfg(test)]
 mod machine;

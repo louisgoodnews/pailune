@@ -18,7 +18,13 @@ Move a line between columns when its status changes.
   - **verified in game (2026-10-25, build 2.3.2):** an overlay group listed first in
     `0.papgt` overrides the vanilla file ("first group wins") — `local/Pylune Overlay Test`
     turned the title screen copyright line red and large.
-  - next: DDS textures + PATHC, JSON byte patches, pack-level conflict reporting.
+  - done: textures — partial-DDS codec (`src/paz/dds/`) and `0.pathc` reader/writer
+    (`src/paz/pathc.rs`); replaced textures keep the vanilla format class, PATHC is rebuilt
+    from the vanilla backup and deployed with the overlay. Verified read-only on 302 real
+    textures (templates and chunk sizes match PATHC; 253 re-encode byte for byte; PATHC
+    round-trips byte for byte). Optional in-game check: `local/Pylune Texture Test`.
+  - next: JSON byte patches; new texture ids (need the UI texture id table);
+    pack-level conflict reporting.
 
 ## Next
 

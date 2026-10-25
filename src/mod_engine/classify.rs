@@ -16,9 +16,7 @@ fn kind_of(place: Placement) -> Option<ModKind> {
     match place {
         Placement::Mirror | Placement::Bin64 => Some(ModKind::Asi),
         Placement::PrebuiltGroup => Some(ModKind::Overlay),
-        Placement::Pack | Placement::NeedsPaz(PazFormat::Texture | PazFormat::Unplaced) => {
-            Some(ModKind::Raw)
-        }
+        Placement::Pack | Placement::NeedsPaz(PazFormat::Unplaced) => Some(ModKind::Raw),
         Placement::NeedsPaz(PazFormat::JsonPatch) => Some(ModKind::Json),
         Placement::Skip => None,
     }

@@ -84,3 +84,57 @@ fn extract_for_inspection() {
     fs::write(&target, data).unwrap();
     println!("wrote {}", target.display());
 }
+
+/// Textures: PATHC round-trips byte for byte; for sampled vanilla DDS
+/// entries the stored header matches the PATHC template and chunk sizes,
+/// decoding restores the original size, and raw-chunk textures re-encode
+/// to exactly the stored bytes.
+#[test]
+#[ignore = "reads the local game installation"]
+fn textures_match_the_pathc() {
+    use super::{Compression, dds, pathc};
+    let game = game_dir();
+    let raw_table = fs::read(game.join("meta/0.pathc")).unwrap();
+    let table = pathc::parse(&raw_table).unwrap();
+    assert_eq!(pathc::serialize(&table), raw_table, "PATHC round trip");
+    let index = pamt::parse(&fs::read(game.join("0012/0.pamt")).unwrap()).unwrap();
+    let mut textures: Vec<_> = index
+        .files
+        .iter()
+        .filter(|(p, r)| {
+            p.ends_with(".dds") && Compression::from_flags(r.flags) == Compression::DdsPartial
+        })
+        .collect();
+    textures.sort_by(|a, b| a.0.cmp(b.0));
+    let (mut checked, mut reencoded) = (0, 0);
+    textures
+        .iter()
+        .step_by((textures.len() / 300).max(1))
+        .for_each(|(vpath, record)| {
+            let stored = extract::read_stored(&game.join("0012"), record).unwrap();
+            let info = dds::info(&stored).unwrap();
+            let (template, m) = table.lookup(vpath).expect("texture registered");
+            assert_eq!(
+                template,
+                dds::template(&stored[..info.header_len]).as_slice(),
+                "{vpath} template"
+            );
+            let stamped: Vec<u32> = (0..4)
+                .map(|i| u32::from_le_bytes(stored[32 + i * 4..36 + i * 4].try_into().unwrap()))
+                .collect();
+            assert_eq!(m.to_vec(), stamped, "{vpath} chunk sizes");
+            let decoded = dds::decode(&stored, record.orig_size as usize).unwrap();
+            if dds::raw_chunk_sizes(&info) == m {
+                let class = u32::from_le_bytes(stored[124..128].try_into().unwrap());
+                assert_eq!(
+                    dds::encode_raw(&decoded, class).unwrap().0,
+                    stored,
+                    "{vpath} re-encode"
+                );
+                reencoded += 1;
+            }
+            checked += 1;
+        });
+    println!("{checked} textures checked, {reencoded} raw-chunk textures re-encoded byte for byte");
+    assert!(checked > 100 && reencoded > 10);
+}

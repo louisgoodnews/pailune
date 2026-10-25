@@ -79,10 +79,10 @@ If the active profile has no options, `[launch] default_options` is used.
 |------------------------------------------------|------------------------------------------|
 | `bin64/…`                                      | linked at the same path                  |
 | `*.asi`, `*.dll`, `*.ini` elsewhere            | linked into `bin64/`                     |
-| RAW `files/NNNN/<path>` or `NNNN/<path>` game files | packed into **Pylune's archive group** (encrypted/compressed like the game file they replace) |
+| RAW `files/NNNN/<path>` or `NNNN/<path>` game files, including `.dds` textures | packed into **Pylune's archive group** (encrypted/compressed like the game file they replace; textures are also registered in a rebuilt `0.pathc`) |
 | prebuilt groups `NNNN/0.pamt` + `*.paz`        | registered under a free group number     |
 | `meta/*` shipped by a mod                      | ignored — Pylune generates `0.papgt` from your vanilla backup |
-| textures (`.dds`), JSON patches, unplaced game files | not supported yet — flagged in the UI |
+| JSON patches, game files with unknown location | not supported yet — flagged in the UI |
 | readmes, images, `manifest.json`               | not deployed (shown in the details panel) |
 
 ### The archive overlay
@@ -91,7 +91,7 @@ The game only loads content from PAZ archives listed in `meta/0.papgt`. On *Appl
 builds its own archive group (`0100`) in `~/.local/share/pylune/overlay/`, writes a new
 `0.papgt` that lists it **first** (from the vanilla backup, after checking it against every
 installed archive index), and links both into the game folder. Vanilla archives are never
-modified; *Unlink all* restores the original `0.papgt` byte for byte. Format details:
+modified; *Unlink all* restores the original `0.papgt` (and `0.pathc`) byte for byte. Format details:
 [docs/paz-format.md](docs/paz-format.md).
 
 ASI mods need a loader (`winmm.dll`, `version.dll` or `dinput8.dll`) in `bin64/` plus
