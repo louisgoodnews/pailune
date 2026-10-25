@@ -145,3 +145,18 @@ Target design — a collection is a parent mod with sub-mods:
 4. Mod list: a collapsible collection row; toggling it toggles all members.
 5. Revision update = diff (add / remove / update members). Uninstall removes members no other
    collection or manual install uses.
+
+---
+
+## Addendum — 2026-10-25: owner requests (B-items)
+
+Requested after the A-items were largely done. Sizes: **S** small, **M** medium, **L** large.
+
+| ID | Size | Request | Scope |
+|----|------|---------|-------|
+| B-01 | M | Backup and restore | One-file backups of settings (`config.toml`), the database (mods, load order, flags, variants, profiles, collections, journal) and optionally the staged mod folders; restore with validation; automatic backups with retention. |
+| B-02 | M | Full settings menu | Categorised settings for appearance (theme, scale, density, reduced motion), behaviour (confirmations, start-up checks), mod management (defaults for new mods, conflict analysis), Nexus, jobs and logs, backups; validated, with reset to defaults. |
+| B-03 | M | Onboarding user guide | In-app guided first run and a built-in, searchable guide; re-openable at any time. |
+| B-04 | L | Evidence-based UI/UX rework | Apply findings from HCI, cognitive psychology, pedagogy and behavioural economics (see `docs/ux-principles.md`). |
+| B-05 | L | Full documentation | Vision, architecture, data model, module and extension guides, decision records, user guide. |
+| B-06 | S | Recoverable deletes | Deleted mods move to a trash folder and can be restored (error recovery; supports B-01 and B-04). |

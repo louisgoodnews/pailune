@@ -37,16 +37,27 @@ Move a line between columns when its status changes.
   - done: conflicts between packed archive files are reported like linked ones
     (`[archive]/<path>` in the details panel).
 
-## Next
+## Next (small first)
 
-- [ ] A-24 (rest) Download resume; MD5 check — *Phase 2*
-- [ ] A-21 (rest) Register Pylune with Nexus (AUP) before a public release — *Phase 5*
+- [ ] A-32 Spec style fixes — *S*
+- [ ] A-24 (rest) MD5 verification, resumable downloads — *S*
+- [ ] B-06 Recoverable deletes (mod trash) — *S*
+- [ ] B-01 Backup and restore (mods, profiles, mod lists, settings) — *M*
+- [ ] B-02 Full settings menu — *M*
+- [ ] B-03 Onboarding: guided first run + built-in guide — *M*
+- [ ] A-28 (rest) Save-game backup — *M*
+- [ ] A-29 (rest) AppImage — *M*
 
-## Backlog
+## Backlog (large)
 
-- [ ] A-28 (rest) FOMOD-style installer scripts, save-game backup — *Phase 7*
-- [ ] A-29 (rest) AppImage/Flatpak — *Phase 7*
-- [ ] A-32 Spec style fixes — *Phase 7*
+- [ ] B-04 Evidence-based UI/UX rework — *L*
+- [ ] B-05 Full documentation: vision, architecture, code, extension guides — *L*
+- [ ] A-01 (rest) XML/HTML patches, new texture ids, table inserts, field-name JSON — *L*
+- [ ] A-28 (rest) FOMOD-style installer scripts — *L*
+
+## Owner
+
+- [ ] A-21 (rest) Register Pylune with Nexus (AUP) before a public release
 
 ## Done
 
