@@ -2,7 +2,7 @@
 
 use super::clicked;
 use crate::profiles::Profile;
-use crate::ui::theme::{self, ACCENT, MUTED};
+use crate::ui::theme::{self, accent, muted};
 use crate::ui::{Action, Confirm, ProfileAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
@@ -14,7 +14,7 @@ fn card(ui: &mut egui::Ui, profile: &Profile, active: bool, draft: &mut String) 
             let mut actions = ui
                 .horizontal(|ui| {
                     let color = if active {
-                        ACCENT
+                        accent()
                     } else {
                         ui.visuals().text_color()
                     };
@@ -28,7 +28,7 @@ fn card(ui: &mut egui::Ui, profile: &Profile, active: bool, draft: &mut String) 
                     let enabled = profile.slots.iter().filter(|s| s.enabled).count();
                     ui.label(
                         RichText::new(format!("{enabled}/{} enabled", profile.slots.len()))
-                            .color(MUTED),
+                            .color(muted()),
                     );
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         clicked([
@@ -61,7 +61,7 @@ fn card(ui: &mut egui::Ui, profile: &Profile, active: bool, draft: &mut String) 
                 .inner;
             let save = ui
                 .horizontal(|ui| {
-                    ui.label(RichText::new("Launch options").small().color(MUTED));
+                    ui.label(RichText::new("Launch options").small().color(muted()));
                     ui.add(
                         egui::TextEdit::singleline(draft)
                             .hint_text("e.g. WINEDLLOVERRIDES=\"winmm=n,b\" %command% -dx12")
@@ -89,7 +89,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
              Options with environment variables (KEY=value) start the game through Proton directly.",
         )
         .small()
-        .color(MUTED),
+        .color(muted()),
     );
     ui.separator();
     let save = ui
@@ -118,11 +118,11 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     )]));
     ui.add_space(8.0);
     if app.profiles.book.profiles.is_empty() {
-        ui.label(RichText::new("No profiles yet.").color(MUTED));
+        ui.label(RichText::new("No profiles yet.").color(muted()));
         return actions;
     }
     if let Some(active) = &app.profiles.book.active {
-        theme::badge(ui, &format!("ACTIVE: {active}"), ACCENT);
+        theme::badge(ui, &format!("ACTIVE: {active}"), accent());
     }
     let book = app.profiles.book.clone();
     egui::ScrollArea::vertical()

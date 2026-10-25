@@ -2,7 +2,7 @@
 
 use crate::mod_engine::model::{ModDetails, ModEntry};
 use crate::mod_engine::variants;
-use crate::ui::theme::{self, ACCENT};
+use crate::ui::theme::{self, accent};
 use crate::ui::{Action, ModAction};
 use eframe::egui::{self, RichText};
 
@@ -16,7 +16,7 @@ pub fn show(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) -> Vec<Ac
         .unwrap_or_default();
     let mut chosen = current.clone();
     ui.horizontal(|ui| {
-        theme::badge(ui, "OPTIONS", ACCENT);
+        theme::badge(ui, "OPTIONS", accent());
         egui::ComboBox::from_id_salt(("variant", &entry.name))
             .selected_text(&chosen)
             .show_ui(ui, |ui| {

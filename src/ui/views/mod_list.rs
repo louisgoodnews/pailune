@@ -2,7 +2,7 @@
 
 use super::clicked;
 use crate::mod_engine::model::{ModEntry, MoveTo};
-use crate::ui::theme::{self, ACCENT, DANGER, MUTED, WARNING};
+use crate::ui::theme::{self, accent, danger, muted, warning};
 use crate::ui::{Action, ModAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
@@ -15,15 +15,19 @@ fn status_cell(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) {
                 .any(|m| m.mod_name.as_ref() == Some(&entry.name))
         });
         match collection {
-            Some(c) => drop(theme::badge(ui, &format!("📚 {}", c.name), ACCENT)),
-            None if entry.nexus.is_some() => drop(theme::badge(ui, "NEXUS", MUTED)),
+            Some(c) => drop(theme::badge(ui, &format!("📚 {}", c.name), accent())),
+            None if entry.nexus.is_some() => drop(theme::badge(ui, "NEXUS", muted())),
             None => {}
         }
         if let Some(version) = app.nexus.updates.get(&entry.name) {
-            theme::badge(ui, &format!("⬆ {version}"), WARNING);
+            theme::badge(ui, &format!("⬆ {version}"), warning());
         }
         if let Some(c) = app.mods.conflicts.get(&entry.name) {
-            let color = if c.loses.is_empty() { ACCENT } else { DANGER };
+            let color = if c.loses.is_empty() {
+                accent()
+            } else {
+                danger()
+            };
             theme::badge(ui, &format!("⚔ {}/{}", c.wins.len(), c.loses.len()), color)
                 .on_hover_text("Conflicts: files won / files lost");
         }
@@ -34,7 +38,7 @@ fn status_cell(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) {
 fn row(ui: &mut egui::Ui, index: usize, entry: &ModEntry, app: &PyluneApp) -> Vec<Action> {
     let last = app.registry.mods.len().saturating_sub(1);
     let name = entry.name.clone();
-    ui.label(RichText::new(format!("{}", index + 1)).color(MUTED));
+    ui.label(RichText::new(format!("{}", index + 1)).color(muted()));
     let mut enabled = entry.enabled;
     let toggled = ui.checkbox(&mut enabled, "").changed();
     let selected = app.mods.selected.as_ref() == Some(&entry.name);
@@ -47,7 +51,7 @@ fn row(ui: &mut egui::Ui, index: usize, entry: &ModEntry, app: &PyluneApp) -> Ve
         0 => entry.file_count.to_string(),
         paz => format!("{} (+{paz} PAZ)", entry.file_count),
     };
-    ui.label(RichText::new(files).color(MUTED));
+    ui.label(RichText::new(files).color(muted()));
     status_cell(ui, entry, app);
     let up = ui
         .add_enabled(index > 0, egui::Button::new("▲").small())
@@ -116,7 +120,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     ui.label(
         RichText::new("Load order runs top to bottom — later mods win file conflicts. Click a name for details.")
             .small()
-            .color(MUTED),
+            .color(muted()),
     );
     ui.separator();
     let mods = &app.registry.mods;
@@ -124,7 +128,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         ui.add_space(40.0);
         ui.vertical_centered(|ui| {
             ui.label(RichText::new("No mods staged yet").size(18.0));
-            ui.label(RichText::new("Import a folder or a .zip/.7z/.rar/.asi/.dll/.json file, or download from Nexus.").color(MUTED));
+            ui.label(RichText::new("Import a folder or a .zip/.7z/.rar/.asi/.dll/.json file, or download from Nexus.").color(muted()));
         });
         actions.extend(trash(ui, app));
         return actions;
@@ -140,7 +144,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
                 .show(ui, |ui| {
                     ["#", "On", "Name", "Type", "Files", "Status", "", ""]
                         .iter()
-                        .for_each(|h| drop(ui.label(RichText::new(*h).small().color(MUTED))));
+                        .for_each(|h| drop(ui.label(RichText::new(*h).small().color(muted()))));
                     ui.end_row();
                     let rows: Vec<Action> = mods
                         .iter()

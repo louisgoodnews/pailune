@@ -22,7 +22,14 @@ pub(super) fn register(
     let now = db::now();
     // Walk the files before taking the write lock (A-20).
     let scan = registry::scan(&ctx.paths.staging)?;
-    db::mods::update(&mut conn, |r| Ok(registry::merge(r, &scan, now)))?;
+    let enable = ctx.config.mods.enable_new && !updated;
+    db::mods::update(&mut conn, |r| {
+        let merged = registry::merge(r, &scan, now);
+        Ok(match enable {
+            true => registry::with_enabled(&merged, name, true),
+            false => merged,
+        })
+    })?;
     db::mods::record_install(&conn, name, source, nexus, now)?;
     let details = info::details(&ctx.paths.staging.join(name), None)?;
     let lines: Vec<String> = details
@@ -99,7 +106,7 @@ pub fn remove(ctx: &JobContext, name: &str) -> Result<JobOutput> {
     };
     // Recoverable: the folder moves to the trash with its metadata.
     trash::move_to_trash(&ctx.paths.staging, &ctx.paths.trash, &entry, db::now())?;
-    trash::prune(&ctx.paths.trash, trash::KEEP)?;
+    trash::prune(&ctx.paths.trash, ctx.config.mods.trash_keep)?;
     ctx.journal(
         &conn,
         Event::new(

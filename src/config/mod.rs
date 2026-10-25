@@ -3,6 +3,9 @@
 pub mod detect;
 pub mod file;
 pub mod paths;
+pub mod prefs;
+
+pub use prefs::{BackupConfig, BehaviorConfig, ModsConfig, UiConfig};
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -58,6 +61,8 @@ pub struct JobsConfig {
 pub struct LoggingConfig {
     /// `tracing` filter for the log file, e.g. `info` or `pylune=debug`.
     pub level: String,
+    /// Daily log files kept.
+    pub keep_days: usize,
 }
 
 /// Complete configuration file.
@@ -65,6 +70,10 @@ pub struct LoggingConfig {
 #[serde(default)]
 pub struct Config {
     pub game: GameConfig,
+    pub ui: UiConfig,
+    pub behavior: BehaviorConfig,
+    pub mods: ModsConfig,
+    pub backup: BackupConfig,
     pub nexus: NexusConfig,
     pub launch: LaunchConfig,
     pub jobs: JobsConfig,
@@ -112,6 +121,7 @@ impl Default for LoggingConfig {
     fn default() -> Self {
         Self {
             level: "info".into(),
+            keep_days: 14,
         }
     }
 }

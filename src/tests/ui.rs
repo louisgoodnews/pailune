@@ -11,7 +11,7 @@ use crate::ui::{
 use std::fs;
 use std::time::{Duration, Instant};
 
-fn app(fx: &Fixture) -> PyluneApp {
+pub(super) fn app(fx: &Fixture) -> PyluneApp {
     let root = fx.staging.parent().unwrap().to_path_buf();
     let paths = DataPaths::under(&root, &root);
     paths.create_dirs().unwrap();
@@ -26,7 +26,7 @@ fn app(fx: &Fixture) -> PyluneApp {
 }
 
 /// Polls until no job is queued or running.
-fn settle(app: &mut PyluneApp) {
+pub(super) fn settle(app: &mut PyluneApp) {
     let start = Instant::now();
     loop {
         app.poll();
@@ -71,8 +71,9 @@ fn import_enable_apply_and_delete() {
             .as_ref()
             .is_some_and(|(n, d)| n == "Cool Mod" && !d.readmes.is_empty())
     );
+    app.config.behavior.confirm_deletes = true;
     app.dispatch(Action::Ask(Confirm::DeleteMod("Cool Mod".into())));
-    assert!(app.confirm.is_some());
+    assert!(app.confirm.is_some(), "asks when the user wants it");
     app.dispatch(Action::Mod(ModAction::Delete("Cool Mod".into())));
     settle(&mut app);
     assert_eq!(
@@ -125,19 +126,6 @@ fn profiles_save_and_load() {
     assert_eq!(app.profiles.book.active.as_deref(), Some("Loader only"));
     app.dispatch(Action::Profile(ProfileAction::Save("  ".into())));
     assert_eq!(app.status.level, Level::Error, "empty names are refused");
-}
-
-#[test]
-fn settings_are_validated() {
-    let fx = fixture();
-    let mut app = app(&fx);
-    app.draft.app_id = "not a number".into();
-    app.dispatch(Action::SaveSettings);
-    assert_eq!(app.status.level, Level::Error);
-    app.draft.app_id = "3321460".into();
-    app.draft.max_parallel = "99".into();
-    app.dispatch(Action::SaveSettings);
-    assert!(app.status.text.contains("parallel"), "{:?}", app.status);
 }
 
 #[test]
@@ -203,44 +191,4 @@ fn app_spool(fx: &Fixture) -> std::path::PathBuf {
     let spool = fx.staging.parent().unwrap().join("spool");
     fs::create_dir_all(&spool).unwrap();
     spool
-}
-
-#[test]
-fn backups_restore_the_mod_list_and_settings() {
-    use crate::ui::BackupAction;
-    let fx = fixture();
-    let mut app = app(&fx);
-    settle(&mut app);
-    assert_eq!(app.backups.len(), 1, "an automatic backup on first start");
-    app.dispatch(Action::Mod(ModAction::ImportPaths(vec![
-        fx.sources.join("Overlay"),
-    ])));
-    settle(&mut app);
-    app.dispatch(Action::Mod(ModAction::SetAll(true)));
-    app.dispatch(Action::Backup(BackupAction::Create { full: true }));
-    settle(&mut app);
-    let backup = app
-        .backups
-        .iter()
-        .find(|b| b.label == "manual")
-        .expect("manual backup")
-        .path
-        .clone();
-    app.dispatch(Action::Mod(ModAction::Delete("Overlay".into())));
-    settle(&mut app);
-    assert!(app.registry.mods.is_empty());
-    app.dispatch(Action::Backup(BackupAction::Restore(backup)));
-    settle(&mut app);
-    assert_eq!(app.status.level, Level::Success, "{:?}", app.status);
-    let names: Vec<_> = app
-        .registry
-        .mods
-        .iter()
-        .map(|m| (m.name.as_str(), m.enabled))
-        .collect();
-    assert_eq!(names, [("Overlay", true)]);
-    assert!(
-        app.backups.iter().any(|b| b.label == "before restore"),
-        "safety backup taken"
-    );
 }

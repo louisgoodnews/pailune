@@ -25,6 +25,12 @@
   with wrapper and environment support; profiles with launch options and JSON export/import;
   mod search, keyboard shortcuts, drag-and-drop import; Log tab with per-mod logs.
 
+### Settings
+- Categorised settings page with explanations, Save/Discard, per-page reset to defaults.
+- Light and dark themes (or follow the desktop), UI scale, density, reduced motion.
+- New options: confirm deletes, update check at start, enable new mods, trash size, automatic
+  backups and how many to keep, days of logs kept.
+
 ### Storage
 - SQLite application state (`~/.local/share/pylune/pylune.sqlite3`), TOML settings
   (`~/.config/pylune/config.toml`).

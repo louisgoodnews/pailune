@@ -24,6 +24,7 @@ impl PyluneApp {
     /// Validates and saves the settings draft to `config.toml`.
     pub(super) fn save_settings(&mut self) -> Result<StatusLine> {
         let mut next = self.draft.to_config()?;
+        // File-only setting, never edited in the UI.
         next.nexus.api_url = self.config.nexus.api_url.clone();
         // Queued jobs carry the old configuration; never let them run
         // against a different game folder (A-26).
@@ -37,6 +38,8 @@ impl PyluneApp {
         }
         file::save(&self.paths.config_file, &next)?;
         let restart = next.jobs != self.config.jobs || next.logging != self.config.logging;
+        self.draft.game_dir = next.game.dir.display().to_string();
+        self.draft.config = next.clone();
         self.config = next;
         self.journal(Event::new(
             Severity::Info,

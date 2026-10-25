@@ -2,7 +2,7 @@
 
 use super::clicked;
 use crate::app_backup::{BackupInfo, BackupKind};
-use crate::ui::theme::MUTED;
+use crate::ui::theme::muted;
 use crate::ui::{Action, BackupAction, Confirm, PyluneApp};
 use eframe::egui::{self, RichText};
 
@@ -20,7 +20,7 @@ fn row(ui: &mut egui::Ui, b: &BackupInfo) -> Vec<Action> {
             b.label
         ))
         .small()
-        .color(MUTED),
+        .color(muted()),
     );
     let actions = clicked([
         (
@@ -45,7 +45,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
              backup also holds the mod files. An automatic backup is taken once a day.",
         )
         .small()
-        .color(MUTED),
+        .color(muted()),
     );
     let mut actions = ui
         .horizontal(|ui| {
@@ -74,7 +74,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         })
         .inner;
     match app.backups.is_empty() {
-        true => drop(ui.label(RichText::new("No backups yet.").small().color(MUTED))),
+        true => drop(ui.label(RichText::new("No backups yet.").small().color(muted()))),
         false => {
             egui::Grid::new("backups")
                 .striped(true)

@@ -1,16 +1,16 @@
 //! Bottom panel listing running and recently finished background jobs.
 
-use crate::ui::theme::{DANGER, MUTED, SUCCESS};
+use crate::ui::theme::{danger, muted, success};
 use crate::ui::{JobState, JobView, PyluneApp};
 use eframe::egui::{self, RichText};
 
 fn row(ui: &mut egui::Ui, job: &JobView) {
     ui.horizontal(|ui| {
         match job.state {
-            JobState::Queued => drop(ui.label(RichText::new("⏸").color(MUTED))),
+            JobState::Queued => drop(ui.label(RichText::new("⏸").color(muted()))),
             JobState::Running => drop(ui.spinner()),
-            JobState::Succeeded => drop(ui.label(RichText::new("✔").color(SUCCESS))),
-            JobState::Failed => drop(ui.label(RichText::new("✖").color(DANGER))),
+            JobState::Succeeded => drop(ui.label(RichText::new("✔").color(success()))),
+            JobState::Failed => drop(ui.label(RichText::new("✖").color(danger()))),
         }
         ui.label(&job.title);
         if let (JobState::Running, Some((done, total))) = (job.state, job.progress) {
@@ -44,7 +44,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) {
     ui.label(
         RichText::new(format!("Background jobs — {running} active"))
             .small()
-            .color(MUTED),
+            .color(muted()),
     );
     egui::ScrollArea::vertical()
         .max_height(110.0)

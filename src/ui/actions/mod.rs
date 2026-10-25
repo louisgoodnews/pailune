@@ -46,6 +46,10 @@ impl PyluneApp {
             Action::SaveSettings => self.save_settings().map(Some),
             Action::RefreshLog => self.refresh_log().map(|()| None),
             Action::OpenLogFolder => self.open_path(&self.paths.logs.clone()).map(|()| None),
+            // Deletes are undoable, so they ask only when the user wants it (R-04).
+            Action::Ask(Confirm::DeleteMod(name)) if !self.config.behavior.confirm_deletes => {
+                self.mod_action(super::ModAction::Delete(name))
+            }
             Action::Ask(confirm) => Ok(self.ask(Some(confirm))),
             Action::Dismiss => Ok(self.ask(None)),
         };

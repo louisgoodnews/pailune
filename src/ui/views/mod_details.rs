@@ -3,7 +3,7 @@
 use super::clicked;
 use crate::mod_engine::conflicts::{Contest, ModConflicts};
 use crate::mod_engine::model::{ModDetails, ModEntry, MoveTo};
-use crate::ui::theme::{self, ACCENT, DANGER, MUTED, SUCCESS, WARNING};
+use crate::ui::theme::{self, accent, danger, muted, success, warning};
 use crate::ui::{Action, Confirm, ModAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
@@ -57,7 +57,7 @@ fn actions_row(ui: &mut egui::Ui, entry: &ModEntry) -> Vec<Action> {
                     mod_action(ModAction::OpenFolder(name.clone())),
                 ),
                 (
-                    theme::filled_button(ui, "🗑 Delete", DANGER).clicked(),
+                    theme::filled_button(ui, "🗑 Delete", danger()).clicked(),
                     Action::Ask(Confirm::DeleteMod(name.clone())),
                 ),
             ])
@@ -73,7 +73,7 @@ fn info_grid(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) {
         .spacing([10.0, 4.0])
         .show(ui, |ui| {
             let row = |ui: &mut egui::Ui, key: &str, value: String| {
-                ui.label(RichText::new(key).color(MUTED));
+                ui.label(RichText::new(key).color(muted()));
                 ui.label(value);
                 ui.end_row();
             };
@@ -96,7 +96,7 @@ fn info_grid(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) {
                 ),
             );
             if entry.paz_files > 0 {
-                ui.label(RichText::new("Needs PAZ").color(WARNING));
+                ui.label(RichText::new("Needs PAZ").color(warning()));
                 ui.label(
                     RichText::new(format!(
                         "{} file(s) are JSON patches or RAW/loose game files. The game only reads \
@@ -104,7 +104,7 @@ fn info_grid(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) {
                      pack archives (roadmap phase 3).",
                         entry.paz_files
                     ))
-                    .color(WARNING),
+                    .color(warning()),
                 );
                 ui.end_row();
             }
@@ -153,20 +153,20 @@ fn conflicts(ui: &mut egui::Ui, report: Option<&ModConflicts>, enabled: bool, an
     ui.label(RichText::new("File conflicts").strong());
     match (report, enabled) {
         (None, true) if analysing => {
-            drop(ui.label(RichText::new("Analysing…").small().color(MUTED)))
+            drop(ui.label(RichText::new("Analysing…").small().color(muted())))
         }
         (_, false) => drop(
             ui.label(
                 RichText::new("Activate the mod to analyse conflicts.")
                     .small()
-                    .color(MUTED),
+                    .color(muted()),
             ),
         ),
         (None, true) => drop(
             ui.label(
                 RichText::new("No conflicts with other active mods.")
                     .small()
-                    .color(SUCCESS),
+                    .color(success()),
             ),
         ),
         (Some(c), true) => {
@@ -187,13 +187,18 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         .filter(|(name, _)| Some(name) == selected)
         .map(|(_, d)| d);
     let (Some(entry), Some(details)) = (entry, details) else {
-        ui.label(RichText::new("Select a mod.").color(MUTED));
+        ui.label(RichText::new("Select a mod.").color(muted()));
         return Vec::new();
     };
     egui::ScrollArea::vertical()
         .auto_shrink([false, false])
         .show(ui, |ui| {
-            ui.label(RichText::new(&entry.name).size(18.0).strong().color(ACCENT));
+            ui.label(
+                RichText::new(&entry.name)
+                    .size(18.0)
+                    .strong()
+                    .color(accent()),
+            );
             let (kind, color) = theme::kind_style(entry.kind);
             theme::badge(ui, kind, color);
             ui.add_space(4.0);
@@ -214,7 +219,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
                 ui.label(
                     RichText::new("No readme found in this mod.")
                         .small()
-                        .color(MUTED),
+                        .color(muted()),
                 );
             }
             actions.extend(super::mod_files::show(ui, details));

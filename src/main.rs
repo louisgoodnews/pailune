@@ -36,7 +36,8 @@ fn main() -> eframe::Result<()> {
         }
     };
     let (config, notice) = config::file::load_or_recover(&paths.config_file);
-    let _log_guard = logging::init::init(&paths.logs, &config.logging.level);
+    let _log_guard =
+        logging::init::init(&paths.logs, &config.logging.level, config.logging.keep_days);
     // The lock must live until the window closes.
     let _instance = match instance::bootstrap(&paths, &args) {
         Ok(instance::Startup::HandedOff) => {

@@ -2,7 +2,7 @@
 
 use super::clicked;
 use crate::nexus::collection::Collection;
-use crate::ui::theme::{self, ACCENT, MUTED, SUCCESS, WARNING};
+use crate::ui::theme::{self, accent, muted, success, warning};
 use crate::ui::{Action, Confirm, NexusAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
@@ -18,19 +18,19 @@ fn installed(ui: &mut egui::Ui, c: &Collection) -> Vec<Action> {
         .show(ui, |ui| {
             let mut actions = ui
                 .horizontal(|ui| {
-                    ui.label(RichText::new(&c.name).strong().color(ACCENT));
+                    ui.label(RichText::new(&c.name).strong().color(accent()));
                     ui.label(
                         RichText::new(format!(
                             "revision {} · {done}/{} installed",
                             c.revision,
                             wanted.len()
                         ))
-                        .color(MUTED),
+                        .color(muted()),
                     );
                     let color = if done == wanted.len() {
-                        SUCCESS
+                        success()
                     } else {
-                        WARNING
+                        warning()
                     };
                     theme::badge(
                         ui,
@@ -106,7 +106,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
             ui.label(
                 RichText::new("No collections installed.")
                     .small()
-                    .color(MUTED),
+                    .color(muted()),
             ),
         ),
         false => app

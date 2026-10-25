@@ -1,7 +1,7 @@
 //! First-run dialog: choose the Crimson Desert folder.
 
 use super::clicked;
-use crate::ui::theme::{self, ACCENT, MUTED};
+use crate::ui::theme::{self, accent, muted};
 use crate::ui::{Action, PyluneApp, SetupAction};
 use eframe::egui::{self, RichText};
 
@@ -10,7 +10,7 @@ pub fn show(ctx: &egui::Context, app: &mut PyluneApp) -> Vec<Action> {
     egui::Modal::new(egui::Id::unique("pylune_setup"))
         .show(ctx, |ui| {
             ui.set_max_width(520.0);
-            ui.heading(RichText::new("Welcome to Pylune").color(ACCENT));
+            ui.heading(RichText::new("Welcome to Pylune").color(accent()));
             ui.label(
                 "Pylune could not find Crimson Desert in your Steam libraries. Choose the \
                  game folder — the one containing bin64/ and meta/.",
@@ -27,10 +27,10 @@ pub fn show(ctx: &egui::Context, app: &mut PyluneApp) -> Vec<Action> {
                     browse
                 })
                 .inner;
-            ui.label(RichText::new(&app.status.text).small().color(MUTED));
+            ui.label(RichText::new(&app.status.text).small().color(muted()));
             ui.add_space(8.0);
             ui.horizontal(|ui| {
-                let confirm = theme::filled_button(ui, "Use this folder", ACCENT).clicked();
+                let confirm = theme::filled_button(ui, "Use this folder", accent()).clicked();
                 let detect = ui.button("🔍 Search Steam again").clicked();
                 let later = ui.button("Later").clicked();
                 clicked([

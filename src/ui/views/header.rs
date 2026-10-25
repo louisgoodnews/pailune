@@ -3,7 +3,7 @@
 use super::clicked;
 use crate::launch::GameProcess;
 use crate::steam::{AsiLoader, GameStatus};
-use crate::ui::theme::{self, ACCENT, DANGER, MUTED, SUCCESS, WARNING};
+use crate::ui::theme::{self, accent, danger, muted, success, warning};
 use crate::ui::{Action, Confirm, DeployAction, PyluneApp, Tab};
 use eframe::egui::{self, Color32, RichText};
 
@@ -17,19 +17,19 @@ const TABS: [(Tab, &str); 5] = [
 
 fn game_badge(status: GameStatus, process: GameProcess) -> (&'static str, Color32) {
     match (status, process) {
-        (_, GameProcess::Running) => ("GAME RUNNING", ACCENT),
-        (GameStatus::Ready, _) => ("GAME FOUND", SUCCESS),
-        (GameStatus::Unrecognised, _) => ("NOT CRIMSON DESERT", WARNING),
-        (GameStatus::Missing, _) => ("GAME MISSING", DANGER),
+        (_, GameProcess::Running) => ("GAME RUNNING", accent()),
+        (GameStatus::Ready, _) => ("GAME FOUND", success()),
+        (GameStatus::Unrecognised, _) => ("NOT CRIMSON DESERT", warning()),
+        (GameStatus::Missing, _) => ("GAME MISSING", danger()),
     }
 }
 
 fn loader_badge(loader: AsiLoader) -> (&'static str, Color32) {
     match loader {
-        AsiLoader::Winmm => ("ASI LOADER: winmm.dll", SUCCESS),
-        AsiLoader::Version => ("ASI LOADER: version.dll", SUCCESS),
-        AsiLoader::Dinput8 => ("ASI LOADER: dinput8.dll", SUCCESS),
-        AsiLoader::Absent => ("NO ASI LOADER", WARNING),
+        AsiLoader::Winmm => ("ASI LOADER: winmm.dll", success()),
+        AsiLoader::Version => ("ASI LOADER: version.dll", success()),
+        AsiLoader::Dinput8 => ("ASI LOADER: dinput8.dll", success()),
+        AsiLoader::Absent => ("NO ASI LOADER", warning()),
     }
 }
 
@@ -38,21 +38,21 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
     let mut actions = Vec::new();
     ui.add_space(6.0);
     ui.horizontal(|ui| {
-        ui.label(RichText::new("Pylune").size(24.0).strong().color(ACCENT));
-        ui.label(RichText::new("Crimson Desert mod manager").color(MUTED));
+        ui.label(RichText::new("Pylune").size(24.0).strong().color(accent()));
+        ui.label(RichText::new("Crimson Desert mod manager").color(muted()));
         ui.add_space(12.0);
         let (text, color) = game_badge(app.game, app.process);
         theme::badge(ui, text, color);
         let (text, color) = loader_badge(app.loader);
         theme::badge(ui, text, color);
         if let Some(profile) = &app.profiles.book.active {
-            theme::badge(ui, &format!("PROFILE: {profile}"), ACCENT);
+            theme::badge(ui, &format!("PROFILE: {profile}"), accent());
         }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             let ready = app.process == GameProcess::Stopped && app.game == GameStatus::Ready;
             let play = ui
                 .add_enabled_ui(ready && app.launch_after.is_none(), |ui| {
-                    theme::filled_button(ui, "▶  PLAY", SUCCESS.linear_multiply(0.85))
+                    theme::filled_button(ui, "▶  PLAY", success().linear_multiply(0.85))
                 })
                 .inner
                 .on_hover_text("Launch with the active profile's options (applies pending changes first if enabled)");
@@ -79,7 +79,9 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             let free = blocked.is_none();
             let why = blocked.unwrap_or_default();
             let reset = ui
-                .add_enabled_ui(free, |ui| theme::filled_button(ui, "⚠ CLEAN SLATE", DANGER))
+                .add_enabled_ui(free, |ui| {
+                    theme::filled_button(ui, "⚠ CLEAN SLATE", danger())
+                })
                 .inner
                 .on_hover_text(
                     "Remove all links, restore .bak originals and set foreign overlays aside",
@@ -89,9 +91,9 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
                 .add_enabled(free, egui::Button::new("Unlink all"))
                 .on_disabled_hover_text(why);
             let fill = if app.dirty {
-                ACCENT
+                accent()
             } else {
-                ACCENT.linear_multiply(0.45)
+                accent().linear_multiply(0.45)
             };
             let apply = ui
                 .add_enabled_ui(free, |ui| theme::filled_button(ui, "✔ Apply", fill))

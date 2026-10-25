@@ -2,7 +2,7 @@
 
 use super::clicked;
 use crate::nexus::collection::Collection;
-use crate::ui::theme::{self, ACCENT, MUTED};
+use crate::ui::theme::{self, accent, muted};
 use crate::ui::{Action, NexusAction};
 use eframe::egui::{self, RichText};
 
@@ -25,7 +25,7 @@ pub fn show(
     egui::Modal::new(egui::Id::unique("pylune_collection"))
         .show(ctx, |ui| {
             ui.set_max_width(600.0);
-            ui.heading(RichText::new(&c.name).color(ACCENT));
+            ui.heading(RichText::new(&c.name).color(accent()));
             let verb = match installed {
                 Some(old) if old.revision == c.revision => {
                     format!("installed (revision {})", c.revision)
@@ -39,7 +39,7 @@ pub fn show(
                     c.members.len(),
                     chosen as f64 / 1e6
                 ))
-                .color(MUTED),
+                .color(muted()),
             );
             ui.label(
                 RichText::new(
@@ -64,7 +64,7 @@ pub fn show(
                                         .small(),
                                 );
                                 if m.optional {
-                                    theme::badge(ui, "OPTIONAL", MUTED);
+                                    theme::badge(ui, "OPTIONAL", muted());
                                 }
                                 clicked([(
                                     toggled,
@@ -85,7 +85,7 @@ pub fn show(
                 };
                 actions.extend(clicked([
                     (
-                        theme::filled_button(ui, label, ACCENT).clicked(),
+                        theme::filled_button(ui, label, accent()).clicked(),
                         Action::Nexus(NexusAction::InstallCollection),
                     ),
                     (

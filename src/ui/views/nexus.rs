@@ -1,7 +1,7 @@
 //! Nexus page: account, nxm handler, mod lookup and downloads.
 
 use crate::nexus::{NexusFile, NexusMod};
-use crate::ui::theme::{self, ACCENT, MUTED, SUCCESS, WARNING};
+use crate::ui::theme::{self, accent, muted, success, warning};
 use crate::ui::{Action, NexusAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
@@ -17,12 +17,12 @@ fn pick(pairs: impl IntoIterator<Item = (bool, NexusAction)>) -> Vec<Action> {
 
 fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     let (text, color) = match &app.nexus.user {
-        Some(user) if user.is_premium => (format!("{} · PREMIUM", user.name), SUCCESS),
+        Some(user) if user.is_premium => (format!("{} · PREMIUM", user.name), success()),
         Some(user) => (
             format!("{} · FREE (use nxm:// downloads)", user.name),
-            WARNING,
+            warning(),
         ),
-        None => ("NOT SIGNED IN".to_string(), MUTED),
+        None => ("NOT SIGNED IN".to_string(), muted()),
     };
     ui.horizontal(|ui| {
         theme::badge(ui, &text, color);
@@ -31,7 +31,7 @@ fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
             ui.label(
                 RichText::new(format!("API budget left: {hourly}/hour, {daily}/day"))
                     .small()
-                    .color(MUTED),
+                    .color(muted()),
             );
         }
     });
@@ -49,9 +49,9 @@ fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         })
         .inner;
     match app.nexus.handler_registered {
-        true => drop(ui.label(RichText::new("✔ Pylune handles nxm:// links").color(SUCCESS))),
+        true => drop(ui.label(RichText::new("✔ Pylune handles nxm:// links").color(success()))),
         false => {
-            drop(ui.label(RichText::new("nxm:// links currently go to another app").color(MUTED)))
+            drop(ui.label(RichText::new("nxm:// links currently go to another app").color(muted())))
         }
     }
     let register = !app.nexus.handler_registered
@@ -89,8 +89,8 @@ fn lookup(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
 fn file_row(ui: &mut egui::Ui, file: &NexusFile, can_download: bool) -> Option<Action> {
     ui.label(RichText::new(&file.name).strong());
     ui.label(&file.version);
-    ui.label(RichText::new(file.category_name.as_deref().unwrap_or("-")).color(MUTED));
-    ui.label(RichText::new(format!("{:.1} MB", file.size_kb as f32 / 1024.0)).color(MUTED));
+    ui.label(RichText::new(file.category_name.as_deref().unwrap_or("-")).color(muted()));
+    ui.label(RichText::new(format!("{:.1} MB", file.size_kb as f32 / 1024.0)).color(muted()));
     let clicked = ui
         .add_enabled(can_download, egui::Button::new("⬇ Download"))
         .on_disabled_hover_text("Free accounts: use \"Mod Manager Download\" on the website")
@@ -105,17 +105,22 @@ fn details(
     files: &[NexusFile],
     app: &PyluneApp,
 ) -> Vec<Action> {
-    ui.label(RichText::new(&info.name).size(18.0).strong().color(ACCENT));
+    ui.label(
+        RichText::new(&info.name)
+            .size(18.0)
+            .strong()
+            .color(accent()),
+    );
     ui.label(
         RichText::new(format!(
             "by {} · version {} · id {}",
             info.author, info.version, info.mod_id
         ))
-        .color(MUTED),
+        .color(muted()),
     );
     ui.label(&info.summary);
     if let Some(target) = &app.nexus.replace_target {
-        ui.label(RichText::new(format!("The next download replaces '{target}'")).color(WARNING));
+        ui.label(RichText::new(format!("The next download replaces '{target}'")).color(warning()));
     }
     let can_download = app.nexus.user.as_ref().is_none_or(|u| u.is_premium);
     egui::Grid::new("nexus_files")
@@ -137,7 +142,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     ui.label(
         RichText::new(format!("Game: nexusmods.com/{}", app.config.nexus.domain))
             .small()
-            .color(MUTED),
+            .color(muted()),
     );
     ui.separator();
     let mut actions = account(ui, app);
@@ -151,7 +156,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         .auto_shrink([false, false])
         .show(ui, |ui| match &browsing {
             Some((info, files)) => actions.extend(details(ui, info, files, app)),
-            None => drop(ui.label(RichText::new("Fetch a mod to see its files.").color(MUTED))),
+            None => drop(ui.label(RichText::new("Fetch a mod to see its files.").color(muted()))),
         });
     actions
 }

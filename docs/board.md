@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] B-02 Full settings menu — *M*
 - [ ] B-03 Onboarding: guided first run + built-in guide — *M*
 - [ ] A-28 (rest) Save-game backup — *M*
 - [ ] A-29 (rest) AppImage — *M*
@@ -57,6 +56,12 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-02 settings menu (`src/ui/views/settings/`, `src/config/prefs.rs`): eight categories
+  with one-line help per option, constrained controls (R-07), Save/Discard bar, per-page reset;
+  appearance (theme incl. System, scale, density, reduced motion) previewed live; WCAG-checked
+  light and dark palettes; new `[ui]`, `[behavior]`, `[mods]`, `[backup]` sections and
+  `[logging] keep_days`, all wired (deletes skip the dialog unless asked — Undo exists).
+- [x] UX principles (`docs/ux-principles.md`): 29 rules with evidence and references.
 - [x] B-01 backups (`src/app_backup/`): one `.zip` with manifest, `config.toml` and an online
   SQLite snapshot (mod list, load order, flags, variants, profiles, collections, journal), full
   backups add the mod files; daily automatic backup (newest 10 kept); restore needs nothing

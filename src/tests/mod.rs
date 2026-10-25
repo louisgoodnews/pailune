@@ -10,6 +10,7 @@ mod overlay;
 mod staging;
 mod storage;
 mod ui;
+mod ui_prefs;
 
 pub(super) use jobs::wait_all as wait_all_jobs;
 

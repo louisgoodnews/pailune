@@ -3,7 +3,7 @@
 use super::clicked;
 use crate::mod_engine::model::ModDetails;
 use crate::mod_engine::plan::Placement;
-use crate::ui::theme::{MUTED, WARNING};
+use crate::ui::theme::{muted, warning};
 use crate::ui::{Action, ModAction};
 use eframe::egui::{self, RichText};
 
@@ -22,8 +22,8 @@ pub fn show(ui: &mut egui::Ui, details: &ModDetails) -> Vec<Action> {
                 | Placement::JsonPatch
                 | Placement::CssPatch
                 | Placement::PrebuiltGroup => ui.visuals().text_color(),
-                Placement::NeedsPaz(_) => WARNING,
-                Placement::Skip => MUTED,
+                Placement::NeedsPaz(_) => warning(),
+                Placement::Skip => muted(),
             };
             ui.label(
                 RichText::new(format!("{}  ({} B)", f.rel.display(), f.bytes))

@@ -13,9 +13,6 @@ use std::path::PathBuf;
 /// Version of the backup layout written into `manifest.json`.
 pub const FORMAT: u64 = 1;
 
-/// Automatic backups kept; manual ones are never pruned.
-pub const KEEP_AUTO: usize = 10;
-
 /// Label of automatic backups.
 pub const AUTO_LABEL: &str = "auto";
 

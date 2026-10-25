@@ -1,6 +1,6 @@
 //! Shown instead of the main window when Pylune cannot start safely.
 
-use super::theme::{self, DANGER, MUTED};
+use super::theme::{self, danger, muted};
 use crate::config::paths::DataPaths;
 use eframe::egui::{self, RichText};
 use std::path::PathBuf;
@@ -31,12 +31,14 @@ impl FatalApp {
 
 impl eframe::App for FatalApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        theme::apply(ui.ctx());
+        theme::apply(ui.ctx(), &Default::default());
         egui::CentralPanel::default().show(ui, |ui| {
-            ui.heading(RichText::new("Pylune cannot open its database").color(DANGER));
+            ui.heading(RichText::new("Pylune cannot open its database").color(danger()));
             ui.label(&self.message);
             ui.add_space(8.0);
-            ui.label(RichText::new(format!("Database: {}", self.database.display())).color(MUTED));
+            ui.label(
+                RichText::new(format!("Database: {}", self.database.display())).color(muted()),
+            );
             ui.label(
                 "Nothing in the game folder was changed. If another program is using the \
                  database, close it and start Pylune again. If the file is damaged, move it \

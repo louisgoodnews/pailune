@@ -28,7 +28,7 @@ impl PyluneApp {
         conn: rusqlite::Connection,
         notice: Option<String>,
     ) -> Self {
-        theme::apply(&cc.egui_ctx);
+        theme::apply(&cc.egui_ctx, &config.ui);
         spawn_ticker(cc.egui_ctx.clone());
         Self::build(cc.egui_ctx.clone(), paths, config, conn, notice)
     }
@@ -72,6 +72,7 @@ impl PyluneApp {
         let info = locate::resolve(&config);
         let mut app = Self {
             draft: SettingsDraft::from_config(&config),
+            applied_ui: config.ui,
             game: locate::game_status(&info),
             loader: locate::detect_loader(&info),
             backup: snapshot::status(&info, &Default::default()),
@@ -113,8 +114,27 @@ impl PyluneApp {
         app.request_conflicts();
         if key::load(&app.paths.nexus_key).is_some() {
             app.submit(JobKind::ValidateKey);
+            if app.config.behavior.check_updates_on_start {
+                app.submit(JobKind::CheckUpdates);
+            }
         }
         app
+    }
+}
+
+impl PyluneApp {
+    /// Applies appearance preferences when they change; on the settings
+    /// page the unsaved draft is previewed live (R-29).
+    fn sync_appearance(&mut self, ctx: &egui::Context) {
+        let wanted = match self.tab {
+            Tab::Settings => self.draft.config.ui,
+            _ => self.config.ui,
+        };
+        if wanted != self.applied_ui {
+            theme::apply(ctx, &wanted);
+            self.applied_ui = wanted;
+        }
+        theme::sync(ctx);
     }
 }
 
@@ -154,6 +174,7 @@ impl eframe::App for PyluneApp {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        self.sync_appearance(ui.ctx());
         self.guard_close(ui.ctx());
         if std::mem::take(&mut self.focus_requested) {
             ui.ctx().send_viewport_cmd(egui::ViewportCommand::Focus);

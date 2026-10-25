@@ -2,15 +2,15 @@
 
 use super::clicked;
 use crate::logging::{Event, Severity};
-use crate::ui::theme::{DANGER, MUTED, WARNING};
+use crate::ui::theme::{danger, muted, warning};
 use crate::ui::{Action, PyluneApp};
 use eframe::egui::{self, RichText};
 
 fn severity_color(ui: &egui::Ui, severity: Severity) -> egui::Color32 {
     match severity {
         Severity::Info => ui.visuals().text_color(),
-        Severity::Warn => WARNING,
-        Severity::Error => DANGER,
+        Severity::Warn => warning(),
+        Severity::Error => danger(),
     }
 }
 
@@ -40,7 +40,7 @@ fn row(ui: &mut egui::Ui, event: &Event) {
         RichText::new(timestamp(event.ts))
             .small()
             .monospace()
-            .color(MUTED),
+            .color(muted()),
     );
     ui.label(RichText::new(event.kind.as_str()).small().strong());
     ui.label(RichText::new(event.mod_name.as_deref().unwrap_or("—")).small());
@@ -81,7 +81,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
             app.paths.logs.display()
         ))
         .small()
-        .color(MUTED),
+        .color(muted()),
     );
     ui.separator();
     egui::ScrollArea::vertical()

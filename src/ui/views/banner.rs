@@ -2,7 +2,7 @@
 
 use super::clicked;
 use crate::backup::MetaBackup;
-use crate::ui::theme::{self, WARNING};
+use crate::ui::theme::{self, warning};
 use crate::ui::{Action, DeployAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
@@ -12,15 +12,15 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         return Vec::new();
     }
     egui::Frame::new()
-        .fill(WARNING.linear_multiply(0.12))
-        .stroke(egui::Stroke::new(1.0, WARNING))
+        .fill(warning().linear_multiply(0.12))
+        .stroke(egui::Stroke::new(1.0, warning()))
         .corner_radius(6)
         .inner_margin(8)
         .show(ui, |ui| {
             ui.label(
                 RichText::new("Crimson Desert was updated since Pylune's backup")
                     .strong()
-                    .color(WARNING),
+                    .color(warning()),
             );
             ui.label(
                 "Mods built for the old version may break the game, and the old .bak files must \
@@ -43,7 +43,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
                     } else {
                         "LINKS DEPLOYED"
                     },
-                    WARNING,
+                    warning(),
                 );
                 clicked([
                     (unlink, Action::Deploy(DeployAction::UnlinkAll)),

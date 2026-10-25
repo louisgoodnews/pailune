@@ -7,9 +7,6 @@ use serde_json::{Value, json};
 use std::fs;
 use std::path::Path;
 
-/// Entries kept in the trash; older ones are deleted for good.
-pub const KEEP: usize = 20;
-
 /// A deleted mod waiting in the trash.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrashItem {

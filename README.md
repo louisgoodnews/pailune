@@ -30,6 +30,18 @@ unlink → verify files in Steam → refresh backup before mods can be applied a
 - **Clean Slate:** removes all links, restores `meta/` from `.bak` and renames foreign archive
   folders above `0035` to `NNNN.bak` (restorable in *Settings*).
 
+## Settings
+
+The *Settings* tab groups every option into categories, each with a one-line explanation:
+**Appearance** (System/Dark/Light theme, size 80–200 %, compact or comfortable density, reduced
+motion — previewed live), **Behavior** (ask before deleting, update check at start, the guide),
+**Mods** (enable new mods, how many deleted mods stay restorable), **Game & launch**,
+**Nexus Mods**, **Backups** (daily automatic backup, how many are kept), **Advanced** (parallel
+jobs, log level, days of logs) and **Diagnostics** (archive state, Proton, metadata backup,
+file locations). Changes are saved with *Save* or dropped with *Discard*; every page can be
+reset to its defaults. Everything is stored in `config.toml` (sections `[game]`, `[ui]`,
+`[behavior]`, `[mods]`, `[backup]`, `[nexus]`, `[launch]`, `[jobs]`, `[logging]`).
+
 ## Background jobs
 
 Imports, downloads, Nexus queries, update checks and conflict analysis run on a worker pool

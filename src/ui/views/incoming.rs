@@ -1,7 +1,7 @@
 //! Confirmation dialog for downloads requested by the browser (`nxm://`).
 
 use super::clicked;
-use crate::ui::theme::{self, ACCENT, MUTED};
+use crate::ui::theme::{self, accent, muted};
 use crate::ui::{Action, Incoming, NexusAction};
 use eframe::egui::{self, RichText};
 
@@ -35,17 +35,17 @@ pub fn show(ctx: &egui::Context, pending: &[Incoming]) -> Vec<Action> {
         .show(ctx, |ui| {
             ui.set_max_width(520.0);
             ui.heading("Download from Nexus Mods?");
-            ui.label(RichText::new("Your browser asked Pylune to download:").color(MUTED));
+            ui.label(RichText::new("Your browser asked Pylune to download:").color(muted()));
             ui.add_space(6.0);
             pending
                 .iter()
                 .enumerate()
                 .flat_map(|(index, incoming)| {
                     let (title, detail) = describe(incoming);
-                    ui.label(RichText::new(title).strong().color(ACCENT));
+                    ui.label(RichText::new(title).strong().color(accent()));
                     ui.label(RichText::new(detail).small());
                     ui.horizontal(|ui| {
-                        let accept = theme::filled_button(ui, "⬇ Download", ACCENT).clicked();
+                        let accept = theme::filled_button(ui, "⬇ Download", accent()).clicked();
                         let reject = ui.button("Ignore").clicked();
                         ui.separator();
                         clicked([

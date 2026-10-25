@@ -45,16 +45,27 @@ pub struct StatusLine {
     pub text: String,
 }
 
-/// Editable copy of the settings, committed with "Save".
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+/// Category shown on the settings page.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum SettingsPage {
+    #[default]
+    Appearance,
+    Behavior,
+    Mods,
+    Game,
+    Nexus,
+    Backups,
+    Advanced,
+    Diagnostics,
+}
+
+/// Editable copy of the settings, committed with "Save". Values are edited
+/// in place with constrained widgets; only the game folder is free text.
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct SettingsDraft {
     pub game_dir: String,
-    pub app_id: String,
-    pub nexus_domain: String,
-    pub apply_before_launch: bool,
-    pub default_options: String,
-    pub max_parallel: String,
-    pub log_level: String,
+    pub config: Config,
+    pub page: SettingsPage,
 }
 
 /// Complete application state.
@@ -62,6 +73,8 @@ pub struct PyluneApp {
     pub paths: DataPaths,
     pub config: Config,
     pub draft: SettingsDraft,
+    /// Appearance currently installed on the egui context.
+    pub applied_ui: crate::config::UiConfig,
     /// The UI thread's own database connection.
     pub conn: Connection,
     pub registry: Registry,

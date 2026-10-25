@@ -1,6 +1,6 @@
 //! Modal confirmation for destructive actions.
 
-use crate::ui::theme::{self, DANGER};
+use crate::ui::theme::{self, danger};
 use crate::ui::{Action, Confirm, DeployAction, ModAction, ProfileAction};
 use eframe::egui::{self, RichText};
 
@@ -62,7 +62,7 @@ pub fn show(ctx: &egui::Context, pending: Option<&Confirm>) -> Vec<Action> {
         ui.label(RichText::new(body));
         ui.add_space(10.0);
         ui.horizontal(|ui| {
-            let yes = theme::filled_button(ui, "Confirm", DANGER).clicked();
+            let yes = theme::filled_button(ui, "Confirm", danger()).clicked();
             let no = ui.button("Cancel").clicked();
             match (yes, no) {
                 (true, _) => Some(action.clone()),

@@ -1,6 +1,6 @@
 //! Bottom bar: last message and deployment summary.
 
-use crate::ui::theme::{MUTED, level_color};
+use crate::ui::theme::{level_color, muted};
 use crate::ui::{Action, ModAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
@@ -29,7 +29,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
                     app.deployed_links,
                     app.registry.mods.len()
                 ))
-                .color(MUTED),
+                .color(muted()),
             );
         });
         action

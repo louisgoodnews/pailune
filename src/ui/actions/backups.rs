@@ -49,7 +49,8 @@ impl PyluneApp {
 
     /// Queues the daily automatic backup if one is due.
     pub fn schedule_auto_backup(&mut self) {
-        if create::auto_due(&self.paths.backups, crate::db::now()) {
+        if self.config.backup.auto_daily && create::auto_due(&self.paths.backups, crate::db::now())
+        {
             self.submit(JobKind::CreateBackup {
                 full: false,
                 label: AUTO_LABEL.into(),

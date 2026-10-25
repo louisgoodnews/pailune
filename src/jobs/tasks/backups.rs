@@ -1,6 +1,6 @@
 //! Backup jobs (exclusive: the state must not change while it is copied).
 
-use crate::app_backup::{AUTO_LABEL, BackupKind, KEEP_AUTO, create, restore as restore_backup};
+use crate::app_backup::{AUTO_LABEL, BackupKind, create, restore as restore_backup};
 use crate::db;
 use crate::error::{IoContext, PyluneError, Result};
 use crate::jobs::JobOutput;
@@ -19,7 +19,7 @@ pub fn create(ctx: &JobContext, full: bool, label: &str) -> Result<JobOutput> {
     };
     let info = create::create(&ctx.paths, &conn, kind, label, db::now())?;
     if label == AUTO_LABEL {
-        create::prune_auto(&ctx.paths.backups, KEEP_AUTO)?;
+        create::prune_auto(&ctx.paths.backups, ctx.config.backup.keep_auto.max(1))?;
     }
     let text = format!(
         "Backup saved ({} mod(s), {:.1} MB)",
