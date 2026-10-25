@@ -144,7 +144,8 @@ impl eframe::App for PyluneApp {
         if std::mem::take(&mut self.focus_requested) {
             ui.ctx().send_viewport_cmd(egui::ViewportCommand::Focus);
         }
-        let mut actions: Vec<Action> = Vec::new();
+        let mut actions: Vec<Action> = super::shortcuts::collect(ui.ctx(), self);
+        super::shortcuts::drop_hint(ui.ctx());
         actions.extend(
             egui::Panel::top("header")
                 .show(ui, |ui| views::header::show(ui, self))

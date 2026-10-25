@@ -106,3 +106,24 @@ mod tests {
         assert!(find(&book, "Other").is_err());
     }
 }
+
+#[cfg(test)]
+mod export_tests {
+    use crate::profiles::{Profile, ProfileSlot};
+
+    /// Exported profile files are plain JSON and read back unchanged.
+    #[test]
+    fn profile_files_round_trip() {
+        let profile = Profile {
+            name: "Main".into(),
+            slots: vec![ProfileSlot {
+                name: "Camera".into(),
+                enabled: true,
+            }],
+            launch_options: "gamemoderun %command%".into(),
+        };
+        let text = serde_json::to_string_pretty(&profile).unwrap();
+        assert!(text.contains("\"launch_options\""));
+        assert_eq!(serde_json::from_str::<Profile>(&text).unwrap(), profile);
+    }
+}

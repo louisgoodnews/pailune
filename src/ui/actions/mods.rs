@@ -53,6 +53,7 @@ impl PyluneApp {
                         .unwrap_or_default(),
                 ),
             )),
+            ModAction::ImportPaths(paths) => Ok(Some(self.import(paths))),
             ModAction::Rescan => {
                 let now = crate::db::now();
                 let staging = self.paths.staging.clone();

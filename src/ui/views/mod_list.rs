@@ -100,8 +100,19 @@ fn toolbar(ui: &mut egui::Ui) -> Vec<Action> {
 }
 
 /// Renders the mod table and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     let mut actions = toolbar(ui);
+    ui.horizontal(|ui| {
+        ui.label("🔍");
+        ui.add(
+            egui::TextEdit::singleline(&mut app.mods.filter)
+                .id(crate::ui::shortcuts::search_id())
+                .hint_text("Filter mods (Ctrl+F)")
+                .desired_width(260.0),
+        );
+    });
+    let app: &PyluneApp = app;
+    let needle = app.mods.filter.trim().to_lowercase();
     ui.label(
         RichText::new("Load order runs top to bottom — later mods win file conflicts. Click a name for details.")
             .small()
@@ -117,7 +128,8 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         });
         return actions;
     }
-    egui::ScrollArea::vertical()
+    // Both directions, so narrow windows never clip columns.
+    egui::ScrollArea::both()
         .auto_shrink([false, false])
         .show(ui, |ui| {
             egui::Grid::new("mod_grid")
@@ -132,6 +144,9 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
                     let rows: Vec<Action> = mods
                         .iter()
                         .enumerate()
+                        .filter(|(_, m)| {
+                            needle.is_empty() || m.name.to_lowercase().contains(&needle)
+                        })
                         .flat_map(|(i, entry)| row(ui, i, entry, app))
                         .collect();
                     actions.extend(rows);

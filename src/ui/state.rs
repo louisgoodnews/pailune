@@ -44,6 +44,8 @@ pub struct ModsState {
     pub conflict_generation: u64,
     /// The mod list changed while an analysis was in flight; run again after it.
     pub conflicts_rerun: bool,
+    /// Text filter of the mod list (case-insensitive name match).
+    pub filter: String,
 }
 
 /// Nexus page state.

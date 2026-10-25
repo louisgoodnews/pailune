@@ -2,8 +2,10 @@
 
 pub mod ops;
 
+use serde::{Deserialize, Serialize};
+
 /// One mod's slot inside a profile.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProfileSlot {
     /// Staged mod name.
     pub name: String,
@@ -12,7 +14,7 @@ pub struct ProfileSlot {
 }
 
 /// A named snapshot of the mod list.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Profile {
     /// Unique display name.
     pub name: String,

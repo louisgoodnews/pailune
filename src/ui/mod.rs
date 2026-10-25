@@ -5,6 +5,7 @@ mod actions;
 mod app;
 mod draft;
 pub mod fatal;
+mod shortcuts;
 mod state;
 mod theme;
 mod views;
@@ -85,6 +86,8 @@ pub enum ModAction {
     CloseReadme,
     ImportFolder,
     ImportFiles,
+    /// Files or folders dropped onto the window.
+    ImportPaths(Vec<PathBuf>),
     Rescan,
 }
 
@@ -110,6 +113,10 @@ pub enum ProfileAction {
     Delete(String),
     /// Store the edited launch options of this profile.
     SaveOptions(String),
+    /// Write a profile to a JSON file chosen by the user.
+    Export(String),
+    /// Read a profile from a JSON file.
+    Import,
 }
 
 /// Nexus page intents.

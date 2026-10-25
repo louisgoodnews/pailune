@@ -17,6 +17,8 @@ impl PyluneApp {
                 self.log_profile(&format!("deleted profile '{name}'"));
                 StatusLine::new(Level::Success, format!("Profile '{name}' deleted"))
             }
+            ProfileAction::Export(name) => self.export_profile(&name)?,
+            ProfileAction::Import => self.import_profile()?,
             ProfileAction::SaveOptions(name) => {
                 let options = self
                     .profiles
@@ -96,5 +98,63 @@ impl PyluneApp {
             None,
             message,
         ));
+    }
+
+    fn export_profile(&mut self, name: &str) -> Result<StatusLine> {
+        let profile = self.find(name)?;
+        let Some(path) = rfd::FileDialog::new()
+            .set_file_name(format!("{name}.pylune-profile.json"))
+            .save_file()
+        else {
+            return Ok(StatusLine::new(Level::Info, "Export cancelled"));
+        };
+        let text = serde_json::to_string_pretty(&profile)?;
+        std::fs::write(&path, text).map_err(|source| crate::error::PyluneError::Io {
+            path: path.clone(),
+            source,
+        })?;
+        Ok(StatusLine::new(
+            Level::Success,
+            format!("Profile '{name}' exported to {}", path.display()),
+        ))
+    }
+
+    /// Reads a profile file; a name clash gets a numbered suffix.
+    fn import_profile(&mut self) -> Result<StatusLine> {
+        let Some(path) = rfd::FileDialog::new()
+            .add_filter("Pylune profile", &["json"])
+            .pick_file()
+        else {
+            return Ok(StatusLine::new(Level::Info, "Import cancelled"));
+        };
+        let text =
+            std::fs::read_to_string(&path).map_err(|source| crate::error::PyluneError::Io {
+                path: path.clone(),
+                source,
+            })?;
+        let profile: Profile = serde_json::from_str(&text)?;
+        let taken = |n: &str| self.profiles.book.profiles.iter().any(|p| p.name == n);
+        let name = (1..)
+            .map(|i| match i {
+                1 => profile.name.clone(),
+                i => format!("{} ({i})", profile.name),
+            })
+            .find(|n| !taken(n))
+            .unwrap_or_default();
+        db::profiles::save(
+            &mut self.conn,
+            &Profile {
+                name: name.clone(),
+                ..profile
+            },
+        )?;
+        self.log_profile(&format!(
+            "imported profile '{name}' from {}",
+            path.display()
+        ));
+        Ok(StatusLine::new(
+            Level::Success,
+            format!("Profile '{name}' imported — load it to use it"),
+        ))
     }
 }
