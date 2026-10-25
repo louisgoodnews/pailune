@@ -36,9 +36,10 @@ in bytes from the start of the structure named.
 3. **An overlay group** is a new directory (`<name>/0.pamt`, `<name>/0.paz`)
    plus one new PAPGT entry. JSON Mod Manager (JMM) and CDUMM insert it as
    entry **index 0** of the PAPGT ("first match wins"). The shadowed vanilla
-   group's PAMT is **not** modified (CDUMM even restores it to vanilla). The
-   ordering rule is SOURCE/UNVERIFIED: two independent tools rely on it, but
-   nothing here proved it on a running game.
+   group's PAMT is **not** modified (CDUMM even restores it to vanilla).
+   **VERIFIED IN GAME (2026-10-25, build 2.3.2):** Pylune's overlay group `0100`,
+   listed first in a rebuilt PAPGT, replaced `ui/xml/gamemain/title/titleview.css`
+   (flags 0x32) on the title screen.
 4. File entries in a PAZ are aligned to 16 bytes and zero padded, and the PAZ
    file length is padded to 16 too. Per-entry `flags`: low nibble =
    compression (0 none, 1 DDS "partial", 2 LZ4 block), next nibble =

@@ -15,8 +15,9 @@ Move a line between columns when its status changes.
     under free numbers; `0.papgt` rebuilt from the verified vanilla backup with overlays first;
     deployed as symlinks; Unlink restores vanilla byte for byte. Tested end to end on a
     fixture and dry-run against the installed game.
-  - **waiting: in-game test** with `local/Pylune Overlay Test` (title screen copyright line
-    turns red and large) to confirm "first group wins".
+  - **verified in game (2026-10-25, build 2.3.2):** an overlay group listed first in
+    `0.papgt` overrides the vanilla file ("first group wins") — `local/Pylune Overlay Test`
+    turned the title screen copyright line red and large.
   - next: DDS textures + PATHC, JSON byte patches, pack-level conflict reporting.
 
 ## Next
