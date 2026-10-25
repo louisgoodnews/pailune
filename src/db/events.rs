@@ -19,6 +19,14 @@ pub fn insert(conn: &Connection, event: &Event) -> Result<()> {
     Ok(())
 }
 
+/// Keeps only the newest `keep` events (run at start-up).
+pub fn trim(conn: &Connection, keep: usize) -> Result<usize> {
+    Ok(conn.execute(
+        "DELETE FROM events WHERE id <= (SELECT id FROM events ORDER BY id DESC LIMIT 1 OFFSET ?1)",
+        [keep as i64],
+    )?)
+}
+
 /// Most recent events first, optionally only those concerning one mod.
 pub fn recent(conn: &Connection, limit: usize, mod_name: Option<&str>) -> Result<Vec<Event>> {
     let mut stmt = conn.prepare(
@@ -35,4 +43,30 @@ pub fn recent(conn: &Connection, limit: usize, mod_name: Option<&str>) -> Result
         })
     })?;
     Ok(rows.collect::<rusqlite::Result<_>>()?)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::logging::{Event, EventKind, Severity};
+
+    #[test]
+    fn trims_to_the_newest_events() {
+        let dir = tempfile::tempdir().unwrap();
+        let conn = crate::db::open(&dir.path().join("e.sqlite3")).unwrap();
+        (0..10).for_each(|i| {
+            super::insert(
+                &conn,
+                &Event::new(Severity::Info, EventKind::Job, None, format!("e{i}")),
+            )
+            .unwrap()
+        });
+        assert_eq!(super::trim(&conn, 3).unwrap(), 7);
+        let left: Vec<_> = super::recent(&conn, 10, None)
+            .unwrap()
+            .into_iter()
+            .map(|e| e.message)
+            .collect();
+        assert_eq!(left, ["e9", "e8", "e7"]);
+        assert_eq!(super::trim(&conn, 3).unwrap(), 0);
+    }
 }

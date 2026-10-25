@@ -45,6 +45,9 @@ impl PyluneApp {
         };
         let book = db::profiles::load(&conn).unwrap_or_default();
         let collections = db::collections::load(&conn).unwrap_or_default();
+        if let Err(err) = db::events::trim(&conn, 20_000) {
+            tracing::warn!(%err, "could not trim the event journal");
+        }
         let notice = notice.map(|n| StatusLine::new(Level::Warning, n));
         let notice = notice.or(scan_error.map(|e| StatusLine::new(Level::Error, e)));
         let ctx = cc.egui_ctx.clone();

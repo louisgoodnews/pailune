@@ -68,3 +68,19 @@ pub fn mod_detail(mod_logs: &Path, mod_name: &str, title: &str, lines: &[String]
         .and_then(|mut file| file.write_all(format!("{title}\n{body}").as_bytes()))
         .map_err(|source| crate::error::PyluneError::Io { path, source })
 }
+
+/// Renames a deleted mod's log to `<mod>.<timestamp>.removed.log`, so a
+/// later mod of the same name starts a fresh log while history is kept.
+pub fn retire_mod_log(mod_logs: &Path, mod_name: &str) {
+    let current = mod_logs.join(mod_log_name(mod_name));
+    let retired = mod_logs.join(format!(
+        "{}.{}.removed.log",
+        mod_name.replace(['/', '\\'], "_"),
+        crate::db::now()
+    ));
+    if current.exists()
+        && let Err(err) = std::fs::rename(&current, &retired)
+    {
+        tracing::warn!(mod_name, %err, "could not retire mod log");
+    }
+}

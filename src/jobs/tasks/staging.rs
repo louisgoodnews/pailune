@@ -104,6 +104,7 @@ pub fn remove(ctx: &JobContext, name: &str) -> Result<JobOutput> {
             "deleted from staging",
         ),
     );
+    crate::logging::journal::retire_mod_log(&ctx.paths.mod_logs, name);
     Ok(JobOutput::Done(match redeployed {
         Some(text) => format!("Deleted '{name}'; {text}"),
         None => format!("Deleted '{name}'"),
