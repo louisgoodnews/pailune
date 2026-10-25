@@ -28,16 +28,19 @@ fn nexus_client(ctx: &JobContext, key: &str) -> Client {
     Client::with_api(key, &ctx.config.nexus.domain, api)
 }
 
+/// A client authenticated with the stored API key.
 fn client(ctx: &JobContext) -> Result<Client> {
     key::load(&ctx.paths.nexus_key)
         .map(|k| nexus_client(ctx, &k))
         .ok_or_else(|| PyluneError::Invalid("set a Nexus API key first".into()))
 }
 
+/// Checks the stored API key and returns the account.
 pub fn validate(ctx: &JobContext) -> Result<JobOutput> {
     client(ctx)?.validate().map(JobOutput::User)
 }
 
+/// Fetches a mod page and its files.
 pub fn fetch_mod(ctx: &JobContext, mod_id: u64) -> Result<JobOutput> {
     let client = client(ctx)?;
     let info = client.mod_info(mod_id)?;
@@ -58,6 +61,8 @@ fn staging_name(ctx: &JobContext, job: &DownloadJob, mod_name: &str) -> (String,
     }
 }
 
+/// Downloads a Nexus file and stages it (replacing an existing mod for
+/// updates), recording its origin and collection membership.
 pub fn download(ctx: &JobContext, job: &DownloadJob) -> Result<JobOutput> {
     let client = client(ctx)?;
     let fetched = download::fetch(&client, job, &ctx.paths.downloads, &|done, total| {
@@ -106,6 +111,24 @@ fn check_one(client: &Client, origin: &NexusRef) -> Result<Option<String>> {
     )
 }
 
+/// Checks a few mods concurrently, one thread each.
+fn check_chunk(
+    client: &Client,
+    chunk: &[(String, NexusRef)],
+) -> Vec<(String, Result<Option<String>>)> {
+    thread::scope(|scope| {
+        let handles: Vec<_> = chunk
+            .iter()
+            .map(|(name, origin)| (name.clone(), scope.spawn(|| check_one(client, origin))))
+            .collect();
+        let crashed = || Err(PyluneError::Invalid("update check crashed".into()));
+        handles
+            .into_iter()
+            .map(|(name, handle)| (name, handle.join().unwrap_or_else(|_| crashed())))
+            .collect()
+    })
+}
+
 /// Follows each Nexus-installed file's update chain, several mods at a
 /// time. A failing mod (hidden, deleted, rate limit) is reported on its own
 /// instead of aborting the whole check.
@@ -123,21 +146,7 @@ pub fn check_updates(ctx: &JobContext) -> Result<JobOutput> {
         .enumerate()
         .flat_map(|(chunk_index, chunk)| {
             ctx.progress((chunk_index * UPDATE_CHECK_PARALLELISM) as u64, Some(total));
-            thread::scope(|scope| {
-                let handles: Vec<_> = chunk
-                    .iter()
-                    .map(|(name, origin)| {
-                        (name.clone(), scope.spawn(|| check_one(&client, origin)))
-                    })
-                    .collect();
-                handles
-                    .into_iter()
-                    .map(|(name, handle)| {
-                        let crashed = || Err(PyluneError::Invalid("update check crashed".into()));
-                        (name, handle.join().unwrap_or_else(|_| crashed()))
-                    })
-                    .collect::<Vec<_>>()
-            })
+            check_chunk(&client, chunk)
         })
         .collect();
     let journal = |name: &str, severity, message: String| {

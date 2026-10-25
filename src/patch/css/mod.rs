@@ -28,6 +28,7 @@ enum Op {
     Remove(String),
 }
 
+/// Selector with whitespace collapsed, for comparisons.
 fn normalise(selector: &str) -> String {
     selector.split_whitespace().collect::<Vec<_>>().join(" ")
 }

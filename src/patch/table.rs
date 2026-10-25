@@ -14,6 +14,7 @@ pub struct TableIndex {
     pub offsets: Vec<u32>,
 }
 
+/// Little-endian u32 at `off`, if in bounds.
 fn u32_at(data: &[u8], off: usize) -> Option<u32> {
     data.get(off..off + 4)
         .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))

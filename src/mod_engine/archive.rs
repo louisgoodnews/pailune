@@ -60,6 +60,7 @@ fn extract_zip(archive: &Path, dest: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Extracts a 7z archive, rejecting entries outside `dest`.
 fn extract_7z(archive: &Path, dest: &Path) -> Result<()> {
     let root: PathBuf = dest.to_path_buf();
     sevenz_rust2::decompress_file_with_extract_fn(archive, dest, |entry, reader, target| {

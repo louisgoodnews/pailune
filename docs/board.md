@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] A-32 Spec style fixes — *S*
 - [ ] A-24 (rest) MD5 verification, resumable downloads — *S*
 - [ ] B-06 Recoverable deletes (mod trash) — *S*
 - [ ] B-01 Backup and restore (mods, profiles, mod lists, settings) — *M*
@@ -61,6 +60,8 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-32 rustdoc on every function and constant outside the UI views (views follow in B-04);
+  deepest non-UI nesting (parallel update check) flattened.
 - [x] A-28 (part) multi-variant mods: option folders detected (≥ 2 sibling folders with game
   layouts), only the chosen option (default: first) deployed, shared root files always; picker in
   the details panel; choice stored (schema v4).

@@ -7,6 +7,7 @@ use crate::logging::{Event, EventKind, Severity};
 use crate::ui::{DeployAction, Level, PyluneApp, StatusLine};
 
 impl PyluneApp {
+    /// Handles game-folder actions (mostly by queueing exclusive jobs).
     pub(super) fn deploy_action(&mut self, action: DeployAction) -> Result<Option<StatusLine>> {
         let (kind, text) = match action {
             DeployAction::Launch => return self.launch().map(Some),

@@ -52,6 +52,7 @@ pub struct OverlayPlan {
 }
 
 impl OverlayInput {
+    /// Whether the enabled mods need no overlay at all.
     pub fn is_empty(&self) -> bool {
         self.packs.is_empty()
             && self.prebuilt.is_empty()

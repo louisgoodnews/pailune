@@ -4,6 +4,7 @@ use crate::error::Result;
 use crate::mod_engine::model::{ModEntry, ModKind, NexusRef, Registry};
 use rusqlite::{Connection, Row, TransactionBehavior, params};
 
+/// Name of a mod kind in the database.
 fn kind_to_str(kind: ModKind) -> &'static str {
     match kind {
         ModKind::Json => "json",
@@ -15,6 +16,7 @@ fn kind_to_str(kind: ModKind) -> &'static str {
     }
 }
 
+/// Mod kind from its database name (unknown names read as empty).
 fn kind_from_str(text: &str) -> ModKind {
     match text {
         "json" => ModKind::Json,
@@ -26,6 +28,7 @@ fn kind_from_str(text: &str) -> ModKind {
     }
 }
 
+/// Builds a mod entry from a `mods` row.
 fn entry_from_row(row: &Row) -> rusqlite::Result<ModEntry> {
     let nexus_mod: Option<i64> = row.get("nexus_mod_id")?;
     let nexus_file: Option<i64> = row.get("nexus_file_id")?;
@@ -107,9 +110,12 @@ pub fn update(
     Ok(next)
 }
 
+/// Key/value entry counting changes to the mod list.
 const REVISION_KEY: &str = "registry_revision";
+/// Key/value entry holding the revision last deployed.
 const DEPLOYED_KEY: &str = "deployed_revision";
 
+/// Reads a revision counter from the key/value table.
 fn revision(conn: &Connection, key: &str) -> Result<Option<i64>> {
     Ok(super::get_value(conn, key)?.and_then(|v| v.parse().ok()))
 }

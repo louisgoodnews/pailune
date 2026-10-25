@@ -148,17 +148,20 @@ fn build_overlay(
     }
 }
 
+/// 1-based load-order position of a mod.
 fn position(mods: &[ModEntry], name: &str) -> usize {
     mods.iter()
         .position(|m| m.name == name)
         .map_or(0, |i| i + 1)
 }
 
+/// Deploys the enabled mods (see [`redeploy`]).
 pub fn apply(ctx: &JobContext) -> Result<JobOutput> {
     let mut conn = ctx.db()?;
     redeploy(ctx, &mut conn).map(JobOutput::Done)
 }
 
+/// Removes every deployed link and restores shadowed originals.
 pub fn unlink_all(ctx: &JobContext) -> Result<JobOutput> {
     let conn = ctx.db()?;
     require_game(&ctx.steam())?;
@@ -173,6 +176,7 @@ pub fn unlink_all(ctx: &JobContext) -> Result<JobOutput> {
     Ok(JobOutput::Done(text))
 }
 
+/// Returns the game to vanilla and disables every mod.
 pub fn clean_slate(ctx: &JobContext) -> Result<JobOutput> {
     let mut conn = ctx.db()?;
     let info = ctx.steam();
@@ -199,6 +203,7 @@ pub fn clean_slate(ctx: &JobContext) -> Result<JobOutput> {
     Ok(JobOutput::Done(text))
 }
 
+/// Moves archive folders set aside by Clean Slate back into place.
 pub fn restore_overlays(ctx: &JobContext) -> Result<JobOutput> {
     let conn = ctx.db()?;
     let n = reset::restore_overlays(&ctx.steam())?;
@@ -210,6 +215,7 @@ pub fn restore_overlays(ctx: &JobContext) -> Result<JobOutput> {
     Ok(JobOutput::Done(text))
 }
 
+/// Re-snapshots `meta/` to `.bak` (only while nothing is deployed).
 pub fn refresh_backup(ctx: &JobContext) -> Result<JobOutput> {
     let conn = ctx.db()?;
     let info = ctx.steam();

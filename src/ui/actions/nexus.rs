@@ -20,11 +20,13 @@ fn parse_mod_id(input: &str) -> Result<u64> {
         .ok_or_else(|| PyluneError::Invalid(format!("'{trimmed}' is not a Nexus mod id or URL")))
 }
 
+/// An informational status line.
 fn info(text: impl Into<String>) -> Option<StatusLine> {
     Some(StatusLine::new(Level::Info, text))
 }
 
 impl PyluneApp {
+    /// Handles Nexus page actions.
     pub(super) fn nexus_action(&mut self, action: NexusAction) -> Result<Option<StatusLine>> {
         match action {
             NexusAction::FetchCollection
@@ -100,6 +102,7 @@ impl PyluneApp {
         }
     }
 
+    /// Starts a direct (Premium) download of a file of the browsed mod.
     fn download(&mut self, file_id: u64) -> Result<StatusLine> {
         let (mod_info, _) = self
             .nexus

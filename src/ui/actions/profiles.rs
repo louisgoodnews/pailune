@@ -7,6 +7,7 @@ use crate::profiles::{Profile, ops};
 use crate::ui::{Level, ProfileAction, PyluneApp, StatusLine};
 
 impl PyluneApp {
+    /// Handles profile page actions.
     pub(super) fn profile_action(&mut self, action: ProfileAction) -> Result<StatusLine> {
         let line = match action {
             ProfileAction::Save(name) => self.save_profile(name.trim())?,
@@ -42,10 +43,12 @@ impl PyluneApp {
         Ok(line)
     }
 
+    /// A copy of the profile called `name`.
     fn find(&self, name: &str) -> Result<Profile> {
         ops::find(&self.profiles.book, name).cloned()
     }
 
+    /// Saves the current selection as a profile (overwriting keeps its options).
     fn save_profile(&mut self, name: &str) -> Result<StatusLine> {
         if name.is_empty() {
             return Err(PyluneError::Invalid(
@@ -70,6 +73,7 @@ impl PyluneApp {
         ))
     }
 
+    /// Applies a profile to the mod list.
     fn load_profile(&mut self, name: &str) -> Result<StatusLine> {
         let profile = self.find(name)?;
         let (_, outcome) = ops::apply(&profile, &self.registry);
@@ -91,6 +95,7 @@ impl PyluneApp {
         })
     }
 
+    /// Journals a profile event.
     fn log_profile(&self, message: &str) {
         self.journal(Event::new(
             Severity::Info,
@@ -100,6 +105,7 @@ impl PyluneApp {
         ));
     }
 
+    /// Writes a profile to a JSON file chosen by the user.
     fn export_profile(&mut self, name: &str) -> Result<StatusLine> {
         let profile = self.find(name)?;
         let Some(path) = rfd::FileDialog::new()

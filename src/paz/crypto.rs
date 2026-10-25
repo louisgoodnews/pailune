@@ -5,7 +5,9 @@ use crate::error::{PyluneError, Result};
 use chacha20::ChaCha20;
 use chacha20::cipher::{KeyIvInit, StreamCipher, StreamCipherSeek};
 
+/// XORed with the seed to form the key base.
 const KEY_BASE: u32 = 0x6061_6263;
+/// Per-word deltas of the 32-byte key.
 const KEY_DELTAS: [u32; 8] = [
     0x0000_0000,
     0x0A0A_0A0A,

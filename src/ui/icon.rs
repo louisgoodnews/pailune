@@ -2,8 +2,11 @@
 
 use eframe::egui::IconData;
 
+/// Edge length in pixels.
 const SIZE: u32 = 64;
+/// Crescent colour (the UI accent).
 const ACCENT: [u8; 4] = [0xd0, 0x8a, 0x3c, 0xff];
+/// Background colour.
 const BACKGROUND: [u8; 4] = [0x17, 0x19, 0x1d, 0xff];
 
 /// 64×64 RGBA crescent matching `packaging/pylune.svg`.

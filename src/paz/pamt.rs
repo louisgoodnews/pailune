@@ -5,6 +5,7 @@ use super::reader::Reader;
 use crate::error::{PyluneError, Result};
 use std::collections::HashMap;
 
+/// "No node" marker in name tries and folder records.
 const NONE: u32 = 0xFFFF_FFFF;
 
 /// One `.paz` data file of the group.

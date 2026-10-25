@@ -9,6 +9,7 @@ use crate::ui::{Level, PyluneApp, SetupAction, StatusLine};
 use std::path::Path;
 
 impl PyluneApp {
+    /// Lets the user pick the game folder for the settings draft.
     pub(super) fn browse_game_dir(&mut self) -> StatusLine {
         let start = Path::new(&self.draft.game_dir);
         let picked = rfd::FileDialog::new()
@@ -20,6 +21,7 @@ impl PyluneApp {
         StatusLine::new(Level::Info, "Press Save to use the new settings")
     }
 
+    /// Validates and saves the settings draft to `config.toml`.
     pub(super) fn save_settings(&mut self) -> Result<StatusLine> {
         let mut next = self.draft.to_config()?;
         next.nexus.api_url = self.config.nexus.api_url.clone();

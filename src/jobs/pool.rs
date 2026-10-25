@@ -110,6 +110,8 @@ fn work(shared: &Shared, queue: &Mutex<Receiver<Queued>>) {
     std::iter::from_fn(next).for_each(|job| run_one(shared, job));
 }
 
+/// Runs one job: reports start, executes it (under the game lock if
+/// exclusive), journals failures and reports the result.
 fn run_one(shared: &Shared, job: Queued) {
     let ctx = JobContext {
         id: job.id,

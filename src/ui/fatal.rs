@@ -13,6 +13,7 @@ pub struct FatalApp {
 }
 
 impl FatalApp {
+    /// A window explaining that the database could not be opened.
     pub fn new(message: String, paths: &DataPaths) -> Self {
         let data_dir = paths
             .database

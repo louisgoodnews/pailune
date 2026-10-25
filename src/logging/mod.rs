@@ -44,6 +44,7 @@ pub struct Event {
 }
 
 impl Severity {
+    /// Name stored in the database.
     pub fn as_str(self) -> &'static str {
         match self {
             Severity::Info => "info",
@@ -52,6 +53,7 @@ impl Severity {
         }
     }
 
+    /// Severity from its stored name (unknown names read as info).
     pub fn parse(text: &str) -> Self {
         match text {
             "warn" => Severity::Warn,
@@ -78,6 +80,7 @@ const KIND_NAMES: [(EventKind, &str); 12] = [
 ];
 
 impl EventKind {
+    /// Name stored in the database.
     pub fn as_str(self) -> &'static str {
         KIND_NAMES
             .iter()
@@ -85,6 +88,7 @@ impl EventKind {
             .map_or("job", |(_, n)| n)
     }
 
+    /// Kind from its stored name (unknown names read as job).
     pub fn parse(text: &str) -> Self {
         KIND_NAMES
             .iter()

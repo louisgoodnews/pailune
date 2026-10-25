@@ -10,6 +10,7 @@ use std::path::PathBuf;
 const MOD_FILES: [&str; 7] = ["zip", "7z", "rar", "asi", "dll", "json", "ini"];
 
 impl PyluneApp {
+    /// Handles mod management actions.
     pub(super) fn mod_action(&mut self, action: ModAction) -> Result<Option<StatusLine>> {
         match action {
             ModAction::Select(name) => self.select(name).map(|()| None),
@@ -77,6 +78,7 @@ impl PyluneApp {
         }
     }
 
+    /// Selects a mod and loads its details.
     fn select(&mut self, name: String) -> Result<()> {
         let details = info::details(
             &self.paths.staging.join(&name),
@@ -91,6 +93,7 @@ impl PyluneApp {
         }
     }
 
+    /// Opens a readme of the selected mod.
     fn show_readme(&mut self, rel: PathBuf) -> Result<()> {
         let name = self
             .mods
@@ -160,6 +163,7 @@ impl PyluneApp {
     }
 }
 
+/// Status after a change to the mod list.
 fn changed() -> StatusLine {
     StatusLine::new(Level::Info, "Selection changed — press Apply to deploy")
 }

@@ -6,6 +6,7 @@
 /// The seed every Crimson Desert hash uses.
 pub const SEED: u32 = 0x000C_5EDE;
 
+/// lookup3 `mix()`.
 fn mix(a: &mut u32, b: &mut u32, c: &mut u32) {
     *a = a.wrapping_sub(*c);
     *a ^= c.rotate_left(4);
@@ -27,6 +28,7 @@ fn mix(a: &mut u32, b: &mut u32, c: &mut u32) {
     *b = b.wrapping_add(*a);
 }
 
+/// lookup3 `final()`.
 fn final_mix(a: &mut u32, b: &mut u32, c: &mut u32) {
     *c ^= *b;
     *c = c.wrapping_sub(b.rotate_left(14));

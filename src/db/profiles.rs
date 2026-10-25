@@ -4,6 +4,7 @@ use crate::error::Result;
 use crate::profiles::{Profile, ProfileBook, ProfileSlot};
 use rusqlite::{Connection, params};
 
+/// Key/value entry naming the active profile.
 const ACTIVE_KEY: &str = "active_profile";
 
 /// Loads every profile (sorted by name) and the active one.

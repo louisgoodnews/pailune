@@ -66,6 +66,7 @@ fn pack(
     )
 }
 
+/// Whether a virtual path is a DDS texture.
 fn is_texture(vpath: &str) -> bool {
     vpath.ends_with(".dds")
 }

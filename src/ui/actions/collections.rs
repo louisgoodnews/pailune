@@ -9,6 +9,7 @@ use crate::nexus::collection::{self, Collection, Member};
 use crate::nexus::download::DownloadJob;
 use crate::ui::{Level, NexusAction, PyluneApp, StatusLine};
 
+/// An informational status line.
 fn info(text: impl Into<String>) -> Result<Option<StatusLine>> {
     Ok(Some(StatusLine::new(Level::Info, text)))
 }
@@ -77,6 +78,7 @@ impl PyluneApp {
         }
     }
 
+    /// The installed collection with this slug.
     fn installed(&self, slug: &str) -> Option<&Collection> {
         self.nexus.collections.iter().find(|c| c.slug == slug)
     }
@@ -96,6 +98,7 @@ impl PyluneApp {
         self.nexus.user.as_ref().is_some_and(|u| u.is_premium)
     }
 
+    /// Queues the download of one collection member.
     fn download_member(&mut self, slug: &str, member: &Member, replace: Option<String>) {
         let job = DownloadJob {
             mod_id: member.mod_id,

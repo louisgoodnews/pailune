@@ -38,6 +38,7 @@ pub struct Pathc {
 /// Direct selectors carry `0xFFFF` in the high half.
 const DIRECT: u32 = 0xFFFF_0000;
 
+/// Reads the four chunk sizes m1..m4.
 fn sizes(r: &mut Reader) -> Result<[u32; 4]> {
     Ok([r.u32()?, r.u32()?, r.u32()?, r.u32()?])
 }

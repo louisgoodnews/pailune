@@ -15,7 +15,9 @@ const RESERVE: i64 = 5;
 #[cfg(test)]
 pub static TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
+/// Remaining hourly API calls, or [`UNKNOWN`].
 static HOURLY: AtomicI64 = AtomicI64::new(UNKNOWN);
+/// Remaining daily API calls, or [`UNKNOWN`].
 static DAILY: AtomicI64 = AtomicI64::new(UNKNOWN);
 
 /// The latest known budget.
@@ -25,6 +27,7 @@ pub struct Limits {
     pub daily: Option<i64>,
 }
 
+/// `None` while no response has reported the value.
 fn known(value: i64) -> Option<i64> {
     (value != UNKNOWN).then_some(value)
 }

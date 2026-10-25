@@ -105,6 +105,7 @@ pub fn sanitize_name(raw: &str) -> String {
     }
 }
 
+/// Classifies what the user picked by type and extension.
 fn source_kind(source: &Path) -> SourceKind {
     match (source.is_dir(), archive::kind_of(source)) {
         (true, _) => SourceKind::Directory,
@@ -124,6 +125,7 @@ fn mod_name(source: &Path) -> Result<String> {
         .ok_or_else(|| PyluneError::Invalid(format!("cannot name mod from {}", source.display())))
 }
 
+/// Copies a single file into the staging folder.
 fn copy_file(source: &Path, dest_dir: &Path) -> Result<()> {
     let name = source
         .file_name()

@@ -136,6 +136,7 @@ impl JobKind {
     }
 }
 
+/// File name of a path for display, falling back to the whole path.
 fn file_name(path: &std::path::Path) -> String {
     path.file_name().map_or_else(
         || path.display().to_string(),

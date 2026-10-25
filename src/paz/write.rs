@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 
 /// Header field copied by every known tool for new groups.
 const PAMT_UNKNOWN: u32 = 0x610E_0232;
+/// "No node" marker in name tries.
 const NONE: u32 = 0xFFFF_FFFF;
 
 /// One encoded file to place in the group.
@@ -26,10 +27,12 @@ pub struct Group {
     pub pamt_crc: u32,
 }
 
+/// Appends a little-endian u32.
 fn le(out: &mut Vec<u8>, v: u32) {
     out.extend(v.to_le_bytes());
 }
 
+/// Splits a virtual path into folder and file name.
 fn split(vpath: &str) -> (&str, &str) {
     vpath.rsplit_once('/').unwrap_or(("", vpath))
 }

@@ -28,12 +28,14 @@ pub struct DdsInfo {
     pub four_cc: u32,
 }
 
+/// Little-endian u32 at `off` of a DDS header.
 fn u32_at(data: &[u8], off: usize) -> Result<u32> {
     data.get(off..off + 4)
         .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
         .ok_or_else(|| PyluneError::Archive("DDS header truncated".into()))
 }
 
+/// A FourCC code as the u32 stored in DDS headers.
 const fn fourcc(code: &[u8; 4]) -> u32 {
     u32::from_le_bytes(*code)
 }

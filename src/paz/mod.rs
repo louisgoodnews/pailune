@@ -43,6 +43,7 @@ pub enum Encryption {
 }
 
 impl Compression {
+    /// Compression from an entry's flags (bits 0–3).
     pub fn from_flags(flags: u16) -> Self {
         match flags & 0x0F {
             0 => Compression::None,
@@ -54,6 +55,7 @@ impl Compression {
 }
 
 impl Encryption {
+    /// Encryption from an entry's flags (bits 4–7).
     pub fn from_flags(flags: u16) -> Self {
         match (flags >> 4) & 0x0F {
             0 => Encryption::None,

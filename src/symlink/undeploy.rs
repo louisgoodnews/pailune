@@ -29,6 +29,7 @@ enum Target {
     Foreign,
 }
 
+/// What occupies the record's target now.
 fn target_of(record: &LinkRecord) -> Target {
     match path_state(&record.target) {
         PathState::Symlink(dest) if dest == record.source => Target::Ours,

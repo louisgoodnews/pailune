@@ -38,6 +38,7 @@ impl JobContext {
         self.send(JobUpdate::Progress { done, total });
     }
 
+    /// Sends a lifecycle update for this job and wakes the UI.
     pub(super) fn send(&self, update: JobUpdate) {
         let _ = self.events.send(JobEvent {
             id: self.id,

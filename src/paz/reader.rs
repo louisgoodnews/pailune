@@ -9,10 +9,12 @@ pub struct Reader<'a> {
 }
 
 impl<'a> Reader<'a> {
+    /// A reader at the start of `data`.
     pub fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0 }
     }
 
+    /// A reader positioned at `pos`.
     pub fn at(data: &'a [u8], pos: usize) -> Self {
         Self { data, pos }
     }
@@ -34,15 +36,18 @@ impl<'a> Reader<'a> {
         Ok(slice)
     }
 
+    /// Reads a byte.
     pub fn u8(&mut self) -> Result<u8> {
         Ok(self.bytes(1)?[0])
     }
 
+    /// Reads a little-endian u16.
     pub fn u16(&mut self) -> Result<u16> {
         let b = self.bytes(2)?;
         Ok(u16::from_le_bytes([b[0], b[1]]))
     }
 
+    /// Reads a little-endian u32.
     pub fn u32(&mut self) -> Result<u32> {
         let b = self.bytes(4)?;
         Ok(u32::from_le_bytes([b[0], b[1], b[2], b[3]]))

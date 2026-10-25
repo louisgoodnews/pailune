@@ -61,6 +61,7 @@ pub(super) fn register(
     })
 }
 
+/// Stages a file, archive or folder; `replace` updates an existing mod.
 pub fn import(ctx: &JobContext, source: &Path, replace: Option<String>) -> Result<JobOutput> {
     let name = match &replace {
         // Replacing a possibly deployed mod must not race a deployment.
@@ -74,6 +75,7 @@ pub fn import(ctx: &JobContext, source: &Path, replace: Option<String>) -> Resul
     register(ctx, &name, &source_text, None, replace.is_some()).map(JobOutput::Done)
 }
 
+/// Deletes a staged mod, redeploying first if links point into it.
 pub fn remove(ctx: &JobContext, name: &str) -> Result<JobOutput> {
     let mut conn = ctx.db()?;
     if db::mods::load(&conn)?.mods.iter().all(|m| m.name != name) {

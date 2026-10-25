@@ -4,6 +4,7 @@ use super::{Anchor, Change, Edit, FilePatch, JsonMod};
 use crate::error::{PyluneError, Result};
 use serde_json::Value;
 
+/// Shorthand for an invalid-input error.
 fn invalid(what: String) -> PyluneError {
     PyluneError::Invalid(what)
 }
@@ -50,12 +51,14 @@ fn field<'a>(obj: &'a Value, names: &[&str]) -> Option<&'a Value> {
         .filter(|v| !v.is_null())
 }
 
+/// String value of the first present key among `names`.
 fn text(obj: &Value, names: &[&str]) -> Option<String> {
     field(obj, names)
         .and_then(Value::as_str)
         .map(str::to_string)
 }
 
+/// Parses one entry of a patch's `changes` list.
 fn change(raw: &Value) -> Result<Change> {
     let label = text(raw, &["label", "name", "description"]).unwrap_or_default();
     let anchor = match (

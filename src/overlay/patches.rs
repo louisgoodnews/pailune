@@ -67,6 +67,7 @@ fn header_of(vpath: &str) -> Option<String> {
     .find_map(|(body, head)| vpath.strip_suffix(body).map(|s| format!("{s}{head}")))
 }
 
+/// File name of a virtual path.
 fn name_of(path: &str) -> String {
     path.rsplit('/').next().unwrap_or(path).to_string()
 }

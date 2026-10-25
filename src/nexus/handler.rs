@@ -8,6 +8,7 @@ use std::process::Command;
 
 /// Desktop entry file name used for the registration.
 pub const DESKTOP_FILE: &str = "pylune-nxm.desktop";
+/// MIME type desktops use for `nxm://` links.
 const MIME: &str = "x-scheme-handler/nxm";
 
 /// `~/.local/share/applications`.

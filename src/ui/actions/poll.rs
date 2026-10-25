@@ -6,6 +6,7 @@ use crate::launch::run;
 use crate::ui::{JobState, Level, PyluneApp, StatusLine};
 use std::time::{Duration, Instant};
 
+/// How often the game process and the request spool are checked.
 const POLL_INTERVAL: Duration = Duration::from_secs(1);
 /// How long finished jobs stay visible in the jobs panel.
 const FINISHED_LINGER: Duration = Duration::from_secs(8);
@@ -30,6 +31,7 @@ impl PyluneApp {
         });
     }
 
+    /// Updates the jobs panel and reacts to a finished job.
     fn on_job_event(&mut self, event: JobEvent) {
         let Some(view) = self.jobs.iter_mut().find(|j| j.id == event.id) else {
             return;
@@ -75,6 +77,7 @@ impl PyluneApp {
         self.refresh_environment();
     }
 
+    /// Applies a successful job's output to the UI state.
     fn on_success(&mut self, id: u64, kind: JobKind, output: JobOutput) {
         let changes_mods = matches!(
             kind,

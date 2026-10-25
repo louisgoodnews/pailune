@@ -7,11 +7,14 @@ use std::time::Duration;
 
 /// The public Nexus Mods API.
 pub const DEFAULT_API: &str = "https://api.nexusmods.com";
+/// GraphQL query for a collection revision and its mod files.
 const COLLECTION_QUERY: &str = "query Rev($slug: String!, $domain: String, $revision: Int) { \
     collectionRevision(slug: $slug, domainName: $domain, revision: $revision) { revisionNumber \
     collection { name slug } modFiles { fileId optional file { modId name version sizeInBytes \
     mod { name } } } } }";
+/// Sent as `Application-Name`, as the Nexus API guidelines ask.
 const APP_NAME: &str = "Pylune";
+/// Sent as `Application-Version`.
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Credentials and connection settings. Holds no mutable state.

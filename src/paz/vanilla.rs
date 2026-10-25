@@ -31,6 +31,7 @@ pub struct Vanilla {
     by_extension: HashMap<String, u16>,
 }
 
+/// Extension of a virtual path (without the dot).
 fn extension(vpath: &str) -> String {
     vpath
         .rsplit_once('.')

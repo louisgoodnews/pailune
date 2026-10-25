@@ -18,6 +18,7 @@ use crate::mod_engine::model::Registry;
 use crate::steam::locate;
 
 impl StatusLine {
+    /// A status line with the given severity.
     pub fn new(level: Level, text: impl Into<String>) -> Self {
         Self {
             level,
@@ -67,6 +68,7 @@ impl PyluneApp {
         self.archives = crate::paz::status::inspect(&self.info.game_dir);
     }
 
+    /// Opens (`Some`) or closes (`None`) a confirmation dialog.
     fn ask(&mut self, confirm: Option<Confirm>) -> Option<StatusLine> {
         self.confirm = confirm;
         None

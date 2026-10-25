@@ -9,6 +9,7 @@ struct Resolved<'a> {
     change: &'a Change,
 }
 
+/// Label of a change for reports (its label, else its offset).
 fn describe(change: &Change, at: Option<usize>) -> String {
     match (change.label.is_empty(), at) {
         (false, _) => change.label.clone(),

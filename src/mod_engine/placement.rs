@@ -60,6 +60,7 @@ const DOCS: [&str; 11] = [
     "txt", "md", "nfo", "pdf", "png", "jpg", "jpeg", "webp", "gif", "url", "rtf",
 ];
 
+/// Lowercase path components.
 fn lower_parts(rel: &Path) -> Vec<String> {
     rel.components()
         .filter_map(|c| match c {
