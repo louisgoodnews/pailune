@@ -56,7 +56,9 @@ fn main() -> eframe::Result<()> {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_title("Pylune — Crimson Desert Mod Manager")
             .with_inner_size([1200.0, 760.0])
-            .with_min_inner_size([860.0, 500.0]),
+            .with_min_inner_size([860.0, 500.0])
+            .with_app_id("pylune")
+            .with_icon(ui::icon::icon()),
         ..Default::default()
     };
     // A broken database gets an explanatory window instead of a crash.

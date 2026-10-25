@@ -40,15 +40,19 @@ Move a line between columns when its status changes.
 
 ## Backlog
 
-- [ ] A-28 Search, drag-and-drop, shortcuts, variants, save backup, profile export — *Phase 7*
-- [ ] A-29 Packaging, CI, icon, LICENSE — *Phase 7*
-- [ ] A-30 Log retention — *Phase 7*
+- [ ] A-28 (rest) Variant/FOMOD picker, save-game backup — *Phase 7*
+- [ ] A-29 (rest) LICENSE (owner's choice), AppImage/Flatpak — *Phase 7*
 - [ ] A-31 Test coverage (UI actions, mocked Nexus HTTP) — *Phase 7*
 - [ ] A-32 Spec style fixes — *Phase 7*
-- [ ] A-33 Small-window layout — *Phase 7*
 
 ## Done
 
+- [x] A-29 (part) release profile (thin LTO, stripped), GitHub Actions CI (fmt, clippy -D
+  warnings, tests), desktop launcher + SVG icon + `packaging/install.sh`, window icon,
+  CHANGELOG.
+- [x] A-28 (part) mod search (Ctrl+F), shortcuts, drag-and-drop import, profile export/import.
+- [x] A-33 mod table scrolls horizontally on narrow windows.
+- [x] A-30 log files kept 14 days, journal trimmed to 20 000 events, deleted mods' logs retired.
 - [x] A-21 `X-RL-*` budget recorded after every API/GraphQL call and shown on the Nexus page;
   calls stop with a clear message when the hourly budget is nearly spent.
 - [x] A-24 (part) downloads are checked against Nexus' exact file size before staging.

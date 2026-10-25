@@ -5,6 +5,7 @@ mod actions;
 mod app;
 mod draft;
 pub mod fatal;
+pub mod icon;
 mod shortcuts;
 mod state;
 mod theme;

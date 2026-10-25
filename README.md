@@ -104,9 +104,11 @@ modified; *Unlink all* restores the original `0.papgt` (and `0.pathc`) byte for 
 ASI mods need a loader (`winmm.dll`, `version.dll` or `dinput8.dll`) in `bin64/` plus
 `WINEDLLOVERRIDES="<loader>=n,b"` in Steam's launch options or a profile's launch options.
 
-## Build
+## Build and install
 
 ```sh
+cargo build --release
+packaging/install.sh       # binary to ~/.local/bin, launcher and icon for your desktop
 cargo run --release
 cargo test                 # offline suite
 cargo test -- --ignored    # also talks to api.nexusmods.com
