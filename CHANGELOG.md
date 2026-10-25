@@ -31,6 +31,9 @@
 - New options: confirm deletes, update check at start, enable new mods, trash size, automatic
   backups and how many to keep, days of logs kept.
 
+### Packaging
+- AppImage build script and release CI job; `nxm://` links point at the AppImage file.
+
 ### Save games
 - Save files are backed up before every Play and on request; restore keeps a safety copy.
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>pylune</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT OR Apache-2.0</project_license>
+  <name>Pylune</name>
+  <summary>Crimson Desert mod manager for Linux</summary>
+  <description>
+    <p>
+      Pylune installs, orders and deploys Crimson Desert mods on Linux (Steam and Proton).
+      Mods stay in their own folder and are linked into the game only when you press Apply;
+      unlinking restores the original files.
+    </p>
+  </description>
+  <launchable type="desktop-id">pylune.desktop</launchable>
+  <categories>
+    <category>Game</category>
+    <category>Utility</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+</component>

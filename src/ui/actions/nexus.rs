@@ -71,8 +71,7 @@ impl PyluneApp {
             NexusAction::AcceptIncoming(index) => self.resolve_incoming(index, true),
             NexusAction::RejectIncoming(index) => self.resolve_incoming(index, false),
             NexusAction::RegisterHandler => {
-                let exe =
-                    std::env::current_exe().map_err(|e| PyluneError::Invalid(e.to_string()))?;
+                let exe = handler::own_executable()?;
                 if exe.to_string_lossy().contains("/target/") {
                     tracing::warn!(exe = %exe.display(), "registering a development build as nxm handler");
                 }

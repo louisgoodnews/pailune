@@ -148,8 +148,13 @@ cargo build --release
 packaging/install.sh       # binary to ~/.local/bin, launcher and icon for your desktop
 cargo run --release
 cargo test                 # offline suite
-cargo test -- --ignored    # also talks to api.nexusmods.com
+cargo test -- --ignored    # also talks to api.nexusmods.com, renders screens (GPU)
 ```
+
+**AppImage:** `APPIMAGETOOL=/path/to/appimagetool packaging/appimage.sh` writes
+`target/appimage/Pylune-<version>-x86_64.AppImage`. It runs on systems whose glibc is at least as
+new as the build machine's; release AppImages are built by CI on Ubuntu 22.04 (glibc 2.35).
+Register the `nxm://` handler from the AppImage you keep — the link points at that file.
 
 `tests/fixtures/sample.rar` comes from the `unrar` crate (MIT / Apache-2.0).
 

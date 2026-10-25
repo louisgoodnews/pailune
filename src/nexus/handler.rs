@@ -16,6 +16,22 @@ fn applications_dir() -> Option<PathBuf> {
     directories::BaseDirs::new().map(|dirs| dirs.data_dir().join("applications"))
 }
 
+/// The program the desktop should start for links: the AppImage file when
+/// running from one (its mount point changes every start), else this binary.
+pub fn own_executable() -> Result<PathBuf> {
+    pick_executable(std::env::var_os("APPIMAGE"), std::env::current_exe())
+}
+
+fn pick_executable(
+    appimage: Option<std::ffi::OsString>,
+    current: std::io::Result<PathBuf>,
+) -> Result<PathBuf> {
+    match appimage.map(PathBuf::from).filter(|p| p.is_file()) {
+        Some(image) => Ok(image),
+        None => current.map_err(|e| PyluneError::Invalid(e.to_string())),
+    }
+}
+
 /// Quotes one `Exec` argument per the Desktop Entry specification.
 pub fn escape_exec_arg(arg: &str) -> String {
     let escaped: String = arg
@@ -160,6 +176,19 @@ pub fn forward(desktop_file: &str, url: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn appimages_register_their_own_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let image = dir.path().join("Pylune.AppImage");
+        fs::write(&image, "").unwrap();
+        let mounted = PathBuf::from("/tmp/.mount_x/usr/bin/pylune");
+        let picked = pick_executable(Some(image.clone().into()), Ok(mounted.clone()));
+        assert_eq!(picked.unwrap(), image);
+        let gone = dir.path().join("moved.AppImage");
+        let picked = pick_executable(Some(gone.into()), Ok(mounted.clone()));
+        assert_eq!(picked.unwrap(), mounted, "a vanished image falls back");
+    }
 
     #[test]
     fn exec_lines_round_trip() {

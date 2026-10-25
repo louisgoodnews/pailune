@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] A-29 (rest) AppImage — *M*
 
 ## Backlog (large)
 
@@ -54,6 +53,12 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-29 AppImage: `packaging/appimage.sh` assembles an AppDir (binary, desktop entry, SVG and
+  256 px icons, AppStream metadata) and packs it with `appimagetool`; CI builds it on Ubuntu 22.04
+  for tags `v*` (glibc ≥ 2.35; a local CachyOS build needs glibc 2.44) with a pinned, checksummed
+  appimagetool 1.9.1. The `nxm://` handler registers the AppImage file itself (`$APPIMAGE`), not
+  its changing mount point. AppDir layout verified locally; the final packing step was not run
+  here.
 - [x] A-28 (part) save-game backups (`src/save_backup/`): the save folder in the Proton prefix
   (`…/AppData/Local/Pearl Abyss/CD/save/<id>/slot<N>/`, verified on the installed game) is zipped
   before every Play (default on, newest 10 kept) and on request; restore backs up the current
