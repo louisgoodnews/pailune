@@ -95,7 +95,8 @@ A published format-3 mod (`target: iteminfo.pabgb`, 2391 intents `set max_stack_
 `entry` and `key`, files for 2x … 100x and 999999). For every intent the record named by `key`
 has the named `entry`, and `new` is exactly the multiple of the u64 at payload offset +1 — in all
 seven multiplier files. This independently confirms `_maxStackCount` = u64 at +1 on 2391 of the
-2412 records where that value is above 1. Since 2026-10-26 Pylune ships a **partial layout** for `iteminfo`
+2412 records where that value is above 1. Confirmed in game on 2026-10-26: Pylune's arrow test (u64 at +1 = 999) let arrows stack past
+100. Since 2026-10-26 Pylune ships a **partial layout** for `iteminfo`
 (`"partial": true`: `_isBlocked`, `_maxStackCount`; checked on every record, the rest of each record
 is left untouched), and every Fat Stacks file resolves completely against the installed game.
 

@@ -636,6 +636,12 @@ DMM log hints at per-type caveats (SOURCE, UNVERIFIED):
 * new UI images were forced to a "self-contained" texture class (last4
   0x0F) and registered in PATHC.
 
+**VERIFIED IN GAME (2026-10-26, build 2.03.02): data tables work through an overlay when each
+table (body + header) has a group of its own, registered first with language mask `0x3FFF` and
+the header stored uncompressed — DMM's layout (`research/dmm-analysis.md`).** The arrow stack
+test went past 100. With all tables in Pylune's single group (mask `0x7FFF`) they had no effect,
+although that group did serve other files (Character Creator's part table).
+
 **Data tables need their header in the overlay (2026-10-26).** Test batch 1 packed only the
 patched `*.staticinfobody` files: the overlay held exactly the intended bytes, listed first in
 the PAPGT, yet none of the three tests had an effect in game. CDUMM packs the companion

@@ -12,6 +12,10 @@ Move a line between columns when its status changes.
 
 ## Backlog (large)
 
+- [ ] D-14 in-place route: only for files the engine reads outside overlays (per DMM: dialogue
+  audio, weapon/socket XML). Parts built and tested (`paz::pamt_edit`, `inplace::store`), not
+  wired; wire when such a file type is confirmed to need it — *M*
+
 - [ ] A-01 format 3.1: records chosen by `match`, nested fields (`prefab_data_list[*].…`) and
   list values that change a record's length (table rewrite with new index offsets). Needed by
   *Character Creator*'s "Equip All Armor"; needs the full ItemInfo layout first — *L*
@@ -31,7 +35,9 @@ Move a line between columns when its status changes.
 
 ## Owner
 
-- [ ] A-01 In-game test batch 1, **second run** (first run 2026-10-26: no effect — overlay held only
+- [ ] A-01 In-game test batch 1, **third run** — test 1 (arrow stacks) CONFIRMED 2026-10-26
+  (101 arrows in a stack) after per-table groups; still open: tests 2–4 (hunting amounts, drop
+  rates, crate coins). Previous note: (first run 2026-10-26: no effect — overlay held only
   table bodies; headers are now packed too, see `paz-format.md` §9.1). `local/test-mods/`, see its `TESTING.md`: arrow stacks
   (`ItemInfo._maxStackCount`), hunting amounts (drop-entry amount A/B = min/max?), drop rates
   (drop-entry rate). Also the first in-game check of patched data tables through the overlay.
