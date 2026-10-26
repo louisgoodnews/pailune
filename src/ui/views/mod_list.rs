@@ -5,6 +5,7 @@ use crate::mod_engine::model::{ModEntry, MoveTo};
 use crate::ui::theme::{self, accent, danger, muted, warning};
 use crate::ui::{Action, ModAction, PyluneApp};
 use eframe::egui::{self, RichText};
+use egui_extras::{Column, TableBuilder, TableRow};
 
 /// Badges after the name: Nexus origin, update available, conflicts.
 fn status_cell(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) {
@@ -34,32 +35,43 @@ fn status_cell(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) {
     });
 }
 
-/// Renders one row and returns the actions it triggered.
-fn row(ui: &mut egui::Ui, index: usize, entry: &ModEntry, app: &PyluneApp) -> Vec<Action> {
+/// Renders one table row and returns the actions it triggered.
+fn row(mut cells: TableRow, index: usize, entry: &ModEntry, app: &PyluneApp) -> Vec<Action> {
     let last = app.registry.mods.len().saturating_sub(1);
     let name = entry.name.clone();
-    ui.label(RichText::new(format!("{}", index + 1)).color(muted()));
-    let mut enabled = entry.enabled;
-    let toggled = ui.checkbox(&mut enabled, "").changed();
     let selected = app.mods.selected.as_ref() == Some(&entry.name);
-    let select = ui
-        .selectable_label(selected, RichText::new(&entry.name).strong())
-        .clicked();
-    let (kind, color) = theme::kind_style(entry.kind);
-    theme::badge(ui, kind, color);
-    let files = match entry.paz_files {
-        0 => entry.file_count.to_string(),
-        paz => format!("{} (+{paz} PAZ)", entry.file_count),
-    };
-    ui.label(RichText::new(files).color(muted()));
-    status_cell(ui, entry, app);
-    let up = ui
-        .add_enabled(index > 0, egui::Button::new("⏶").small())
-        .clicked();
-    let down = ui
-        .add_enabled(index < last, egui::Button::new("⏷").small())
-        .clicked();
-    ui.end_row();
+    cells.set_selected(selected);
+    cells.col(|ui| drop(ui.label(RichText::new(format!("{}", index + 1)).color(muted()))));
+    let mut enabled = entry.enabled;
+    let mut toggled = false;
+    cells.col(|ui| toggled = ui.checkbox(&mut enabled, "").changed());
+    let mut select = false;
+    cells.col(|ui| {
+        select = ui
+            .selectable_label(selected, RichText::new(&entry.name).strong())
+            .clicked();
+    });
+    cells.col(|ui| {
+        let (kind, color) = theme::kind_style(entry.kind);
+        theme::badge(ui, kind, color);
+    });
+    cells.col(|ui| {
+        let files = match entry.paz_files {
+            0 => entry.file_count.to_string(),
+            paz => format!("{} (+{paz} PAZ)", entry.file_count),
+        };
+        ui.label(RichText::new(files).color(muted()));
+    });
+    cells.col(|ui| status_cell(ui, entry, app));
+    let (mut up, mut down) = (false, false);
+    cells.col(|ui| {
+        up = ui
+            .add_enabled(index > 0, egui::Button::new("⏶").small())
+            .clicked();
+        down = ui
+            .add_enabled(index < last, egui::Button::new("⏷").small())
+            .clicked();
+    });
     clicked([
         (
             toggled,
@@ -145,31 +157,39 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         actions.extend(trash(ui, app));
         return actions;
     }
-    // Both directions, so narrow windows never clip columns.
-    egui::ScrollArea::both()
-        .auto_shrink([false, false])
-        .show(ui, |ui| {
-            egui::Grid::new("mod_grid")
-                .striped(true)
-                .num_columns(8)
-                .spacing([10.0, 8.0])
-                .show(ui, |ui| {
-                    ["#", "On", "Name", "Type", "Files", "Status", "", ""]
-                        .iter()
-                        .for_each(|h| drop(ui.label(RichText::new(*h).small().color(muted()))));
-                    ui.end_row();
-                    let rows: Vec<Action> = mods
-                        .iter()
-                        .enumerate()
-                        .filter(|(_, m)| {
-                            needle.is_empty() || m.name.to_lowercase().contains(&needle)
-                        })
-                        .flat_map(|(i, entry)| row(ui, i, entry, app))
-                        .collect();
-                    actions.extend(rows);
-                });
-        });
     actions.extend(trash(ui, app));
+    // The name column takes the remaining width, so the table fills the
+    // page; the other columns fit their content.
+    let shown: Vec<(usize, &ModEntry)> = mods
+        .iter()
+        .enumerate()
+        .filter(|(_, m)| needle.is_empty() || m.name.to_lowercase().contains(&needle))
+        .collect();
+    TableBuilder::new(ui)
+        .id_salt("mod_table")
+        .striped(true)
+        .auto_shrink([false, false])
+        .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+        .column(Column::auto().at_least(24.0))
+        .column(Column::auto())
+        .column(Column::remainder().at_least(160.0).clip(true))
+        .column(Column::auto())
+        .column(Column::auto().at_least(40.0))
+        .column(Column::auto().at_least(80.0))
+        .column(Column::auto())
+        .header(22.0, |mut header| {
+            ["#", "On", "Name", "Type", "Files", "Status", "Order"]
+                .iter()
+                .for_each(|h| {
+                    header.col(|ui| drop(ui.label(RichText::new(*h).small().color(muted()))));
+                });
+        })
+        .body(|body| {
+            body.rows(30.0, shown.len(), |cells| {
+                let (index, entry) = shown[cells.index()];
+                actions.extend(row(cells, index, entry, app));
+            });
+        });
     actions
 }
 

@@ -11,6 +11,7 @@ clap = { version = "4", features = ["derive"] }
 directories = "6.0.0"
 eframe = "0.37.0"
 egui = { version = "0.37.0", default-features = false, features = ["monochrome_emoji_fonts"] }
+egui_extras = { version = "0.37.0", default-features = false }
 hmac = "0.12"
 lz4_flex = "0.11"
 md-5 = "0.11.0"

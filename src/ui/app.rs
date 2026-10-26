@@ -178,7 +178,11 @@ impl eframe::App for PyluneApp {
                 .inner,
         );
         if !self.jobs.is_empty() {
-            egui::Panel::bottom("jobs").show(ui, |ui| views::jobs::show(ui, self));
+            egui::Panel::bottom("jobs")
+                .resizable(true)
+                .default_size(120.0)
+                .min_size(60.0)
+                .show(ui, |ui| views::jobs::show(ui, self));
         }
         if self.tab == Tab::Mods && self.mods.selected.is_some() {
             let details = egui::Panel::right("details")

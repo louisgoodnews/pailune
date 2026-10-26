@@ -48,8 +48,9 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) {
             .small()
             .color(muted()),
     );
+    // Fills the (resizable) panel and scrolls; newest first.
     egui::ScrollArea::vertical()
-        .max_height(110.0)
+        .auto_shrink([false, false])
         .show(ui, |ui| {
             app.jobs.iter().rev().for_each(|job| row(ui, job));
         });
