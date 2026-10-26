@@ -58,6 +58,8 @@
 - User guide, vision, architecture, data model, extension guide and decision records in `docs/`.
 
 ### Interface
+- The header warns when an ASI loader is installed but Steam's launch options leave it off
+  (no ASI plugin would run); clicking the warning copies the launch option.
 - Notifications: pop-ups (top right) when mods are installed, applied, deleted or restored,
   backups made, scans finished or something failed; the 🔔 button keeps them for the session.
   Pop-ups can be switched off in *Settings → Behavior*.

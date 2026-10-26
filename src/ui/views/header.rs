@@ -47,8 +47,23 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         ui.add_space(12.0);
         let (text, color) = game_badge(app.game, app.process);
         theme::badge(ui, text, color);
-        let (text, color) = loader_badge(app.loader);
-        theme::badge(ui, text, color);
+        match (app.loader_off, crate::steam::locate::launch_options(app.loader)) {
+            (true, Some(line)) => {
+                let badge = theme::badge(ui, "ASI LOADER OFF — click to copy the fix", warning())
+                    .interact(egui::Sense::click())
+                    .on_hover_text(format!(
+                        "Steam's launch options don't enable the ASI loader, so no ASI plugin runs.\n\
+                         Steam › Crimson Desert › Properties › Launch options:\n{line}"
+                    ));
+                if badge.clicked() {
+                    actions.push(Action::Copy(line));
+                }
+            }
+            _ => {
+                let (text, color) = loader_badge(app.loader);
+                theme::badge(ui, text, color);
+            }
+        }
         if let Some(profile) = &app.profiles.book.active {
             theme::badge(ui, &format!("PROFILE: {profile}"), accent());
         }

@@ -96,6 +96,8 @@ pub struct PyluneApp {
     pub profiles: ProfilesState,
     pub nexus: NexusState,
     pub log: LogState,
+    /// An ASI loader is installed but Steam's launch options leave it off.
+    pub loader_off: bool,
     /// Toasts and the notification center.
     pub notices: notify::Notifications,
     /// Window commands requested by this frame's actions.

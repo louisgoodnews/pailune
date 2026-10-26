@@ -124,6 +124,10 @@ one is installed. *Settings → Diagnostics* shows the launch options Proton nee
 `WINEDLLOVERRIDES="version=n,b" %command%`); put them into *Default launch options* or a profile.
 Wrapper commands like `gamemoderun %command%` work too.
 
+If the header shows **ASI LOADER OFF**, Steam's launch options do not enable the loader, so no
+ASI plugin runs; click the badge to copy the line for *Steam → Crimson Desert → Properties →
+Launch options*.
+
 *Settings → Diagnostics → ASI plugins* lists every plugin in the game folder and which mod
 installed it (or that it came from elsewhere). Plugins that ship settings (`.ini`) can be edited
 in the mod's details panel under **Plugin settings**. Plugins hook the game's code, so they often

@@ -147,6 +147,8 @@ pub enum Action {
     CopyLog,
     /// Close Pylune.
     Quit,
+    /// Put text on the clipboard.
+    Copy(String),
     Notice(super::notify::NoticeAction),
     Ask(Confirm),
     Dismiss,

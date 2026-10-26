@@ -59,13 +59,30 @@ pub fn detect_loader(info: &SteamInfo) -> AsiLoader {
         .map_or(AsiLoader::Absent, |(_, loader)| *loader)
 }
 
+/// The DLL name (without `.dll`) a loader is installed as.
+pub fn loader_dll(loader: AsiLoader) -> Option<&'static str> {
+    match loader {
+        AsiLoader::Winmm => Some("winmm"),
+        AsiLoader::Version => Some("version"),
+        AsiLoader::Dinput8 => Some("dinput8"),
+        AsiLoader::Absent => None,
+    }
+}
+
 /// Steam launch options required for Wine to prefer the native loader DLL.
 pub fn launch_options(loader: AsiLoader) -> Option<String> {
-    let dll = match loader {
-        AsiLoader::Winmm => "winmm",
-        AsiLoader::Version => "version",
-        AsiLoader::Dinput8 => "dinput8",
-        AsiLoader::Absent => return None,
-    };
-    Some(format!("WINEDLLOVERRIDES=\"{dll}=n,b\" %command%"))
+    loader_dll(loader).map(|dll| format!("WINEDLLOVERRIDES=\"{dll}=n,b\" %command%"))
+}
+
+/// Whether an installed loader is switched off by Steam's launch options
+/// (Proton only; unknown counts as fine, so nothing is claimed blindly).
+pub fn loader_disabled(loader: AsiLoader, app_id: u32) -> bool {
+    let roots = super::library::steam_roots();
+    // Tests never read the machine's real Steam configuration.
+    !cfg!(test)
+        && crate::platform::USES_PROTON
+        && loader_dll(loader).is_some_and(|dll| {
+            super::launch_config::steam_launch_options(&roots, app_id)
+                .is_some_and(|options| !super::launch_config::enables(&options, dll))
+        })
 }

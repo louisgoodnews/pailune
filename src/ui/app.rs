@@ -111,6 +111,7 @@ impl PyluneApp {
             plugins: Vec::new(),
             window: Default::default(),
             notices: Default::default(),
+            loader_off: false,
             headless: false,
             job_failures: Vec::new(),
             save_view: None,

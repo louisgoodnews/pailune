@@ -67,6 +67,13 @@ impl PyluneApp {
                     format!("Copied {count} log entries to the clipboard"),
                 )))
             }
+            Action::Copy(text) => {
+                self.window.clipboard = Some(text);
+                Ok(Some(StatusLine::new(
+                    Level::Success,
+                    "Copied to the clipboard",
+                )))
+            }
             Action::Quit => {
                 self.window.quit = true;
                 Ok(None)
@@ -91,6 +98,7 @@ impl PyluneApp {
         self.info = locate::resolve(&self.config);
         self.game = locate::game_status(&self.info);
         self.loader = locate::detect_loader(&self.info);
+        self.loader_off = locate::loader_disabled(self.loader, self.config.game.app_id);
         let manifest = db::links::load(&self.conn).unwrap_or_default();
         self.deployed_links = manifest.links.len();
         self.dirty =

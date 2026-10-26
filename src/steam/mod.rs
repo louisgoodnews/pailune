@@ -1,5 +1,6 @@
 //! Steam / Proton path resolution for the configured game installation.
 
+pub mod launch_config;
 pub mod library;
 pub mod locate;
 pub mod vdf;
