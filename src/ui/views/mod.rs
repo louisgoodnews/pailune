@@ -12,6 +12,7 @@ pub mod header;
 pub mod incoming;
 pub mod jobs;
 pub mod log;
+pub mod missing;
 pub mod mod_actions;
 pub mod mod_details;
 pub mod mod_files;

@@ -94,7 +94,7 @@ impl PyluneApp {
     }
 
     /// Premium accounts download directly; free accounts via the website.
-    fn can_download(&self) -> bool {
+    pub(super) fn can_download(&self) -> bool {
         self.nexus.user.as_ref().is_some_and(|u| u.is_premium)
     }
 

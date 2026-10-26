@@ -45,7 +45,7 @@ pub fn scan(staging: &Path) -> Result<Scan> {
 }
 
 /// A disabled entry for a mod found in staging without a database row.
-fn discovered(name: &str, now: i64) -> ModEntry {
+pub(crate) fn discovered(name: &str, now: i64) -> ModEntry {
     ModEntry {
         name: name.to_string(),
         kind: ModKind::Empty,

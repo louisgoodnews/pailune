@@ -3,7 +3,7 @@
 use super::clicked;
 use crate::profiles::Profile;
 use crate::ui::theme::{self, accent, muted};
-use crate::ui::{Action, Confirm, ProfileAction, PyluneApp};
+use crate::ui::{Action, Confirm, ModListAction, ProfileAction, PyluneApp};
 use eframe::egui::{self, RichText};
 
 /// One profile card.
@@ -102,16 +102,35 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
             let save = ui
                 .add_enabled(valid, egui::Button::new("💾 Save current as"))
                 .clicked();
-            (
-                save,
-                ui.button("📥 Import…")
-                    .on_hover_text("Load a profile from a .json file")
-                    .clicked(),
-            )
+            let import = ui
+                .button("📥 Import…")
+                .on_hover_text("Load a profile from a .json file")
+                .clicked();
+            ui.separator();
+            let list = clicked([
+                (
+                    ui.button("📤 Export mod list…")
+                        .on_hover_text(
+                            "Order, options and Nexus origins of every mod, to share or keep",
+                        )
+                        .clicked(),
+                    Action::ModList(ModListAction::Export),
+                ),
+                (
+                    ui.button("📥 Import mod list…")
+                        .on_hover_text(
+                            "Rebuild a setup from a mod list; missing mods can be downloaded",
+                        )
+                        .clicked(),
+                    Action::ModList(ModListAction::Import),
+                ),
+            ]);
+            (save, import, list)
         })
         .inner;
-    let (save, import) = save;
+    let (save, import, list) = save;
     let mut actions = clicked([(import, Action::Profile(ProfileAction::Import))]);
+    actions.extend(list);
     actions.extend(clicked([(
         save,
         Action::Profile(ProfileAction::Save(app.profiles.name_draft.clone())),

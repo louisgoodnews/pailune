@@ -172,6 +172,9 @@ impl PyluneApp {
             }
             _ => {}
         }
+        if matches!(kind, JobKind::Download(_) | JobKind::Import { .. }) {
+            self.reapply_pending_list();
+        }
         if self.launch_after == Some(id) {
             self.launch_after = None;
             self.status = self

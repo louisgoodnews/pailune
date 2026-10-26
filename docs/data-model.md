@@ -84,6 +84,11 @@ the database online and keeps the replaced staging folder as `staging-before-res
 `created_at`, `label`: `before play`|`manual`|`before restore`, `files`, `app_version`) and
 `save/**`, a copy of `<prefix>/drive_c/users/steamuser/AppData/Local/Pearl Abyss/CD/save/`.
 
+**Mod list** (`modlist/`, B-12): JSON with `kind: "pylune-modlist"`, `format: 1`, `game`
+(Nexus domain), `exported_at`, `app_version` and `mods` in load order; each mod has `name`,
+`enabled`, optional `variant`, `source`, optional `nexus` (`mod_id`, `file_id`, `version`) and
+optional `collections` (slugs). Files for another game or a newer format are rejected.
+
 ## Game archive formats
 
 See [paz-format.md](paz-format.md): pack group table `meta/0.papgt` (first listed group wins),

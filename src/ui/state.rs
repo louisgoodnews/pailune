@@ -50,6 +50,16 @@ pub struct ModsState {
     pub trash: Vec<crate::mod_engine::trash::TrashItem>,
     /// Trash id of the mod deleted last, offered as "Undo".
     pub undo: Option<String>,
+    /// An imported mod list whose missing mods are still being installed;
+    /// re-applied after each finished download.
+    pub list_import: Option<ListImport>,
+}
+
+/// An imported mod list and the mods it names that are not installed.
+#[derive(Debug, Clone)]
+pub struct ListImport {
+    pub list: crate::modlist::ModList,
+    pub missing: Vec<crate::modlist::ListedMod>,
 }
 
 /// Nexus page state.

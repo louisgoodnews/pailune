@@ -14,8 +14,8 @@ mod theme;
 mod views;
 
 pub use intent::{
-    Action, BackupAction, Confirm, DeployAction, ModAction, NexusAction, ProfileAction,
-    SetupAction, Tab,
+    Action, BackupAction, Confirm, DeployAction, ModAction, ModListAction, NexusAction,
+    ProfileAction, SetupAction, Tab,
 };
 pub use state::{Incoming, JobState, JobView, LogState, ModsState, NexusState, ProfilesState};
 

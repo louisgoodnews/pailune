@@ -103,3 +103,43 @@ fn the_guide_follows_progress_and_remembers_the_choice() {
     app.dispatch(Action::SwitchTab(Tab::Settings));
     assert!(!app.draft.is_changed(&app.config));
 }
+
+#[test]
+fn mod_lists_rebuild_a_setup_and_place_mods_installed_later() {
+    let fx = fixture();
+    let mut app = app(&fx);
+    app.dispatch(Action::Mod(ModAction::ImportPaths(vec![
+        fx.sources.join("Cool Mod"),
+        fx.sources.join("Overlay"),
+    ])));
+    settle(&mut app);
+    // The setup to share: Overlay first and enabled, Cool Mod disabled.
+    let first = app.registry.mods[1].name.clone();
+    app.dispatch(Action::Mod(ModAction::Move(
+        first,
+        crate::mod_engine::model::MoveTo::Top,
+    )));
+    app.dispatch(Action::Mod(ModAction::SetEnabled("Overlay".into(), true)));
+    let list = crate::modlist::capture(&app.registry, &[], "crimsondesert", 1);
+    // Elsewhere only Cool Mod is installed, enabled.
+    app.dispatch(Action::Mod(ModAction::Delete("Overlay".into())));
+    settle(&mut app);
+    app.dispatch(Action::Mod(ModAction::SetAll(true)));
+    let line = app.apply_list(list).unwrap();
+    assert_eq!(line.level, Level::Warning, "{line:?}");
+    assert!(!app.registry.mods[0].enabled, "Cool Mod disabled as listed");
+    assert_eq!(app.mods.list_import.as_ref().unwrap().missing.len(), 1);
+    // Installing the missing mod puts it where the list wants it.
+    app.dispatch(Action::Mod(ModAction::ImportPaths(vec![
+        fx.sources.join("Overlay"),
+    ])));
+    settle(&mut app);
+    let order: Vec<_> = app
+        .registry
+        .mods
+        .iter()
+        .map(|m| (m.name.as_str(), m.enabled))
+        .collect();
+    assert_eq!(order, [("Overlay", true), ("Cool Mod", false)]);
+    assert!(app.mods.list_import.is_none(), "nothing missing any more");
+}

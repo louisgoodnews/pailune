@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] B-12 Portable mod lists (export/import with variants, Nexus origins, collections) — *S–M*
 - [ ] B-14 Headless core + CLI, then MCP server — *M–L*
 - [ ] B-08 (step 1) `Platform` trait around Linux-specific code — *M*
 - [ ] B-07 (research) Save format: read-only decoding, `docs/save-format.md` — *L*
@@ -59,6 +58,10 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-12 portable mod lists (`src/modlist/`): versioned JSON (order, flags, options, source,
+  Nexus origin, collections); import matches by Nexus id then name, reorders and flags, lists
+  missing mods (download all for Premium, Nexus pages otherwise) and re-applies the list after
+  every install so late mods take their place; Profiles page buttons, guide topic, user guide.
 - [x] B-15 *Move to number* in the details panel (`MoveTo::Position`, 1-based, clamped), Enter or
   *Move*; guide topic and user guide updated.
 - [x] B-09/B-10/B-11 `CONTRIBUTING.md` (setup, conventions, checks, commits, game-data rules,

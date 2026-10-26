@@ -92,6 +92,17 @@ Wrapper commands like `gamemoderun %command%` work too.
 A profile remembers which mods are enabled, their order, and its own launch options. *Profiles → type a name → Save current as*. *Load* switches to a profile (then press
 *Apply*). Profiles can be exported to a `.json` file and imported elsewhere.
 
+### Mod lists
+
+A **mod list** describes your whole setup — order, enabled mods, chosen options, and where each
+mod came from — so you can keep it, share it or rebuild it on another computer.
+*Profiles → Export mod list…* writes a `.json` file; *Import mod list…* applies one: installed
+mods are reordered and enabled as listed (found by their Nexus id, else by name). Mods that are
+not installed appear in a **missing mods** window: Premium accounts can download them all at
+once; otherwise open each mod's Nexus page and use *Mod manager download*, or import the file
+yourself. Each mod takes its place in the list as soon as it is installed. Press *Apply* when
+you are done.
+
 ## Updates
 
 *Nexus → Check updates* marks mods with a newer file on Nexus (or turn on *Settings → Behavior →

@@ -4,6 +4,7 @@ mod backups;
 mod collections;
 mod deploy;
 mod guide;
+mod modlist;
 mod mods;
 mod nexus;
 mod poll;
@@ -40,6 +41,7 @@ impl PyluneApp {
             Action::Setup(action) => self.setup_action(action),
             Action::Backup(action) => self.backup_action(action),
             Action::Guide(action) => self.guide_action(action),
+            Action::ModList(action) => self.modlist_action(action),
             Action::SwitchTab(tab) => {
                 self.tab = tab;
                 self.refresh_log().map(|()| None)

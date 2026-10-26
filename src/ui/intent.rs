@@ -130,6 +130,7 @@ pub enum Action {
     Setup(SetupAction),
     Backup(BackupAction),
     Guide(super::guide::GuideAction),
+    ModList(ModListAction),
     SwitchTab(Tab),
     BrowseGameDir,
     SaveSettings,
@@ -137,6 +138,21 @@ pub enum Action {
     OpenLogFolder,
     Ask(Confirm),
     Dismiss,
+}
+
+/// Portable mod list intents (B-12).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ModListAction {
+    /// Write the current list to a file chosen by the user.
+    Export,
+    /// Read a list and apply it to the installed mods.
+    Import,
+    /// Download every missing mod that came from Nexus (Premium).
+    DownloadMissing,
+    /// Open the Nexus page of the missing mod at this index.
+    OpenMissing(usize),
+    /// Stop tracking the imported list.
+    CloseMissing,
 }
 
 /// Backup intents.

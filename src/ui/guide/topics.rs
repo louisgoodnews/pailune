@@ -100,6 +100,14 @@ pub const TOPICS: &[Topic] = &[
         ],
     },
     Topic {
+        title: "Share or move my whole setup",
+        keywords: "mod list export import share copy another computer reinstall missing",
+        body: &[
+            "Profiles › Export mod list… saves the order, enabled mods, options and Nexus origins to a file.",
+            "Import mod list… applies it: installed mods are ordered as listed; missing ones are listed with ways to get them and take their place once installed.",
+        ],
+    },
+    Topic {
         title: "Use ASI or script mods",
         keywords: "asi loader dll version winmm dinput8 launch options proton",
         body: &[

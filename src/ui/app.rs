@@ -233,6 +233,7 @@ impl eframe::App for PyluneApp {
             installed,
         ));
         actions.extend(views::guide::show(ui.ctx(), self));
+        actions.extend(views::missing::show(ui.ctx(), self));
         if self.setup_open {
             actions.extend(views::setup::show(ui.ctx(), self));
         }

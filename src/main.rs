@@ -14,6 +14,7 @@ mod jobs;
 mod launch;
 mod logging;
 mod mod_engine;
+mod modlist;
 mod nexus;
 mod overlay;
 mod patch;
