@@ -26,11 +26,12 @@ pub struct Engine {
 impl Engine {
     /// Takes the instance lock and starts the application without a window.
     pub fn open(paths: DataPaths, config: Config) -> Result<Self> {
-        let lock = instance::try_lock(&paths)?.ok_or_else(|| {
-            PyluneError::Invalid(
-                "the Pylune window is open — make changes there, or close it first".into(),
-            )
-        })?;
+        let lock =
+            instance::try_lock_for(&paths, Duration::from_millis(500))?.ok_or_else(|| {
+                PyluneError::Invalid(
+                    "the Pylune window is open — make changes there, or close it first".into(),
+                )
+            })?;
         let conn = crate::db::open(&paths.database)?;
         let ctx = eframe::egui::Context::default();
         let mut app = PyluneApp::build(ctx, paths, config, conn, None);

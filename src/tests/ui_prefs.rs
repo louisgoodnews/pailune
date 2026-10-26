@@ -142,7 +142,13 @@ fn mod_lists_rebuild_a_setup_and_place_mods_installed_later() {
         .iter()
         .map(|m| (m.name.as_str(), m.enabled))
         .collect();
-    assert_eq!(order, [("Overlay", true), ("Cool Mod", true)]);
+    assert_eq!(
+        order,
+        [("Overlay", true), ("Cool Mod", true)],
+        "{:?} pending {:?}",
+        app.status,
+        app.mods.list_import.as_ref().map(|l| l.missing.len())
+    );
     assert!(app.mods.list_import.is_none(), "nothing missing any more");
 }
 

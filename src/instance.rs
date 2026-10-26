@@ -58,6 +58,20 @@ pub fn try_lock(paths: &DataPaths) -> Result<Option<InstanceLock>> {
     }
 }
 
+/// [`try_lock`], retrying for up to `wait`. A lock that was just released
+/// can look taken for a moment: a process started at that instant holds an
+/// inherited copy of the lock file until it executes its program.
+pub fn try_lock_for(paths: &DataPaths, wait: std::time::Duration) -> Result<Option<InstanceLock>> {
+    let started = std::time::Instant::now();
+    loop {
+        match try_lock(paths)? {
+            Some(lock) => return Ok(Some(lock)),
+            None if started.elapsed() >= wait => return Ok(None),
+            None => std::thread::sleep(std::time::Duration::from_millis(10)),
+        }
+    }
+}
+
 /// Spools `nxm://` arguments and decides whether to show the GUI.
 pub fn bootstrap(paths: &DataPaths, args: &[String]) -> Result<Startup> {
     fs::create_dir_all(&paths.spool).at(&paths.spool)?;

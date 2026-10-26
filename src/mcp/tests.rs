@@ -73,6 +73,7 @@ fn failed_jobs_are_errors_and_the_lock_is_released() {
     let missing = json!([fx.sources.join("No Such Mod")]);
     let failed = call(&mut server, "install_mods", json!({ "paths": missing }));
     assert_eq!(failed["isError"], true, "{failed}");
-    let lock = crate::instance::try_lock(&server.paths).unwrap();
+    let wait = std::time::Duration::from_millis(500);
+    let lock = crate::instance::try_lock_for(&server.paths, wait).unwrap();
     assert!(lock.is_some(), "the window can start between calls");
 }
