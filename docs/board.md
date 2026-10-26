@@ -44,18 +44,20 @@ Move a line between columns when its status changes.
 
 - [ ] B-07 (step 3) Save editing: body writer, fresh nonce + HMAC (done), per-version checks — *L*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
-- [ ] A-01 (rest) table inserts, field-name JSON (format 3) — *L*, waits on the owner decision below
+- [ ] A-01 format 3 / table inserts with layouts derived from the game
+  (`docs/research/table-layouts.md`): 1. field names from the executable's data sections;
+  2. layout inference verified on every record; 3. fixed-size tables; 4. iteminfo, dropsetinfo,
+  skill, storeinfo, characterinfo, buffinfo one by one; 5. format-3 `set` on verified fields — *L*
 
 ## Owner
 
-- [ ] A-01 Format 3 / table inserts need per-table field layouts. The only sources are community
-  projects (CDUMM `field_schema/*.json`, `pabgb_complete_schema.json`, licensed MPL-2.0). Choose:
-  ship those data files unmodified under MPL-2.0 next to Pylune's MIT/Apache code (allowed:
-  MPL is file-level), or derive our own layouts from the game (slow, table by table).
 - [ ] A-21 (rest) Register Pylune with Nexus (AUP) before a public release
 
 ## Done
 
+- [x] A-01 research: table layouts can be derived from the game (`docs/research/table-layouts.md`):
+  513 classes with field names in the executable's data sections, sizes and order verified on
+  sample records; method and order of work set (owner decision 2026-10-26: own layouts).
 - [x] B-13/D-12 ASI plugin management (`mod_engine/plugins.rs`): plugins in `bin64/`,
   `scripts/`, `plugins/` with their owning mod (from the link journal, so copies count too) on
   the Diagnostics page; `.ini` editor in the details panel (writes the staged file, which the
