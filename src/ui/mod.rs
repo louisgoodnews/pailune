@@ -95,6 +95,8 @@ pub struct PyluneApp {
     pub profiles: ProfilesState,
     pub nexus: NexusState,
     pub log: LogState,
+    /// Window commands requested by this frame's actions.
+    pub window: state::WindowRequests,
     pub pool: JobPool,
     pub jobs: Vec<JobView>,
     /// Apply job after which the game should be launched.

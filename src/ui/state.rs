@@ -102,6 +102,16 @@ pub struct ProfilesState {
     pub option_drafts: BTreeMap<String, String>,
 }
 
+/// Requests only the window can carry out, collected while dispatching
+/// and executed at the end of the frame.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct WindowRequests {
+    /// Close Pylune (through the normal close, so its guard applies).
+    pub quit: bool,
+    /// Text to put on the clipboard.
+    pub clipboard: Option<String>,
+}
+
 /// Log page state.
 #[derive(Debug, Clone, Default)]
 pub struct LogState {

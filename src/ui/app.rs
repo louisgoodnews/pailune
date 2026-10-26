@@ -109,6 +109,7 @@ impl PyluneApp {
             save_backups: Vec::new(),
             save_slots: Vec::new(),
             plugins: Vec::new(),
+            window: Default::default(),
             headless: false,
             job_failures: Vec::new(),
             save_view: None,
@@ -217,5 +218,12 @@ impl eframe::App for PyluneApp {
             actions.extend(views::setup::show(ui.ctx(), self));
         }
         actions.into_iter().for_each(|action| self.dispatch(action));
+        let requests = std::mem::take(&mut self.window);
+        if let Some(text) = requests.clipboard {
+            ui.ctx().copy_text(text);
+        }
+        if requests.quit {
+            ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+        }
     }
 }

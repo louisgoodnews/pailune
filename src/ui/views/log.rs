@@ -52,6 +52,12 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
                 (filter, Action::RefreshLog),
                 (ui.button("⟳ Refresh").clicked(), Action::RefreshLog),
                 (
+                    ui.add_enabled(!app.log.events.is_empty(), egui::Button::new("📋 Copy log"))
+                        .on_hover_text("Copy the entries shown here, e.g. for a bug report")
+                        .clicked(),
+                    Action::CopyLog,
+                ),
+                (
                     ui.button("📂 Open log folder").clicked(),
                     Action::OpenLogFolder,
                 ),

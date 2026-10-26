@@ -172,7 +172,7 @@ pub const TOPICS: &[Topic] = &[
         title: "Keyboard shortcuts",
         keywords: "keys shortcut hotkey keyboard",
         body: &[
-            "F1 guide · Ctrl+F search mods · Ctrl+I import · Ctrl+Enter apply · F5 rescan · Delete removes the selected mod.",
+            "F1 guide · Ctrl+F search mods · Ctrl+I import · Ctrl+Enter apply · F5 rescan · Delete removes the selected mod · Ctrl+Q quits.",
         ],
     },
     Topic {

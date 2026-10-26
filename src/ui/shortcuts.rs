@@ -12,7 +12,7 @@ pub fn search_id() -> egui::Id {
 /// Reads shortcuts and dropped files for this frame.
 pub fn collect(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
     let typing = ctx.memory(|m| m.focused().is_some());
-    let (search, rescan, apply, import, delete, help) = ctx.input_mut(|i| {
+    let (search, rescan, apply, import, delete, help, quit) = ctx.input_mut(|i| {
         (
             i.consume_key(Modifiers::COMMAND, Key::F),
             i.consume_key(Modifiers::NONE, Key::F5),
@@ -20,6 +20,7 @@ pub fn collect(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
             i.consume_key(Modifiers::COMMAND, Key::I),
             !typing && i.consume_key(Modifiers::NONE, Key::Delete),
             i.consume_key(Modifiers::NONE, Key::F1),
+            i.consume_key(Modifiers::COMMAND, Key::Q),
         )
     });
     if search {
@@ -37,6 +38,7 @@ pub fn collect(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
     [
         (search && app.tab != Tab::Mods, Action::SwitchTab(Tab::Mods)),
         (rescan, Action::Mod(ModAction::Rescan)),
+        (quit, Action::Quit),
         (apply, Action::Deploy(DeployAction::Apply)),
         (import, Action::Mod(ModAction::ImportFiles)),
         (

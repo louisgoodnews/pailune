@@ -135,3 +135,21 @@ pub fn timestamp(ts: i64) -> String {
         secs % 60
     )
 }
+
+/// Journal events as plain text, one per line (for the clipboard and bug
+/// reports): time, severity, kind, mod and message.
+pub fn as_text(events: &[Event]) -> String {
+    events
+        .iter()
+        .map(|e| {
+            format!(
+                "{} UTC  {:<5} {:<8} {}: {}\n",
+                timestamp(e.ts),
+                e.severity.as_str(),
+                e.kind.as_str(),
+                e.mod_name.as_deref().unwrap_or("-"),
+                e.message
+            )
+        })
+        .collect()
+}

@@ -229,6 +229,7 @@ agent, for example in Claude Code: `claude mcp add pylune -- pylune mcp`. `clean
 | Ctrl+F | Search mods |
 | Ctrl+I | Import files |
 | Ctrl+Enter | Apply |
+| Ctrl+Q | Quit Pylune (also *More → Quit Pylune*) |
 | F5 | Rescan the staging folder |
 | Delete | Delete the selected mod (undoable) |
 

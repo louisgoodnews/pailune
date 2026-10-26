@@ -90,20 +90,25 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             };
             let free = blocked.is_none();
             let why = blocked.unwrap_or_default();
-            // Rare and destructive, so out of reach of slips (R-06).
-            let reset = ui
-                .add_enabled_ui(free, |ui| {
-                    ui.menu_button("More ⏷", |ui| {
-                        ui.button(RichText::new("⚠ Clean slate…").color(danger()))
-                            .on_hover_text(
-                                "Put the game back to its original state and disable every mod",
-                            )
-                            .clicked()
-                    })
-                })
-                .inner;
-            let reset_clicked = reset.inner.unwrap_or(false);
-            reset.response.on_disabled_hover_text(why);
+            // Rare and destructive, so out of reach of slips (R-06). Quit is
+            // always available; only Clean slate waits for the game.
+            let menu = ui.menu_button("More ⏷", |ui| {
+                let reset = ui
+                    .add_enabled(
+                        free,
+                        egui::Button::new(RichText::new("⚠ Clean slate…").color(danger())),
+                    )
+                    .on_hover_text("Put the game back to its original state and disable every mod")
+                    .on_disabled_hover_text(why)
+                    .clicked();
+                ui.separator();
+                let quit = ui
+                    .button("✖ Quit Pylune")
+                    .on_hover_text("Close Pylune (Ctrl+Q); mods stay applied")
+                    .clicked();
+                (reset, quit)
+            });
+            let (reset_clicked, quit_clicked) = menu.inner.unwrap_or_default();
             let unlink = ui
                 .add_enabled(free, egui::Button::new("Unlink all"))
                 .on_disabled_hover_text(why);
@@ -118,6 +123,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
                 .on_disabled_hover_text(why);
             actions.extend(clicked([
                 (reset_clicked, Action::Ask(Confirm::CleanSlate)),
+                (quit_clicked, Action::Quit),
                 (unlink.clicked(), Action::Deploy(DeployAction::UnlinkAll)),
                 (apply.clicked(), Action::Deploy(DeployAction::Apply)),
             ]));

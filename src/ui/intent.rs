@@ -139,6 +139,10 @@ pub enum Action {
     SaveSettings,
     RefreshLog,
     OpenLogFolder,
+    /// Copy the shown log entries to the clipboard.
+    CopyLog,
+    /// Close Pylune.
+    Quit,
     Ask(Confirm),
     Dismiss,
 }

@@ -50,6 +50,18 @@ impl PyluneApp {
             Action::SaveSettings => self.save_settings().map(Some),
             Action::RefreshLog => self.refresh_log().map(|()| None),
             Action::OpenLogFolder => self.open_path(&self.paths.logs.clone()).map(|()| None),
+            Action::CopyLog => {
+                let count = self.log.events.len();
+                self.window.clipboard = Some(crate::logging::as_text(&self.log.events));
+                Ok(Some(StatusLine::new(
+                    Level::Success,
+                    format!("Copied {count} log entries to the clipboard"),
+                )))
+            }
+            Action::Quit => {
+                self.window.quit = true;
+                Ok(None)
+            }
             // Deletes are undoable, so they ask only when the user wants it (R-04).
             Action::Ask(Confirm::DeleteMod(name)) if !self.config.behavior.confirm_deletes => {
                 self.mod_action(super::ModAction::Delete(name))
