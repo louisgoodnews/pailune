@@ -9,6 +9,14 @@ use crate::ui::{Action, ModAction, PyluneApp, SettingsPage, Tab};
 use egui_kittest::Harness;
 use std::path::PathBuf;
 
+/// A JSON mod like the first in-game test.
+const ARROWS: &str = r#"{"modinfo": {"title": "Arrow Stacks"}, "patches": [{
+  "game_file": "gamedata/binarystaticinfo__/bin/iteminfo.staticinfobody", "changes": [
+    {"entry": "Arrow", "rel_offset": 1, "original": "6400000000000000",
+     "patched": "e703000000000000", "label": "Arrow max stack 100 -> 999"},
+    {"entry": "Pyeonjeon_Arrow", "rel_offset": 1, "original": "6400000000000000",
+     "patched": "e703000000000000", "label": "Pyeonjeon_Arrow max stack 100 -> 999"}]}]}"#;
+
 fn harness(fx: &Fixture, theme: Theme) -> Harness<'static, PyluneApp> {
     let root = fx.staging.parent().unwrap().to_path_buf();
     let paths = DataPaths::under(&root, &root);
@@ -85,6 +93,18 @@ fn screens() {
             app.poll();
             app.dispatch(Action::Mod(ModAction::Select("Better Things".into())));
             shoot(&mut h, &format!("{tag}-installer"));
+            let json = fx.sources.join("Arrow Stacks");
+            std::fs::create_dir_all(&json).unwrap();
+            std::fs::write(json.join("arrow_stacks.json"), ARROWS).unwrap();
+            let app = h.state_mut();
+            app.dispatch(Action::Mod(ModAction::ImportPaths(vec![json])));
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            app.poll();
+            app.dispatch(Action::Mod(ModAction::Select("Arrow Stacks".into())));
+            // Tall enough to show the editor under the details.
+            h.set_size(eframe::egui::vec2(1200.0, 1100.0));
+            shoot(&mut h, &format!("{tag}-json-editor"));
+            h.set_size(eframe::egui::vec2(1200.0, 760.0));
             h.state_mut()
                 .dispatch(Action::Ask(crate::ui::Confirm::CleanSlate));
             shoot(&mut h, &format!("{tag}-confirm"));

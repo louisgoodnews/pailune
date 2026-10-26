@@ -55,7 +55,7 @@ impl PyluneApp {
                 ),
             )),
             ModAction::ImportPaths(paths) => Ok(Some(self.import(paths))),
-            ModAction::SaveSettingsFile(path, text) => {
+            ModAction::SaveModFile(path, text) => {
                 // Only files of staged mods; deployed links point at them.
                 let escapes = path
                     .components()
@@ -73,9 +73,18 @@ impl PyluneApp {
                     .unwrap_or_default()
                     .to_string_lossy()
                     .into_owned();
-                let when = match cfg!(windows) {
-                    true => "press Apply to copy it into the game",
-                    false => "it applies the next time the game starts",
+                // Packed content (JSON patches) reaches the game only through
+                // the archive group Apply rebuilds.
+                let packed = crate::mod_engine::plan::placement(
+                    path.strip_prefix(&self.paths.staging).unwrap_or(&path),
+                ) == crate::mod_engine::plan::Placement::JsonPatch;
+                if packed {
+                    crate::db::mods::bump_revision(&self.conn)?;
+                }
+                let when = match (packed, cfg!(windows)) {
+                    (true, _) => "press Apply to rebuild the game's data",
+                    (false, true) => "press Apply to copy it into the game",
+                    (false, false) => "it applies the next time the game starts",
                 };
                 Ok(Some(StatusLine::new(
                     Level::Success,

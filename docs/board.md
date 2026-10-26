@@ -27,6 +27,8 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] JSON mod viewer/editor (details panel): changes table with numbers and hex, raw JSON with
+  live checking, Save marks the setup for Apply (`src/patch/document.rs`, `ui/views/json_editor/`).
 - [x] Code review of the recent features (27 findings, three passes, all fixed with tests):
   FOMOD and mod paths cannot leave their folders; XML/HTML patch engine edge cases; overlapping
   or length-changing table patches refused; interrupted save restores recovered; hostile saves

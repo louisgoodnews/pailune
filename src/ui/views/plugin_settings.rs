@@ -46,7 +46,7 @@ fn editor(ui: &mut egui::Ui, path: &Path, rel: &Path) -> Option<Action> {
                     .add_enabled(changed, egui::Button::new("💾 Save"))
                     .clicked()
                 {
-                    action = Some(Action::Mod(ModAction::SaveSettingsFile(
+                    action = Some(Action::Mod(ModAction::SaveModFile(
                         path.to_path_buf(),
                         draft.text.clone(),
                     )));

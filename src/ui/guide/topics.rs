@@ -67,6 +67,15 @@ pub const TOPICS: &[Topic] = &[
         ],
     },
     Topic {
+        title: "Change the values of a JSON mod",
+        keywords: "json patch edit value number bytes stack field",
+        body: &[
+            "Select the mod: its JSON files appear under “JSON patches” in the details panel.",
+            "Each change shows the original value and the new one. Type a new number (or bytes as hex); “Raw JSON” edits the whole file.",
+            "Save, then press Apply. The original bytes are still checked first, so a wrong guess changes nothing.",
+        ],
+    },
+    Topic {
         title: "Find out why a mod has no effect",
         keywords: "conflict overwrite lose win not working",
         body: &[

@@ -154,9 +154,10 @@ pub fn launch(
     }
 }
 
-/// Whether the game is running.
+/// Whether the game is running. Tests never see the real game, so they
+/// pass while the developer plays.
 pub fn game_process() -> GameProcess {
-    match crate::platform::game_running(GAME_PROCESS) {
+    match !cfg!(test) && crate::platform::game_running(GAME_PROCESS) {
         true => GameProcess::Running,
         false => GameProcess::Stopped,
     }

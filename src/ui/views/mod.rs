@@ -12,6 +12,7 @@ pub mod header;
 pub mod incoming;
 pub mod installer;
 pub mod jobs;
+pub mod json_editor;
 pub mod log;
 pub mod missing;
 pub mod mod_actions;

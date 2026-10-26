@@ -39,6 +39,8 @@
 - FOMOD installers: the installer's pages appear in the details panel; choices are remembered.
 - Mod lists: export your whole setup and import it elsewhere; missing mods can be downloaded.
 - Move a mod straight to a load-order number from its details panel.
+- JSON mod editor in the details panel: every change with its original and new value, editable as
+  a number or hex (format 3: the new field value), plus the raw JSON, checked as you type.
 
 ### Documentation
 - User guide, vision, architecture, data model, extension guide and decision records in `docs/`.

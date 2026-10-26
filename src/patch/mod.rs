@@ -5,6 +5,7 @@
 
 pub mod apply;
 pub mod css;
+pub mod document;
 pub mod html;
 pub mod parse;
 pub mod table;

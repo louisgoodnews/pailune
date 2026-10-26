@@ -121,7 +121,7 @@ fn revision(conn: &Connection, key: &str) -> Result<Option<i64>> {
 }
 
 /// Marks the registry (or a staged mod's files) as changed.
-fn bump_revision(conn: &Connection) -> Result<()> {
+pub fn bump_revision(conn: &Connection) -> Result<()> {
     let next = revision(conn, REVISION_KEY)?.unwrap_or(0) + 1;
     super::set_value(conn, REVISION_KEY, Some(&next.to_string()))
 }

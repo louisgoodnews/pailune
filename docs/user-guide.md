@@ -69,6 +69,15 @@ mods* is on).
 | `*.html.patch` (`<html-patch>` or comment directives) | Applied to the game's HTML files with CSS-style selectors. |
 | Readmes, screenshots | Kept for you to read (details panel), not deployed. |
 
+### Editing JSON mods
+
+Select a JSON mod: its files appear under **JSON patches** in the details panel. The
+**Changes** view lists every change with the original value and the new one; type a new number
+(byte strings of 1, 2, 4 or 8 bytes are shown as little-endian numbers) or edit the bytes as
+hex. Format-3 mods show record, field and new value. **Raw JSON** edits the whole file. The file
+is checked as you type the same way Apply reads it, and *Save* is only possible when it is valid.
+Saved edits take effect with the next *Apply*; the original bytes are still verified first.
+
 ### Mods with options
 
 Some mods ship several versions in separate folders. The details panel then offers a choice;
