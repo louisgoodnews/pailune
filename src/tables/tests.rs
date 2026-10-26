@@ -112,3 +112,21 @@ fn raw_replaces_work_on_tables_without_a_layout() {
     assert_eq!(changes.len(), 1, "{failed:?}");
     assert!(failed[0].contains("raw old/new changes work"), "{failed:?}");
 }
+
+#[test]
+fn ambiguous_record_names_are_refused() {
+    let (header, body) = wanted();
+    let by_name = Intent {
+        entry: Some(String::new()),
+        ..set(0, "_isBlocked", serde_json::json!(true))
+    };
+    let by_name = Intent {
+        key: None,
+        ..by_name
+    };
+    let (changes, failed) = resolve("wantedinfo.pabgb", &header, &body, &[by_name]);
+    assert!(
+        changes.is_empty() && failed[0].contains("share this name"),
+        "{failed:?}"
+    );
+}

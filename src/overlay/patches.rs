@@ -154,8 +154,15 @@ pub fn apply_all(
                         None => vanilla_bytes(game_dir, base, &vpath)?,
                     },
                 };
+                // The index must come from the same place as the body.
                 let header = header_of(&vpath)
-                    .map(|h| vanilla_bytes(game_dir, base, &h))
+                    .map(|h| match (packed.get(&h), packed.contains_key(&vpath)) {
+                        (Some(own), _) => fs::read(own).at(own),
+                        (None, true) => Err(PyluneError::Invalid(format!(
+                            "{vpath}: a mod ships this table without its index ({h})"
+                        ))),
+                        (None, false) => vanilla_bytes(game_dir, base, &h),
+                    })
                     .transpose()?;
                 Ok((vpath, current, header))
             });
@@ -213,14 +220,21 @@ pub fn apply_text(
         };
         let result = current.and_then(|base_bytes| {
             let patch = fs::read_to_string(file).at(file)?;
-            let base_text = String::from_utf8_lossy(&base_bytes);
+            // Never rewrite a file lossily: untouched bytes must stay as shipped.
+            let base_text = String::from_utf8(base_bytes).map_err(|_| {
+                PyluneError::Invalid("the game file is not UTF-8 text; not patched".into())
+            })?;
             let name = file.file_name().unwrap_or_default().to_string_lossy();
-            patch::text::apply(target, &name, &base_text, &patch)
+            patch::text::apply(target, &name, &base_text, &patch).map(|r| (r, base_text))
         });
         let (ok, message) = match result {
-            Ok((text, what)) => {
-                files.insert(target.clone(), text.into_bytes());
-                (true, format!("{target}: {what}"))
+            Ok(((text, what, all_found), before)) => {
+                let changed = text != before;
+                if changed {
+                    files.insert(target.clone(), text.into_bytes());
+                }
+                let note = if changed { "" } else { " — nothing changed" };
+                (all_found, format!("{target}: {what}{note}"))
             }
             Err(err) => (false, format!("{target}: {err}")),
         };

@@ -29,7 +29,16 @@ pub struct LinkPlan {
 }
 
 /// Resolves the absolute game path for `rel` under the given placement.
+/// Only plain relative paths qualify: nothing a mod ships may be linked
+/// outside the game folder (`..`, root or drive prefixes are refused).
 fn destination(config: &Config, rel: &Path, place: Placement) -> Option<PathBuf> {
+    let plain = rel
+        .components()
+        .all(|c| matches!(c, std::path::Component::Normal(_)));
+    if !plain {
+        tracing::warn!(path = %rel.display(), "refusing a mod path outside the game folder");
+        return None;
+    }
     let game = &config.game.dir;
     let inside = match place {
         Placement::Mirror => Some(rel.to_path_buf()),

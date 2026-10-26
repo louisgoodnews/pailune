@@ -48,7 +48,10 @@ fn comment_ops(patch: &str) -> Vec<Op> {
     let mut ops = Vec::new();
     let mut rest = patch;
     while let Some(start) = rest.find("<!--") {
-        let end = rest[start..].find("-->").map_or(rest.len(), |e| start + e);
+        // Search after the opening `<!--`, so `<!-->` cannot end before it.
+        let end = rest[start + 4..]
+            .find("-->")
+            .map_or(rest.len(), |e| start + 4 + e);
         let body = rest[start + 4..end].trim();
         rest = rest.get(end + 3..).unwrap_or("");
         let Some((name, args)) = body
@@ -76,6 +79,7 @@ fn comment_ops(patch: &str) -> Vec<Op> {
                 rest = rest.get(close..).unwrap_or("");
                 HtmlAction::Plain(Action::Replace(content))
             }
+            "set-attr" if get("name").is_empty() => continue,
             "set-attr" => HtmlAction::Plain(Action::SetAttr(get("name"), get("value"))),
             "add-class" => HtmlAction::Classes(
                 get("class")

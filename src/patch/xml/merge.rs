@@ -39,6 +39,12 @@ fn merge_into(
             edits.push(edit(base, found, &Action::Remove));
             out.applied += 1;
         }
+        // `<Item …/>` gaining children: rewrite the element as a whole, so the
+        // attribute changes and the new content cannot collide.
+        Some(found) if found.close_start.is_none() && !w.children.is_empty() => {
+            edits.push(open_up(base, patch, found, w));
+            out.applied += 1;
+        }
         Some(found) => {
             w.attrs.iter().filter(|a| a.name != DELETE).for_each(|a| {
                 edits.push(edit(
@@ -73,6 +79,30 @@ fn merge_into(
             out.applied += 1;
         }
     });
+}
+
+/// A self-closing element with merged attributes and `w`'s children inside.
+fn open_up(base: &str, patch: &str, found: &Element, w: &Element) -> Edit {
+    let tag = &base[found.start..found.tag_end];
+    let local = dom::parse(tag);
+    let attrs: Vec<Edit> = local
+        .first()
+        .map(|e| {
+            w.attrs
+                .iter()
+                .filter(|a| a.name != DELETE)
+                .map(|a| edit(tag, e, &Action::SetAttr(a.name.clone(), a.value.clone())))
+                .collect()
+        })
+        .unwrap_or_default();
+    let tag = super::edit::splice(tag, attrs);
+    let open = tag.trim_end_matches('>').trim_end_matches('/').trim_end();
+    let inner: String = w.children.iter().map(|c| &patch[c.start..c.end]).collect();
+    Edit {
+        start: found.start,
+        end: found.end,
+        text: format!("{open}>{inner}</{}>", found.name),
+    }
 }
 
 /// Merges `patch` into `base`.

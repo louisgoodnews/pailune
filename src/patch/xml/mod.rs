@@ -60,6 +60,9 @@ fn json_ops(value: &Value) -> Result<Vec<Op>, String> {
                 "add-before" | "insert-before" => Action::Before(text("value")),
                 "add-after" | "insert-after" => Action::After(text("value")),
                 "remove" | "delete" => Action::Remove,
+                "set-attr" | "remove-attr" if text("attribute").is_empty() => {
+                    return Err("set-attr/remove-attr needs an \"attribute\"".into());
+                }
                 "set-attr" => Action::SetAttr(text("attribute"), text("value")),
                 "remove-attr" => Action::RemoveAttr(text("attribute")),
                 other => return Err(format!("unknown XML patch operation \"{other}\"")),
@@ -123,6 +126,9 @@ fn xml_ops(text: &str) -> Result<Vec<Op>, String> {
                     .filter(|a| !reserved.contains(&a.name.as_str()))
                     .map(|a| Action::SetAttr(a.name.clone(), a.value.clone()))
                     .collect(),
+                "unset" if attr_name.is_empty() => {
+                    return Err("<unset> needs an attribute".to_string());
+                }
                 "unset" => vec![Action::RemoveAttr(attr_name)],
                 "insert" | "add" | "append" => vec![Action::Append(content)],
                 "insert-before" => vec![Action::Before(content)],

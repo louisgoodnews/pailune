@@ -86,3 +86,75 @@ fn merges_match_by_identity_and_append_the_rest() {
         "untouched prefab kept"
     );
 }
+
+#[test]
+fn quotes_and_unicode_in_tags_are_safe() {
+    let base = "<R>\n  <C E=\"a > b\" Key=\"x\"/>\n  <D Key=\"y\"/>\n</R>\n";
+    let roots = dom::parse(base);
+    assert_eq!(
+        roots[0].children.len(),
+        2,
+        "the quoted > does not end the tag"
+    );
+    let out = apply(
+        base,
+        "r.xml.patch",
+        r#"{"operations":[{"op":"remove","xpath":"//C"}]}"#,
+    )
+    .unwrap();
+    assert_eq!(out.text, "<R>\n  <D Key=\"y\"/>\n</R>\n");
+    // Must not panic on a valueless attribute before a multi-byte character.
+    let odd = dom::parse("<a foo ÿbar=\"x\">");
+    assert_eq!(odd[0].attr("ÿbar"), Some("x"));
+}
+
+#[test]
+fn unsupported_predicates_match_nothing_and_positions_count_per_parent() {
+    let base =
+        "<R><G><Item Key=\"a\"/><Item Key=\"b\"/></G><G><Item Key=\"c\"/><Item Key=\"d\"/></G></R>";
+    let none = apply(
+        base,
+        "x.xml.patch",
+        r#"{"operations":[{"op":"remove","xpath":"//Item[Name='Sword']"}]}"#,
+    )
+    .unwrap();
+    assert_eq!((none.text.as_str(), none.missed.len()), (base, 1));
+    let second = apply(
+        base,
+        "x.xml.patch",
+        r#"{"operations":[{"op":"remove","xpath":"//Item[2]"}]}"#,
+    )
+    .unwrap();
+    assert_eq!(
+        second.text,
+        "<R><G><Item Key=\"a\"/></G><G><Item Key=\"c\"/></G></R>"
+    );
+}
+
+#[test]
+fn merges_open_self_closing_elements_and_bad_ops_are_refused() {
+    let base = "<R>\n<Item Key=\"a\" N=\"1\"/>\n</R>\n";
+    let out = merge::merge(base, "<R><Item Key=\"a\" N=\"2\"><Sub/></Item></R>");
+    assert_eq!(
+        out.text,
+        "<R>\n<Item Key=\"a\" N=\"2\"><Sub/></Item>\n</R>\n"
+    );
+    assert!(
+        apply(
+            base,
+            "x.xml.patch",
+            r#"{"operations":[{"op":"set-attr","xpath":"//Item","value":"v"}]}"#
+        )
+        .is_err()
+    );
+    assert!(
+        apply(
+            base,
+            "x.xml.patch",
+            "<xml-patch><unset target=\"//Item\"/></xml-patch>"
+        )
+        .is_err()
+    );
+    // Must not panic on an empty comment.
+    let _ = crate::patch::html::apply("<p/>", "<!--><!--->");
+}

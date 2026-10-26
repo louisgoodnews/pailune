@@ -6,6 +6,10 @@ use serde_json::Value;
 /// Bytes of `new` for a fixed field of `size` bytes.
 pub fn encode(field: &Field, size: usize, new: &Value) -> std::result::Result<Vec<u8>, String> {
     let bad = |what: &str| Err(format!("{}: {what}", field.name));
+    // Shipped layouts only have 1-8 byte scalars; anything else is refused.
+    if !(1..=8).contains(&size) || (field.meaning == "bool" && size != 1) {
+        return bad(&format!("unsupported field size {size}"));
+    }
     let int = |v: i128| -> std::result::Result<Vec<u8>, String> {
         let bits = size as u32 * 8;
         let (min, max) = (-(1i128 << (bits - 1)), (1i128 << bits) - 1);

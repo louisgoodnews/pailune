@@ -54,11 +54,14 @@ pub fn apply(
     let mut valid: Vec<Resolved> = Vec::new();
     patch.changes.iter().for_each(|change| {
         let at = match &change.anchor {
-            Anchor::Offset(o) => Some(base + *o as usize),
-            Anchor::Entry { name, rel_offset } => anchors
-                .as_ref()
-                .and_then(|a| a.get(name))
-                .map(|a| a + *rel_offset as usize),
+            Anchor::Offset(o) => usize::try_from(*o).ok().and_then(|o| base.checked_add(o)),
+            Anchor::Entry { name, rel_offset } => {
+                anchors.as_ref().and_then(|a| a.get(name)).and_then(|a| {
+                    usize::try_from(*rel_offset)
+                        .ok()
+                        .and_then(|r| a.checked_add(r))
+                })
+            }
         };
         let verdict = match (at, &change.edit) {
             (None, _) => Err("entry not found in the table".to_string()),
@@ -69,9 +72,18 @@ pub fn apply(
                 Err("offset beyond the end of the file".into())
             }
             (Some(_), Edit::Insert { .. }) => Ok(false),
+            (
+                Some(_),
+                Edit::Replace {
+                    original: Some(o),
+                    patched,
+                },
+            ) if is_table && o.len() != patched.len() => {
+                Err("changes to data tables must keep their length".into())
+            }
             (Some(at), Edit::Replace { original, patched }) => {
                 let span = original.as_ref().map_or(patched.len(), Vec::len);
-                match data.get(at..at + span) {
+                match at.checked_add(span).and_then(|end| data.get(at..end)) {
                     None => Err("offset beyond the end of the file".into()),
                     Some(now) if now == patched.as_slice() => Ok(true),
                     Some(now) if original.as_ref().is_none_or(|o| o.as_slice() == now) => Ok(false),
@@ -88,6 +100,33 @@ pub fn apply(
             Err(reason) => report
                 .failed
                 .push(format!("{}: {reason}", describe(change, at))),
+        }
+    });
+    // Two changes to the same bytes cannot both be honoured: the later one
+    // (in file order) is refused instead of silently overwriting the first.
+    let span = |r: &Resolved| match &r.change.edit {
+        Edit::Insert { .. } => 0,
+        Edit::Replace { original, patched } => original.as_ref().map_or(patched.len(), Vec::len),
+    };
+    let mut taken: Vec<(usize, usize)> = Vec::new();
+    valid.retain(|r| {
+        let (start, end) = (r.at, r.at + span(r));
+        let clash = taken.iter().any(|(s, e)| match end == start {
+            true => *s < start && start < *e,
+            false => start < *e && *s < end,
+        });
+        match clash {
+            true => {
+                report.failed.push(format!(
+                    "{}: overlaps an earlier change",
+                    describe(r.change, Some(r.at))
+                ));
+                false
+            }
+            false => {
+                taken.push((start, end));
+                true
+            }
         }
     });
     if !report.failed.is_empty() && !allow_partial {
@@ -163,5 +202,50 @@ mod tests {
         );
         apply(&mut data, &insert, None, false, false);
         assert_eq!(data[..3], [5, 0xAA, 9]);
+    }
+}
+
+#[cfg(test)]
+mod safety_tests {
+    use super::*;
+    use crate::patch::Edit;
+
+    fn patch(changes: Vec<Change>) -> FilePatch {
+        FilePatch {
+            game_file: "x".into(),
+            signature: None,
+            changes,
+            fields: Vec::new(),
+        }
+    }
+
+    fn replace(at: u64, original: &[u8], patched: &[u8]) -> Change {
+        Change {
+            anchor: Anchor::Offset(at),
+            edit: Edit::Replace {
+                original: Some(original.to_vec()),
+                patched: patched.to_vec(),
+            },
+            label: String::new(),
+        }
+    }
+
+    #[test]
+    fn tables_keep_their_size_and_overlaps_are_refused() {
+        let mut data = vec![1u8, 2, 3, 4];
+        let grow = patch(vec![replace(0, &[1], &[9, 9])]);
+        let report = apply(&mut data, &grow, None, true, true);
+        assert_eq!((report.applied, data.len()), (0, 4), "{report:?}");
+        let overlap = patch(vec![replace(0, &[1, 2], &[7, 7]), replace(1, &[2], &[8])]);
+        let report = apply(&mut data, &overlap, None, false, true);
+        assert_eq!(report.applied, 1);
+        assert!(report.failed[0].contains("overlaps"), "{report:?}");
+        assert_eq!(data, [7, 7, 3, 4]);
+        let huge = patch(vec![replace(u64::MAX, &[1], &[2])]);
+        assert_eq!(
+            apply(&mut data, &huge, None, false, true).failed.len(),
+            1,
+            "no overflow panic"
+        );
     }
 }

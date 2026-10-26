@@ -51,6 +51,27 @@ fn find(text: &str, from: usize, needle: &str) -> usize {
     text[from..].find(needle).map_or(text.len(), |i| from + i)
 }
 
+/// Position of the `>` closing the tag at `from`, ignoring `>` inside
+/// quoted attribute values (or the end of `text`).
+fn tag_end(text: &str, from: usize) -> usize {
+    let mut quote = None;
+    text.as_bytes()[from..]
+        .iter()
+        .position(|b| match (quote, *b) {
+            (None, b'"' | b'\'') => {
+                quote = Some(*b);
+                false
+            }
+            (Some(q), b) if b == q => {
+                quote = None;
+                false
+            }
+            (None, b'>') => true,
+            _ => false,
+        })
+        .map_or(text.len(), |p| from + p)
+}
+
 /// Parses the attributes inside a start tag (`inner` begins at `offset`).
 fn attributes(inner: &str, offset: usize) -> Vec<Attr> {
     let bytes = inner.as_bytes();
@@ -74,7 +95,11 @@ fn attributes(inner: &str, offset: usize) -> Vec<Attr> {
             i += 1;
         }
         if name.is_empty() || i >= bytes.len() || bytes[i] != b'=' {
-            i = (i + 1).max(name_start + name.len());
+            // A name without value: the next attribute starts here. Nothing
+            // consumed: skip one whole character (never split a UTF-8 one).
+            if name.is_empty() {
+                i += inner[i..].chars().next().map_or(1, char::len_utf8);
+            }
             continue;
         }
         i += 1;
@@ -144,7 +169,7 @@ fn parse_with(text: &str, html: bool) -> Vec<Element> {
             pos = (find(text, i + 2, end) + end.len()).min(text.len());
             continue;
         }
-        let gt = find(text, i, ">");
+        let gt = tag_end(text, i);
         let end = (gt + 1).min(text.len());
         if let Some(name) = rest.strip_prefix("</") {
             let name = name[..gt - i - 2].trim();

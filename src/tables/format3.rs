@@ -176,15 +176,25 @@ pub fn resolve(
     intents
         .iter()
         .fold((Vec::new(), Vec::new()), |(mut ok, mut failed), i| {
-            let found = all.iter().find(|r| {
-                i.entry.as_deref().is_none_or(|e| r.name == e)
-                    && i.key.is_none_or(|k| r.key == k)
-                    && (i.entry.is_some() || i.key.is_some())
-            });
-            match found.map(|r| change(&layout, body, r, i)) {
-                Some(Ok(c)) => ok.push(c),
-                Some(Err(why)) => failed.push(why),
-                None => failed.push(format!("record {:?} / key {:?} not found", i.entry, i.key)),
+            let found: Vec<&super::Record> = all
+                .iter()
+                .filter(|r| {
+                    i.entry.as_deref().is_none_or(|e| r.name == e)
+                        && i.key.is_none_or(|k| r.key == k)
+                        && (i.entry.is_some() || i.key.is_some())
+                })
+                .collect();
+            match found.as_slice() {
+                [one] => match change(&layout, body, one, i) {
+                    Ok(c) => ok.push(c),
+                    Err(why) => failed.push(why),
+                },
+                [] => failed.push(format!("record {:?} / key {:?} not found", i.entry, i.key)),
+                _ => failed.push(format!(
+                    "{:?}: {} records share this name; add its \"key\"",
+                    i.entry.as_deref().unwrap_or_default(),
+                    found.len()
+                )),
             }
             (ok, failed)
         })

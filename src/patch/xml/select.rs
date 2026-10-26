@@ -108,8 +108,26 @@ fn passes(element: &Element, predicate: &str) -> bool {
     match predicate.strip_prefix('@').map(|p| p.split_once('=')) {
         Some(Some((name, value))) => element.attr(name.trim()) == Some(unquote(value).as_str()),
         Some(None) => element.attr(predicate[1..].trim()).is_some(),
-        None => true,
+        // Anything else (`text()`, `contains()`, child tests …) is not
+        // supported: it matches nothing rather than everything.
+        None => false,
     }
+}
+
+/// Applies the predicates to the matching children of one parent, so a
+/// position like `[2]` counts among siblings, as in XPath.
+fn filter<'d>(children: &'d [Element], step: &Step) -> Vec<&'d Element> {
+    let mut found: Vec<&Element> = children
+        .iter()
+        .filter(|e| step.name == "*" || e.name == step.name)
+        .collect();
+    for p in &step.predicates {
+        found = match p.trim().parse::<usize>() {
+            Ok(n) => found.get(n.wrapping_sub(1)).copied().into_iter().collect(),
+            Err(_) => found.into_iter().filter(|e| passes(e, p)).collect(),
+        };
+    }
+    found
 }
 
 /// Applies one step to a set of context elements (`None`: the document).
@@ -122,19 +140,13 @@ fn apply<'d>(
         .iter()
         .flat_map(|ctx| {
             let children = ctx.map_or(roots, |e| e.children.as_slice());
-            let pool: Vec<&Element> = match step.descendant {
-                true => all(children),
-                false => children.iter().collect(),
-            };
-            let mut found: Vec<&Element> = pool
-                .into_iter()
-                .filter(|e| step.name == "*" || e.name == step.name)
-                .collect();
-            for p in &step.predicates {
-                found = match p.trim().parse::<usize>() {
-                    Ok(n) => found.get(n.wrapping_sub(1)).copied().into_iter().collect(),
-                    Err(_) => found.into_iter().filter(|e| passes(e, p)).collect(),
-                };
+            // Descendants: the matching children of the context and of every
+            // element below it, each parent filtered on its own.
+            let mut found = filter(children, step);
+            if step.descendant {
+                all(children)
+                    .into_iter()
+                    .for_each(|parent| found.extend(filter(&parent.children, step)));
             }
             found
         })

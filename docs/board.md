@@ -5,37 +5,7 @@ Move a line between columns when its status changes.
 
 ## In progress
 
-- [ ] A-01 PAZ pipeline — *Phase 3* — see [paz-format.md](paz-format.md).
-  - done: spec; read-only `src/paz/` (pa_hash, PAVER, PAPGT parse/serialize, PAMT,
-    ChaCha20, LZ4, extraction), verified read-only on the installed game (34 groups,
-    2 052 523 files, real XML decrypted); PAZ-only content flagged instead of linked;
-    inactive archive folders reported.
-  - done: overlay writer (`src/paz/write.rs`, `src/overlay/`): RAW and group-folder files are
-    packed into group `0100` with the shadowed file's flags; prebuilt mod groups re-registered
-    under free numbers; `0.papgt` rebuilt from the verified vanilla backup with overlays first;
-    deployed as symlinks; Unlink restores vanilla byte for byte. Tested end to end on a
-    fixture and dry-run against the installed game.
-  - **verified in game (2026-10-25, build 2.3.2):** an overlay group listed first in
-    `0.papgt` overrides the vanilla file ("first group wins") — `local/Pylune Overlay Test`
-    turned the title screen copyright line red and large.
-  - done: textures — partial-DDS codec (`src/paz/dds/`) and `0.pathc` reader/writer
-    (`src/paz/pathc.rs`); replaced textures keep the vanilla format class, PATHC is rebuilt
-    from the vanilla backup and deployed with the overlay. Verified read-only on 302 real
-    textures (templates and chunk sizes match PATHC; 253 re-encode byte for byte; PATHC
-    round-trips byte for byte). Optional in-game check: `local/Pylune Texture Test`.
-  - done: byte-patch JSON (`src/patch/`): dialect-tolerant parser, table index reader
-    (`.pabgh`/`.staticinfoheader`, verified on the real item table: 6 816 records),
-    entry and offset anchors, signature anchors, original-byte verification, strict vs.
-    `allow_partial_apply`, later mods win; game files resolved by path, renamed extension
-    or unique file name; patched files packed with vanilla flags; results journaled per
-    mod. Dry run on the real item table changes exactly the targeted byte.
-  - not yet: field-name JSON (format 3, needs per-table schemas — reported as
-    unsupported) and inserts into tables.
-  - done: CSS patch/merge files (`*.css.patch`, `*.css.merge`: @merge/@replace/@add/@remove),
-    applied in load order on top of shipped or vanilla stylesheets; untouched rules stay
-    byte-identical (checked on the real title stylesheet).
-  - done: conflicts between packed archive files are reported like linked ones
-    (`[archive]/<path>` in the details panel).
+- (nothing — waiting on the owner's in-game test batch 1)
 
 ## Next (small first)
 
@@ -57,6 +27,9 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-01 archive pipeline (phase 3 of the original plan): read-only PAZ reader, overlay group
+  verified in game, textures with rebuilt PATHC, byte-patch JSON, CSS/XML/HTML patches, archive
+  conflicts — details in `paz-format.md` and the entries below.
 - [x] A-01 format 3: raw `old`/`new` intents on every data table (only record boundaries needed),
   checked on the real item table; recursive inference engine with nested classes
   (`tools/table-layouts/engine.py`).

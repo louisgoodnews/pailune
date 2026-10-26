@@ -153,3 +153,26 @@ fn rejects_broken_xml_and_sorts_ascending_by_default() {
     let names: Vec<_> = config.steps.iter().map(|s| s.name.as_str()).collect();
     assert_eq!(names, ["a", "B"]);
 }
+
+#[test]
+fn paths_leaving_the_mod_or_game_folder_are_ignored() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path().join("mod");
+    fs::create_dir_all(root.join("fomod")).unwrap();
+    fs::write(root.join("x.asi"), "x").unwrap();
+    fs::write(dir.path().join("secret.txt"), "outside").unwrap();
+    let xml = r#"<config><requiredInstallFiles>
+        <file source="x.asi" destination="bin64\..\..\..\.config\autostart\x.desktop"/>
+        <file source="..\secret.txt" destination="bin64\secret.txt"/>
+        <folder source="..\.." destination="bin64"/>
+        <file source="x.asi" destination="C:\Windows\x.asi"/>
+        <file source="x.asi" destination="bin64\ok.asi"/>
+    </requiredInstallFiles></config>"#;
+    fs::write(root.join("fomod/ModuleConfig.xml"), xml).unwrap();
+    let config = load(&root).unwrap().unwrap();
+    let files: Vec<String> = resolve(&root, &config, None)
+        .iter()
+        .map(|(_, d)| d.display().to_string())
+        .collect();
+    assert_eq!(files, ["bin64/ok.asi"]);
+}

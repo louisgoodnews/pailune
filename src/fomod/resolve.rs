@@ -146,21 +146,45 @@ pub fn selection_of(config: &Config, picks: &[(usize, usize, usize)]) -> Selecti
     }
 }
 
-/// A FOMOD path (`\` or `/`, any case) as a relative path.
-fn rel_path(text: &str) -> PathBuf {
-    text.split(['\\', '/'])
+/// A FOMOD path (`\\` or `/`, any case) as a plain relative path; `None`
+/// for anything that could leave its folder (`..`, drive or root prefixes).
+fn rel_path(text: &str) -> Option<PathBuf> {
+    let parts: Vec<&str> = text
+        .split(['\\', '/'])
         .filter(|p| !p.is_empty() && *p != ".")
-        .collect()
+        .collect();
+    let unsafe_part = |p: &&str| *p == ".." || p.contains(':');
+    match parts.iter().any(unsafe_part) {
+        true => None,
+        false => Some(parts.into_iter().collect()),
+    }
 }
 
-/// Files of one install: `(source, destination)`.
+/// Whether `path` lies inside `root` once symlinks are resolved.
+fn inside(root: &Path, path: &Path) -> bool {
+    match (root.canonicalize(), path.canonicalize()) {
+        (Ok(root), Ok(path)) => path.starts_with(root),
+        _ => false,
+    }
+}
+
+/// Files of one install: `(source, destination)`. Installs whose paths
+/// would leave the mod or the game folder are dropped.
 fn expand(mod_root: &Path, install: &FileInstall) -> Vec<(PathBuf, PathBuf)> {
-    let source = resolve_case(mod_root, &rel_path(&install.source));
-    let dest = rel_path(&install.destination);
+    let (Some(source_rel), Some(dest)) =
+        (rel_path(&install.source), rel_path(&install.destination))
+    else {
+        tracing::warn!(source = %install.source, destination = %install.destination, "FOMOD path leaves its folder; ignored");
+        return Vec::new();
+    };
+    let source = resolve_case(mod_root, &source_rel);
+    if !inside(mod_root, &source) {
+        return Vec::new();
+    }
     match install.folder {
         false => {
             let dest = match dest.as_os_str().is_empty() {
-                true => rel_path(&install.source),
+                true => source_rel,
                 false => dest,
             };
             source
