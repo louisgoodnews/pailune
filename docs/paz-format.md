@@ -910,6 +910,10 @@ patch, then put the result in the overlay.
   property by property), `/* @replace */`, `/* @add */`,
   `/* @remove ".sel" */`. `*.css.merge`: every rule merges.
 
+Status (2026-10-26): XML patch and merge are implemented in `src/patch/xml/` (an own
+span-keeping reader instead of a DOM, since the game's XML is not well-formed: 69 of 1 084
+sampled files fail a strict parser, 24 use `</>`, all start with a BOM). HTML patches are not.
+
 Complexity: XML **M** (needs an XML DOM with XPath), HTML **M/L**
 (lenient parser), CSS **S**. These are ports of JMM (MPL-2.0) behaviour:
 re-implement them from this description, not by translating code.

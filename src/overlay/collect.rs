@@ -3,7 +3,7 @@
 use super::OverlayInput;
 use crate::error::Result;
 use crate::mod_engine::model::Registry;
-use crate::mod_engine::plan::{Placement, css_target, deployable_files, virtual_path};
+use crate::mod_engine::plan::{Placement, deployable_files, text_target, virtual_path};
 use std::path::Path;
 
 /// Walks every enabled mod in load order.
@@ -24,9 +24,9 @@ pub fn collect(staging: &Path, registry: &Registry) -> Result<OverlayInput> {
                         }
                     }
                     Placement::JsonPatch => input.patches.push((m.name.clone(), f.source)),
-                    Placement::CssPatch => {
-                        if let Some(target) = css_target(&f.rel) {
-                            input.css_patches.push((m.name.clone(), target, f.source));
+                    Placement::TextPatch => {
+                        if let Some(target) = text_target(&f.rel) {
+                            input.text_patches.push((m.name.clone(), target, f.source));
                         }
                     }
                     Placement::PrebuiltGroup => {

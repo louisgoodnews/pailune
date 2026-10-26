@@ -61,8 +61,16 @@ impl PyluneApp {
 
     /// Applies a list to the installed mods and remembers what is missing.
     pub fn apply_list(&mut self, list: modlist::ModList) -> Result<StatusLine> {
-        let outcome = apply(&list, &self.registry);
-        self.update_registry(|r| Ok(apply(&list, r).registry))?;
+        // Computed inside the write transaction, from the stored list: the
+        // in-memory copy may lag behind a job that just installed a mod.
+        let mut outcome = None;
+        self.update_registry(|r| {
+            let applied = apply(&list, r);
+            let next = applied.registry.clone();
+            outcome = Some(applied);
+            Ok(next)
+        })?;
+        let outcome = outcome.expect("update ran the closure");
         let missing = outcome.missing.len();
         self.mods.list_import = (missing > 0).then_some(ListImport {
             list,

@@ -64,6 +64,7 @@ mods* is on).
 | Prebuilt archive groups (`NNNN/0.pamt`, `*.paz`) | Registered under a free group number. |
 | Byte-patch JSON mods | Applied to the game file inside the archives; each change is checked against the original bytes. |
 | `*.css.patch`, `*.css.merge` | Applied to the game's stylesheets. |
+| `*.xml.patch` (JSON or `<xml-patch>`), `*.xml.merge` | Applied to the game's XML files; only the changed parts are rewritten. |
 | Readmes, screenshots | Kept for you to read (details panel), not deployed. |
 
 ### Mods with options

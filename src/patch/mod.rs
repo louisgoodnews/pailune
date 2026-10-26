@@ -7,6 +7,7 @@ pub mod apply;
 pub mod css;
 pub mod parse;
 pub mod table;
+pub mod xml;
 
 #[cfg(test)]
 mod machine;

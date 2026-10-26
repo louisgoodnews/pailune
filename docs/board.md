@@ -45,7 +45,7 @@ Move a line between columns when its status changes.
 - [ ] B-07 (step 2) Save viewer, then editing — *L*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs; Windows console window (needs a GUI subsystem build that still serves the CLI); macOS app bundle with `nxm://` URL type — *L*
 - [ ] B-13 (step 2) Script bridge installation — *L*
-- [ ] A-01 (rest) XML/HTML patches, new texture ids, table inserts, field-name JSON — *L*
+- [ ] A-01 (rest) HTML patches, new texture ids, table inserts, field-name JSON (format 3) — *L*
 
 ## Owner
 
@@ -56,6 +56,13 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-01 XML patch/merge files (`src/patch/xml/`): lenient span-keeping reader for the game's
+  XML (BOM, multi-root fragments, comments, `</>` shorthand — surveyed on 1 084 real files),
+  XPath subset plus `#id`/`.class`/`find`+`key`, JSON and `<xml-patch>` operations, identity-based
+  `<xml-merge>`; edits are spliced into the original text (untouched bytes and CRLF kept);
+  applied in load order with CSS patches, results per mod in the Log tab.
+- [x] Fixed a race in mod-list import: the missing-mods list was computed from the in-memory
+  registry, which can lag one poll behind an install; now computed inside the write transaction.
 - [x] A-28 FOMOD installers (`src/fomod/`, `ui/views/installer.rs`): `ModuleConfig.xml` in any
   case and UTF-8/UTF-16; required files, steps with visibility conditions, all group types,
   plugin types incl. dependency types, condition flags, file/folder installs with priorities,

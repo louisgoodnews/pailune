@@ -32,6 +32,7 @@
   backups and how many to keep, days of logs kept.
 
 ### Mod management
+- XML patch and merge files (`*.xml.patch`, `*.xml.merge`) change the game's XML in place.
 - FOMOD installers: the installer's pages appear in the details panel; choices are remembered.
 - Mod lists: export your whole setup and import it elsewhere; missing mods can be downloaded.
 - Move a mod straight to a load-order number from its details panel.

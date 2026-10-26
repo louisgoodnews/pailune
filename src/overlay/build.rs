@@ -126,7 +126,7 @@ pub fn build_from(
     wanted.paths.extend(input.packs.keys().cloned());
     wanted.paths.extend(
         input
-            .css_patches
+            .text_patches
             .iter()
             .map(|(_, target, _)| target.clone()),
     );
@@ -134,10 +134,10 @@ pub fn build_from(
     let _ = fs::remove_dir_all(out_dir);
     let (mut patched, mut patch_notes) =
         super::patches::apply_all(&info.game_dir, &base, &patch_mods, &input.packs);
-    super::patches::apply_css(
+    super::patches::apply_text(
         &info.game_dir,
         &base,
-        &input.css_patches,
+        &input.text_patches,
         &input.packs,
         &mut patched,
         &mut patch_notes,

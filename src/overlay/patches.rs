@@ -192,9 +192,9 @@ pub fn apply_all(
     (files, notes)
 }
 
-/// Applies CSS patches in load order on top of `files` (patched content),
-/// the mod's own shipped stylesheet, or vanilla.
-pub fn apply_css(
+/// Applies CSS and XML patch/merge files in load order on top of `files`
+/// (patched content), the mod's own shipped file, or vanilla.
+pub fn apply_text(
     game_dir: &Path,
     base: &Vanilla,
     patches: &[(String, String, PathBuf)],
@@ -210,12 +210,31 @@ pub fn apply_css(
         };
         let result = current.and_then(|base_bytes| {
             let patch = fs::read_to_string(file).at(file)?;
-            Ok(patch::css::apply(&String::from_utf8_lossy(&base_bytes), &patch).into_bytes())
+            let base_text = String::from_utf8_lossy(&base_bytes);
+            let name = file.file_name().unwrap_or_default().to_string_lossy();
+            match target.ends_with(".xml") {
+                false => Ok((
+                    patch::css::apply(&base_text, &patch),
+                    "CSS patch applied".to_string(),
+                )),
+                true => patch::xml::apply(&base_text, &name, &patch)
+                    .map(|out| {
+                        let missed = match out.missed.len() {
+                            0 => String::new(),
+                            n => format!("; {n} target(s) not found: {}", out.missed.join(", ")),
+                        };
+                        (
+                            out.text,
+                            format!("XML patch applied ({} change(s)){missed}", out.applied),
+                        )
+                    })
+                    .map_err(PyluneError::Invalid),
+            }
         });
         let (ok, message) = match result {
-            Ok(bytes) => {
-                files.insert(target.clone(), bytes);
-                (true, format!("{target}: CSS patch applied"))
+            Ok((text, what)) => {
+                files.insert(target.clone(), text.into_bytes());
+                (true, format!("{target}: {what}"))
             }
             Err(err) => (false, format!("{target}: {err}")),
         };
