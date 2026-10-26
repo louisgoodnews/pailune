@@ -39,8 +39,7 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] B-09 `CONTRIBUTING.md` — *S*
-- [ ] B-11 Issue and PR templates — *S*
+- [ ] B-15 Move a mod to a load-order number — *S*
 - [ ] B-12 Portable mod lists (export/import with variants, Nexus origins, collections) — *S–M*
 - [ ] B-14 Headless core + CLI, then MCP server — *M–L*
 - [ ] B-08 (step 1) `Platform` trait around Linux-specific code — *M*
@@ -57,12 +56,15 @@ Move a line between columns when its status changes.
 
 ## Owner
 
-- [ ] B-10 Choose the contact address for `CODE_OF_CONDUCT.md` enforcement
-- [ ] B-08 Confirm Windows/macOS as goals (the vision lists them as non-goals)
 - [ ] A-21 (rest) Register Pylune with Nexus (AUP) before a public release
 
 ## Done
 
+- [x] B-09/B-10/B-11 `CONTRIBUTING.md` (setup, conventions, checks, commits, game-data rules,
+  license), `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1, contact louisgoodnews95@gmail.com),
+  GitHub issue forms (bug report, feature request; blank issues off) and a PR template.
+- [x] B-08 decision: Windows and macOS are goals — vision updated, open decision D-11 for the
+  per-platform deployment method.
 - [x] B-05 documentation: `docs/README.md` (index), `vision.md`, `architecture.md` (layers,
   modules, threads, flows, testing), `data-model.md` (files, every `config.toml` key, SQLite
   schema, backup formats), `extending.md` (conventions and recipes), `decisions.md` (D-01 … D-10),

@@ -78,3 +78,12 @@ game's first write.
 **Decision.** License the code under either license, at the user's option.
 **Why.** The Rust ecosystem's convention: compatible with almost every downstream use, and the
 Apache option adds an explicit patent grant.
+
+## D-11 Deployment per platform (open)
+
+**Context.** Windows and macOS became goals (2026-10-26). D-01 relies on Unix symlinks; on
+Windows they need Developer Mode or administrator rights.
+**Direction.** Keep one journaled deployment model with a per-platform method: symlinks on Linux
+and macOS; on Windows symlinks when permitted, otherwise hard links (same volume) or verified
+copies. All platform specifics sit behind a `Platform` trait (B-08 step 1). To be finalised with
+the Windows port.

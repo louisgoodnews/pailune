@@ -174,6 +174,7 @@ Requested after the A-items were largely done. Sizes: **S** small, **M** medium,
 | B-11 | S | Issue templates | Bug report and feature request forms (GitHub's `.github/ISSUE_TEMPLATE/` folder; a single root `ISSUE_TEMPLATE.md` is the legacy form) plus a PR template. |
 | B-12 | S–M | Mod list backup, export and import | A portable mod list (order, enabled flags, chosen options, Nexus origins, collection membership) that can be exported, shared and imported to reinstall the same setup elsewhere. |
 | B-13 | Research | Script bridge | Find out whether scripts can be injected into the running game, and how. |
+| B-15 | S | Move to position | Move a mod to a given load-order number (details panel field and a list action), instead of repeated up/down. |
 | B-14 | M–L | MCP server for agentic use | A command-line mode that exposes Pylune's actions as Model Context Protocol tools, so agents can manage mods without the window. |
 
 ### B-07 — Save files: what we know (read-only look, build 2.3.2)
@@ -207,8 +208,8 @@ Requested after the A-items were largely done. Sizes: **S** small, **M** medium,
   in the prefix, `nxm://` registration via `.desktop`/`xdg-mime` → per-platform modules behind
   one trait (`Platform`: locate game, saves dir, launch, register URL handler, open path).
 - Packaging: AppImage only → add MSI/zip for Windows.
-- **Conflicts with `docs/vision.md`**, which lists Windows/macOS as a non-goal; the owner's
-  request supersedes it — the vision and decision D-01 (symlinks) need revisiting.
+- **Decided 2026-10-26:** Windows and macOS are goals. `docs/vision.md` is updated; decision
+  D-01 (symlinks) gets a per-platform deployment strategy (D-11).
 - First step (useful even on Linux only): isolate platform code behind the trait, so the core
   stays testable and Linux behaviour is unchanged.
 

@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an idea or an improvement for Pylune.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation and what is hard about it today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: How should it work from your point of view?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and the board (docs/board.md).
+          required: true
+        - label: I agree to follow the Code of Conduct.
+          required: true

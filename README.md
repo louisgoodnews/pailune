@@ -7,6 +7,8 @@ Native Linux mod manager for **Crimson Desert** (Steam / Proton), written in Rus
 [extending Pylune](docs/extending.md) · [decisions](docs/decisions.md) ·
 [UX principles](docs/ux-principles.md) · [all documents](docs/README.md)
 
+**Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## First start
 
 Pylune finds Crimson Desert through Steam's library configuration. If that fails, a setup

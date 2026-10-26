@@ -23,7 +23,8 @@ the large reworks that build on them. Day-to-day status lives in [board.md](boar
 ## Phase 11 — Project hygiene (S)
 
 - B-09 `CONTRIBUTING.md`.
-- B-10 `CODE_OF_CONDUCT.md` (needs a contact address from the owner).
+- B-10 `CODE_OF_CONDUCT.md`.
+- B-15 Move a mod to a load-order number.
 - B-11 Issue and pull request templates.
 
 ## Phase 12 — Medium features (M)
@@ -43,7 +44,7 @@ the large reworks that build on them. Day-to-day status lives in [board.md](boar
 - A-01 rest: XML/HTML patches, new texture ids, table inserts, field-name JSON (format 3).
 - A-28 FOMOD-style installer scripts.
 - B-07 (step 2) Save viewer, then editing once re-encoding is proven byte-identical.
-- B-08 (step 2) Windows support (deployment without symlinks, packaging); revisit the vision.
+- B-08 (step 2) Windows and macOS support (deployment strategy per platform, packaging).
 - B-13 (step 2) Bridge installation, if the research says it is viable.
 
 ## Owner tasks
