@@ -131,9 +131,47 @@ fn backup_section(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
     ])
 }
 
+/// ASI plugins in the game folder and who installed them (D-12).
+fn plugin_section(ui: &mut egui::Ui, app: &PyluneApp) {
+    ui.heading("ASI plugins");
+    if app.plugins.is_empty() {
+        ui.label(RichText::new("No .asi plugins in bin64/, scripts/ or plugins/.").color(muted()));
+        return;
+    }
+    egui::Grid::new("asi_plugins")
+        .striped(true)
+        .num_columns(3)
+        .show(ui, |ui| {
+            app.plugins.iter().for_each(|p| {
+                ui.label(&p.name);
+                match &p.owner {
+                    Some(owner) => drop(ui.label(format!("from {owner}"))),
+                    None => {
+                        drop(ui.label(RichText::new("not installed by Pylune").color(warning())))
+                    }
+                }
+                ui.label(
+                    RichText::new(if p.ini.is_some() {
+                        "has settings (.ini)"
+                    } else {
+                        ""
+                    })
+                    .color(muted()),
+                );
+                ui.end_row();
+            });
+        });
+    ui.label(
+        RichText::new("Plugins hook the game's code and often break after game updates; check their mod pages then.")
+            .color(muted()),
+    );
+}
+
 /// Renders the diagnostics page: archives, Proton, metadata backup, paths.
 pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
     proton_section(ui, app);
+    ui.separator();
+    plugin_section(ui, app);
     ui.separator();
     let actions = backup_section(ui, app);
     ui.separator();

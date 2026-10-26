@@ -111,6 +111,8 @@ pub struct PyluneApp {
     pub backups: Vec<crate::app_backup::BackupInfo>,
     /// Backups of the game's save files, newest first.
     pub save_backups: Vec<crate::save_backup::SaveBackup>,
+    /// ASI plugins in the game folder.
+    pub plugins: Vec<crate::mod_engine::plugins::Plugin>,
     /// The game's save slots (summaries).
     pub save_slots: Vec<crate::savefile::slots::Slot>,
     /// An open save viewer: slot name, tree, search text.

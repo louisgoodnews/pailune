@@ -43,7 +43,6 @@ Move a line between columns when its status changes.
 ## Backlog (large)
 
 - [ ] B-07 (step 3) Save editing: body writer, fresh nonce + HMAC (done), per-version checks — *L*
-- [ ] B-13 ASI plugin management per D-12: plugin list with status, INI settings, update warnings — *M*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
 - [ ] A-01 (rest) table inserts, field-name JSON (format 3) — *L*, waits on the owner decision below
 
@@ -57,6 +56,11 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-13/D-12 ASI plugin management (`mod_engine/plugins.rs`): plugins in `bin64/`,
+  `scripts/`, `plugins/` with their owning mod (from the link journal, so copies count too) on
+  the Diagnostics page; `.ini` editor in the details panel (writes the staged file, which the
+  deployed link shows; refuses paths outside staging); game-update banner warns that plugins may
+  break.
 - [x] B-07 own save decoder (`src/savefile/`): SAVE container (key, ChaCha20, HMAC-SHA256, LZ4),
   self-describing body (schema, table of contents, exact object walk for every field kind),
   readable values and trees. Verified on all 10 real saves: HMACs valid, byte-identical

@@ -9,6 +9,7 @@ mod jobs;
 mod json_patches;
 mod nexus_http;
 mod overlay;
+mod plugins;
 mod screens;
 mod staging;
 mod storage;

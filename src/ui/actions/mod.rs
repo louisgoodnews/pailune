@@ -76,6 +76,11 @@ impl PyluneApp {
             db::mods::pending(&self.conn, &self.registry, self.deployed_links).unwrap_or(true);
         self.backup = snapshot::status(&self.info, &manifest);
         self.archives = crate::paz::status::inspect(&self.info.game_dir);
+        self.plugins = crate::mod_engine::plugins::scan(
+            &self.info.bin64_dir,
+            &manifest.links,
+            &self.paths.staging,
+        );
     }
 
     /// Opens (`Some`) or closes (`None`) a confirmation dialog.

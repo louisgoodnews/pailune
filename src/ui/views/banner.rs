@@ -59,7 +59,8 @@ fn updated(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             );
             ui.label(
                 "Mods built for the old version may break the game, and the old .bak files must \
-                 not be restored. Recover in three steps, then apply your mods again:",
+                 not be restored. Script plugins (.asi) often break after updates — check their \
+                 mod pages for new versions. Recover in three steps, then apply your mods again:",
             );
             ui.horizontal_wrapped(|ui| {
                 let unlinked = app.deployed_links == 0;

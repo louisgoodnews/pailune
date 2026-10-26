@@ -95,6 +95,11 @@ one is installed. *Settings → Diagnostics* shows the launch options Proton nee
 `WINEDLLOVERRIDES="version=n,b" %command%`); put them into *Default launch options* or a profile.
 Wrapper commands like `gamemoderun %command%` work too.
 
+*Settings → Diagnostics → ASI plugins* lists every plugin in the game folder and which mod
+installed it (or that it came from elsewhere). Plugins that ship settings (`.ini`) can be edited
+in the mod's details panel under **Plugin settings**. Plugins hook the game's code, so they often
+break after a game update — check their mod pages for new versions then.
+
 ## Profiles
 
 A profile remembers which mods are enabled, their order, and its own launch options. *Profiles → type a name → Save current as*. *Load* switches to a profile (then press

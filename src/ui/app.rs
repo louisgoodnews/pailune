@@ -108,6 +108,7 @@ impl PyluneApp {
             backups: Vec::new(),
             save_backups: Vec::new(),
             save_slots: Vec::new(),
+            plugins: Vec::new(),
             save_view: None,
             pool,
             paths,

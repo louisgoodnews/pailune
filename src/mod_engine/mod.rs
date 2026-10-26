@@ -9,6 +9,7 @@ pub mod install;
 pub mod model;
 pub mod placement;
 pub mod plan;
+pub mod plugins;
 pub mod registry;
 pub mod trash;
 pub mod variants;

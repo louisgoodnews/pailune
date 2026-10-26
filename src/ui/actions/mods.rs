@@ -55,6 +55,32 @@ impl PyluneApp {
                 ),
             )),
             ModAction::ImportPaths(paths) => Ok(Some(self.import(paths))),
+            ModAction::SaveSettingsFile(path, text) => {
+                // Only files of staged mods; deployed links point at them.
+                let escapes = path
+                    .components()
+                    .any(|c| c == std::path::Component::ParentDir);
+                if escapes || !path.starts_with(&self.paths.staging) {
+                    return Err(PyluneError::Invalid(
+                        "not a file of an installed mod".into(),
+                    ));
+                }
+                std::fs::write(&path, text)
+                    .map_err(|e| PyluneError::Invalid(format!("{}: {e}", path.display())))?;
+                let name = path
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .into_owned();
+                let when = match cfg!(windows) {
+                    true => "press Apply to copy it into the game",
+                    false => "it applies the next time the game starts",
+                };
+                Ok(Some(StatusLine::new(
+                    Level::Success,
+                    format!("Saved {name} — {when}"),
+                )))
+            }
             ModAction::RestoreDeleted(id) => {
                 self.mods.undo = None;
                 self.submit(JobKind::RestoreDeleted(id));
