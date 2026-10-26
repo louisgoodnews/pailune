@@ -18,6 +18,8 @@ cargo test shipped_table_layouts -- --ignored     # verify in Pylune itself
 * `mdl.py` — enumerates every layout that decodes all sampled records exactly, merges
   equivalent states, picks the minimum-description-length layout and reports per-field
   margins; a field's offset is *proven* when all exact layouts agree on it.
+* `engine.py` — recursive version for nested classes (lists of structures, inline structures);
+  solves element layouts where the parent search reaches the field.
 * `export.py` — writes layouts that decode **every** record exactly, with evidence
   thresholds (≥ 10 records, no opaque blocks) and name certainty (unique shape in its class).
 

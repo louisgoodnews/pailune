@@ -44,9 +44,9 @@ Move a line between columns when its status changes.
 
 - [ ] B-07 (step 3) Save editing: body writer, fresh nonce + HMAC (done), per-version checks — *L*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
-- [ ] A-01 format 3, phase 2: type vocabulary for nested tables (structures, optional blocks,
-  string forms), then iteminfo, dropsetinfo, skill, storeinfo, characterinfo, buffinfo one by one;
-  table inserts afterwards — *L*
+- [ ] A-01 format 3, phase 2: names for large tables. Shapes are derivable (ItemInfo prefix done),
+  names are not from data alone (message lists are incomplete). Next: in-game confirmation of the
+  most-modded fields with the owner (stack sizes, prices, drop rates, cooldowns) — *L*
 
 ## Owner
 
@@ -54,6 +54,9 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-01 format 3: raw `old`/`new` intents on every data table (only record boundaries needed),
+  checked on the real item table; recursive inference engine with nested classes
+  (`tools/table-layouts/engine.py`).
 - [x] A-01 format 3, phase 1 (`src/tables/`, `data/table-layouts.json`, `tools/table-layouts/`):
   field names from the deserializer's messages in the executable; layouts inferred by exact fit +
   minimum description length with per-field proof; 21 tables / 38 editable fields, each verified

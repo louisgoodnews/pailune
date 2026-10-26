@@ -89,8 +89,10 @@ fn same_name(a: &str, b: &str) -> bool {
 }
 
 /// Turns one intent into a change, or explains why it cannot be applied.
+/// Raw replaces need only record boundaries; `set` needs a verified
+/// layout (`layout` explains why there is none).
 fn change(
-    table: &Table,
+    layout: &std::result::Result<&Table, String>,
     body: &[u8],
     record: &super::Record,
     i: &Intent,
@@ -128,6 +130,7 @@ fn change(
     if i.op != "set" {
         return Err(format!("operation \"{}\" is not supported yet", i.op));
     }
+    let table = layout.as_ref().map_err(String::clone)?;
     let name = i.field.as_deref().ok_or("an intent without a field")?;
     let index = table
         .fields
@@ -158,17 +161,14 @@ pub fn resolve(
     body: &[u8],
     intents: &[Intent],
 ) -> (Vec<Change>, Vec<String>) {
-    let Some(table) = super::table(table_file) else {
-        return (
-            Vec::new(),
-            vec![format!(
-                "{table_file}: no verified layout for this table yet"
-            )],
-        );
+    let layout = match super::table(table_file) {
+        None => Err(format!(
+            "{table_file}: no verified layout for this table yet (raw old/new changes work)"
+        )),
+        Some(table) => verify(table, header, body)
+            .map(|()| table)
+            .map_err(|e| e.to_string()),
     };
-    if let Err(err) = verify(table, header, body) {
-        return (Vec::new(), vec![err.to_string()]);
-    }
     let all = match records(header, body) {
         Ok(all) => all,
         Err(err) => return (Vec::new(), vec![err.to_string()]),
@@ -181,7 +181,7 @@ pub fn resolve(
                     && i.key.is_none_or(|k| r.key == k)
                     && (i.entry.is_some() || i.key.is_some())
             });
-            match found.map(|r| change(table, body, r, i)) {
+            match found.map(|r| change(&layout, body, r, i)) {
                 Some(Ok(c)) => ok.push(c),
                 Some(Err(why)) => failed.push(why),
                 None => failed.push(format!("record {:?} / key {:?} not found", i.entry, i.key)),

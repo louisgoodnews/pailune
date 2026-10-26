@@ -89,6 +89,36 @@ in the executable as well (`ItemIconData`, `DropDefaultData`, `EnchantData`, `Do
 `ItemInfo_SharpnessData`, …), so nested layouts can be derived the same way once the order rules
 are understood.
 
+### Phase 2 results so far
+
+* With a recursive engine (`tools/table-layouts/engine.py`: nested classes from the executable's
+  names, element layouts solved where the parent search reaches the field), the `ItemInfo` prefix
+  is established on 6 753 of 6 816 records: `_isBlocked u8, _maxStackCount u64, _itemName loc,
+  _brokenItemPrefixString loc, _useMapIconAlert u8, _itemType u8, _materialKey u8,
+  _materialMatchInfo u32, _consumableTypeList list<u32>, _itemUseInfoList list<u32>,
+  _itemIconList list<ItemIconData{hash, hash, u8, list<u32>, u8}>, _mapIconPath hash`.
+* Then exactly 10 bytes (u8 0/1, u8 enum, hash, the same hash again) precede `_itemDesc`. No
+  field with a message fits there, so **the message lists are incomplete**: some fields are read
+  by helpers that report no per-field error.
+* The empty-string hash `0xEAC5E173` equals lookup3 with seed `0x0C182284`, but neither that nor
+  the archive seed reproduces other hashes, so names cannot be confirmed through hashed values.
+* Consequence: shapes of the large tables can be proven from data, **names cannot** — not without
+  analysing the deserializer's code, which is in protected sections and stays off-limits.
+
+### What works regardless
+
+Raw `old`/`new` intents need only record boundaries, which every table index gives, so they work
+on **all 128 tables** (checked on the real `iteminfo`: `Pyeonjeon_Arrow` stack 100 → 999). `set` by
+field name stays limited to verified layouts.
+
+### Ways forward for names in large tables
+
+1. **In-game confirmation** of the most-modded fields (stack sizes, prices, drop rates,
+   cooldowns): change one candidate field in a test mod, observe the effect, record the name with
+   its evidence. Exact, but one field at a time and needs the owner's play testing.
+2. **Semantic evidence** from values (e.g. arrows stack to 100), marked as inferred and never
+   editable by name without (1).
+
 ## Order of work
 
 Fixed-size tables first (done: phase 1), then the tables mods target most — `iteminfo`,

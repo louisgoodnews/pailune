@@ -184,3 +184,48 @@ fn export_tables_for_layout_research() {
             fs::write(std::path::Path::new(&out).join(name), data).unwrap();
         });
 }
+
+/// A raw format-3 change on a table without a layout (`iteminfo`), in memory.
+#[test]
+#[ignore = "reads the local game installation"]
+fn raw_field_change_on_the_real_item_table() {
+    let dir = game_dir().join("0008");
+    let index = pamt::parse(&fs::read(dir.join("0.pamt")).unwrap()).unwrap();
+    let read = |p: &str| extract::extract(&dir, p, &index.files[p]).unwrap();
+    let body = read("gamedata/binarystaticinfo__/bin/iteminfo.staticinfobody");
+    let head = read("gamedata/binarystaticinfo__/bin/iteminfo.staticinfoheader");
+    let intent = crate::tables::format3::Intent {
+        entry: Some("Pyeonjeon_Arrow".into()),
+        key: None,
+        field: None,
+        op: "set".into(),
+        old: Some("006400000000000000".into()),
+        new: serde_json::json!("00e703000000000000"),
+    };
+    let (changes, failed) =
+        crate::tables::format3::resolve("iteminfo.staticinfobody", &head, &body, &[intent]);
+    assert!(failed.is_empty(), "{failed:?}");
+    let mut patched = body.clone();
+    let patch = crate::patch::FilePatch {
+        game_file: "iteminfo".into(),
+        signature: None,
+        changes,
+        fields: Vec::new(),
+    };
+    let report = crate::patch::apply::apply(&mut patched, &patch, Some(&head), true, false);
+    assert!(
+        report.failed.is_empty() && report.applied == 1,
+        "{report:?}"
+    );
+    let arrow = crate::tables::records(&head, &patched)
+        .unwrap()
+        .into_iter()
+        .find(|r| r.name == "Pyeonjeon_Arrow")
+        .unwrap();
+    assert_eq!(
+        &patched[arrow.payload + 1..arrow.payload + 3],
+        &[0xe7, 0x03],
+        "stack size 999"
+    );
+    assert_eq!(patched.len(), body.len());
+}
