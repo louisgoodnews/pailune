@@ -212,24 +212,7 @@ pub fn apply_text(
             let patch = fs::read_to_string(file).at(file)?;
             let base_text = String::from_utf8_lossy(&base_bytes);
             let name = file.file_name().unwrap_or_default().to_string_lossy();
-            match target.ends_with(".xml") {
-                false => Ok((
-                    patch::css::apply(&base_text, &patch),
-                    "CSS patch applied".to_string(),
-                )),
-                true => patch::xml::apply(&base_text, &name, &patch)
-                    .map(|out| {
-                        let missed = match out.missed.len() {
-                            0 => String::new(),
-                            n => format!("; {n} target(s) not found: {}", out.missed.join(", ")),
-                        };
-                        (
-                            out.text,
-                            format!("XML patch applied ({} change(s)){missed}", out.applied),
-                        )
-                    })
-                    .map_err(PyluneError::Invalid),
-            }
+            patch::text::apply(target, &name, &base_text, &patch)
         });
         let (ok, message) = match result {
             Ok((text, what)) => {

@@ -16,6 +16,10 @@ pub struct Edit {
 pub enum Action {
     Replace(String),
     Append(String),
+    /// Insert as the first child.
+    Prepend(String),
+    /// Replace the content between the tags.
+    Inner(String),
     Before(String),
     After(String),
     Remove,
@@ -89,6 +93,18 @@ pub fn edit(text: &str, element: &Element, action: &Action) -> Edit {
                 text: String::new(),
             }
         }
+        Action::Prepend(xml) => match element.close_start {
+            Some(_) => at(element.tag_end, xml.clone()),
+            None => edit(text, element, &Action::Append(xml.clone())),
+        },
+        Action::Inner(xml) => match element.close_start {
+            Some(close) => Edit {
+                start: element.tag_end,
+                end: close,
+                text: xml.clone(),
+            },
+            None => edit(text, element, &Action::Append(xml.clone())),
+        },
         Action::Before(xml) => at(element.start, format!("{xml}{nl}{pad}")),
         Action::After(xml) => at(element.end, format!("{nl}{pad}{xml}")),
         Action::Append(xml) => match element.close_start {

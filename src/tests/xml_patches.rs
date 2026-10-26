@@ -1,4 +1,4 @@
-//! XML patch and merge files end to end: applied in load order on top of the
+//! XML patch/merge and HTML patch files end to end: applied in load order on top of the
 //! game's file, packed into the overlay, reverted by Unlink.
 
 use super::overlay::{game_lookup_bytes, write_group};
@@ -18,7 +18,12 @@ fn xml_patches_and_merges_apply_in_load_order() {
     let game = fx.config.game.dir.clone();
     let xml = "ui/xml/texture/cd_challenges_00.xml";
     let vanilla = "\u{feff}<Texture Name=\"gauge\" Filename=\"UI/a.dds\" GetRect=\"73,105,14,18\"/>\r\n<Texture Name=\"icon\" Filename=\"UI/a.dds\" GetRect=\"1,1,70,70\"/>\r\n";
-    let crc = write_group(&game.join("0012"), &[(xml, vanilla, 0x32)]);
+    let html = "ui/html/title.html";
+    let page = "<div id=\"title\" class=\"big\"><img src=\"logo.png\"><span>Play</span></div>";
+    let crc = write_group(
+        &game.join("0012"),
+        &[(xml, vanilla, 0x32), (html, page, 0x32)],
+    );
     let table = Papgt {
         unknown0: 1,
         unknown1: 2,
@@ -41,6 +46,11 @@ fn xml_patches_and_merges_apply_in_load_order() {
         "<xml-merge><Texture Name=\"gauge\" Filename=\"UI/b.dds\"/><Texture Name=\"new\" Filename=\"UI/n.dds\"/></xml-merge>",
     );
 
+    write(
+        &fx.sources
+            .join("A Wide/files/0012/ui/html/title.html.patch"),
+        "<html-patch><set at=\"#title\" class=\"+wide -big\"/><inner at=\"#title span\">Start</inner></html-patch>",
+    );
     let root = fx.staging.parent().unwrap().to_path_buf();
     let paths = DataPaths::under(&root, &root);
     paths.create_dirs().unwrap();
@@ -65,6 +75,11 @@ fn xml_patches_and_merges_apply_in_load_order() {
     assert_eq!(
         out,
         "\u{feff}<Texture Name=\"gauge\" Filename=\"UI/b.dds\" GetRect=\"73,105,28,18\"/>\r\n<Texture Name=\"icon\" Filename=\"UI/a.dds\" GetRect=\"1,1,70,70\"/>\r\n<Texture Name=\"new\" Filename=\"UI/n.dds\"/>\r\n"
+    );
+    let page_out = String::from_utf8(game_lookup_bytes(&game, html).unwrap()).unwrap();
+    assert_eq!(
+        page_out,
+        "<div id=\"title\" class=\"wide\"><img src=\"logo.png\"><span>Start</span></div>"
     );
     let events = db::events::recent(&conn, 50, Some("A Wide")).unwrap();
     assert!(

@@ -22,7 +22,7 @@ pub enum Placement {
     PrebuiltGroup,
     /// A byte-patch JSON mod applied to game data inside the archives.
     JsonPatch,
-    /// A `*.css`/`*.xml` patch or merge file applied to an archived game file.
+    /// A CSS/XML patch or merge file, or an HTML patch, applied to an archived game file.
     TextPatch,
     /// Not deployable yet.
     NeedsPaz(PazFormat),
@@ -84,10 +84,13 @@ pub fn virtual_path(rel: &Path) -> Option<String> {
     Some(parts[start..].join("/")).filter(|p| !p.is_empty())
 }
 
-/// The game file a `*.css.patch`, `*.css.merge`, `*.xml.patch` or
-/// `*.xml.merge` file changes.
+/// The game file a `*.css.patch`, `*.css.merge`, `*.xml.patch`,
+/// `*.xml.merge` or `*.html.patch` file changes.
 pub fn text_target(rel: &Path) -> Option<String> {
     let vpath = virtual_path(rel)?;
+    if let Some(t) = vpath.strip_suffix(".html.patch") {
+        return Some(format!("{t}.html"));
+    }
     [".css", ".xml"].iter().find_map(|ext| {
         [".patch", ".merge"].iter().find_map(|kind| {
             vpath

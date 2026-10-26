@@ -111,8 +111,23 @@ fn close(stack: &mut Vec<Element>, roots: &mut Vec<Element>, close_start: usize,
     }
 }
 
+/// HTML elements that never have a close tag.
+const VOID: [&str; 14] = [
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source",
+    "track", "wbr",
+];
+
 /// Reads the top-level elements of `text`.
 pub fn parse(text: &str) -> Vec<Element> {
+    parse_with(text, false)
+}
+
+/// Like [`parse`], treating HTML void elements as self-closing.
+pub fn parse_html(text: &str) -> Vec<Element> {
+    parse_with(text, true)
+}
+
+fn parse_with(text: &str, html: bool) -> Vec<Element> {
     let (mut roots, mut stack): (Vec<Element>, Vec<Element>) = (Vec::new(), Vec::new());
     let mut pos = 0;
     while let Some(i) = text[pos..].find('<').map(|i| pos + i) {
@@ -148,9 +163,11 @@ pub fn parse(text: &str) -> Vec<Element> {
             continue;
         }
         let body = &text[i + 1..gt];
-        let self_closing = body.ends_with('/');
+        let explicit = body.ends_with('/');
         let body = body.trim_end_matches('/');
         let name_len = body.find(|c: char| c.is_whitespace()).unwrap_or(body.len());
+        let void = html && VOID.contains(&body[..name_len].to_lowercase().as_str());
+        let self_closing = explicit || void;
         let element = Element {
             name: body[..name_len].to_string(),
             attrs: attributes(&body[name_len..], i + 1 + name_len),

@@ -30,7 +30,7 @@ Move a line between columns when its status changes.
     or unique file name; patched files packed with vanilla flags; results journaled per
     mod. Dry run on the real item table changes exactly the targeted byte.
   - not yet: field-name JSON (format 3, needs per-table schemas — reported as
-    unsupported), inserts into tables, HTML patch files.
+    unsupported) and inserts into tables.
   - done: CSS patch/merge files (`*.css.patch`, `*.css.merge`: @merge/@replace/@add/@remove),
     applied in load order on top of shipped or vanilla stylesheets; untouched rules stay
     byte-identical (checked on the real title stylesheet).
@@ -45,10 +45,14 @@ Move a line between columns when its status changes.
 - [ ] B-07 (step 2) Save viewer, then editing — *L*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs; Windows console window (needs a GUI subsystem build that still serves the CLI); macOS app bundle with `nxm://` URL type — *L*
 - [ ] B-13 (step 2) Script bridge installation — *L*
-- [ ] A-01 (rest) HTML patches, table inserts, field-name JSON (format 3) — *L*
+- [ ] A-01 (rest) table inserts, field-name JSON (format 3) — *L*, waits on the owner decision below
 
 ## Owner
 
+- [ ] A-01 Format 3 / table inserts need per-table field layouts. The only sources are community
+  projects (CDUMM `field_schema/*.json`, `pabgb_complete_schema.json`, licensed MPL-2.0). Choose:
+  ship those data files unmodified under MPL-2.0 next to Pylune's MIT/Apache code (allowed:
+  MPL is file-level), or derive our own layouts from the game (slow, table by table).
 - [ ] B-07 Choose how saves are decoded (`docs/save-format.md` § Options; recommended: read-only
   inspector on `crimson-rs`, MIT)
 - [ ] B-13 Accept or reject D-12 (no script runtime; better ASI plugin management instead)
@@ -56,6 +60,10 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-01 HTML patches (`src/patch/html/`): `<html-patch>` operations (`set` incl.
+  `class="+a -b"`, `remove`, `replace`, `inner`, `append`, `prepend`, `before`, `after`) and
+  comment directives (`@replace … @end`, `@set-attr`, `@add-class`) with CSS-lite selectors;
+  void elements handled; spliced into the original text like XML.
 - [x] A-01 new textures: a `.dds` the game does not have gets its own PATHC entry (default format
   class) and is packed like a replacement; covered by the overlay test. With XML patches, mods can
   reference new textures from the game's UI XML.

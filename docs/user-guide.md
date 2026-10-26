@@ -65,6 +65,7 @@ mods* is on).
 | Byte-patch JSON mods | Applied to the game file inside the archives; each change is checked against the original bytes. |
 | `*.css.patch`, `*.css.merge` | Applied to the game's stylesheets. |
 | `*.xml.patch` (JSON or `<xml-patch>`), `*.xml.merge` | Applied to the game's XML files; only the changed parts are rewritten. |
+| `*.html.patch` (`<html-patch>` or comment directives) | Applied to the game's HTML files with CSS-style selectors. |
 | Readmes, screenshots | Kept for you to read (details panel), not deployed. |
 
 ### Mods with options

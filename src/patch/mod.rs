@@ -5,8 +5,10 @@
 
 pub mod apply;
 pub mod css;
+pub mod html;
 pub mod parse;
 pub mod table;
+pub mod text;
 pub mod xml;
 
 #[cfg(test)]
