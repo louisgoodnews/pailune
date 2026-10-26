@@ -29,6 +29,7 @@ a plan is computed, then executed), which keeps them testable without a window o
 | `config/` | `config.toml` model (`Config` and the `prefs` sections), atomic save, XDG paths (`DataPaths`), Steam auto-detection. |
 | `db/` | SQLite: versioned migrations, mods (registry + revisions), links journal, profiles, events, collections, key/value. |
 | `mod_engine/` | Staging: import (zip/7z/rar/loose), classification, placement rules, link plans, registry merge/order, variants, conflicts, trash, mod info/readmes. |
+| `tables/` | Derived layouts of the game's data tables (`data/table-layouts.json`), exact record decoder and verification, format-3 resolution into byte changes. |
 | `fomod/` | FOMOD installers: XML model and parser, resolution of choices into files (used by `mod_engine::plan`). |
 | `symlink/` | Executes link plans: `.bak` displacement, write-ahead journal, exact undeploy. |
 | `paz/` | Read/write of the game's archive formats (PAPGT, PAMT, PAZ, PATHC, PAVER), ChaCha20, LZ4, DDS. See [paz-format.md](paz-format.md). |

@@ -1,7 +1,7 @@
 //! FOMOD installers (board item A-28): `fomod/ModuleConfig.xml`, the wizard
 //! format most Nexus Mods installers use. A FOMOD mod stays in staging as
 //! extracted; the user's choices are stored like a variant
-//! ([`Selection::encode`]) and [`resolve`] maps the chosen files onto their
+//! ([`Selection::encode`]) and [`resolve()`] maps the chosen files onto their
 //! destinations whenever the mod is planned, analysed or deployed.
 //!
 //! Supported: required files, install steps with visibility conditions,

@@ -1,0 +1,210 @@
+//! Field-name JSON mods ("format 3", `.field.json`): `set` by field name and
+//! raw `old`/`new` within a record, resolved against the game's own table
+//! and Pylune's derived layouts into ordinary verified byte changes.
+//!
+//! Only fields whose offset is proven and whose name is certain may be set;
+//! other operations (`clone_record`, `new_record`, `delete_record`,
+//! `array_append`, `scale`) are refused with a message.
+
+use super::{Table, records, spans, verify};
+use crate::error::{PyluneError, Result};
+use crate::patch::{Anchor, Change, Edit, FilePatch};
+use serde_json::Value;
+
+/// One intent of a format-3 file.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Intent {
+    /// Record name.
+    pub entry: Option<String>,
+    /// Record key.
+    pub key: Option<u64>,
+    pub field: Option<String>,
+    pub op: String,
+    pub new: Value,
+    /// Raw replace: bytes to find in the record.
+    pub old: Option<String>,
+}
+
+/// The intents for one table file.
+#[derive(Debug, Clone, PartialEq)]
+pub struct FieldPatch {
+    pub target: String,
+    pub intents: Vec<Intent>,
+}
+
+/// Whether a parsed JSON document is a format-3 mod.
+pub fn is_format3(root: &Value) -> bool {
+    root.get("format").and_then(Value::as_u64) == Some(3)
+        || root.get("intents").is_some()
+        || root.get("targets").is_some()
+}
+
+fn intent(v: &Value) -> Intent {
+    let text = |k: &str| v.get(k).and_then(Value::as_str).map(str::to_string);
+    Intent {
+        entry: text("entry"),
+        key: v.get("key").and_then(|k| {
+            k.as_u64()
+                .or_else(|| k.as_str().and_then(|s| s.parse().ok()))
+        }),
+        field: text("field"),
+        op: text("op").unwrap_or_else(|| "set".into()),
+        new: v.get("new").cloned().unwrap_or(Value::Null),
+        old: text("old"),
+    }
+}
+
+/// Reads the targets of a format-3 document (singular or plural form).
+pub fn parse(root: &Value) -> Result<Vec<FieldPatch>> {
+    let one = |file: Option<&Value>, intents: Option<&Value>| -> Result<FieldPatch> {
+        Ok(FieldPatch {
+            target: file
+                .and_then(Value::as_str)
+                .ok_or_else(|| PyluneError::Invalid("format-3 target without a file".into()))?
+                .to_string(),
+            intents: intents
+                .and_then(Value::as_array)
+                .map(|a| a.iter().map(intent).collect())
+                .unwrap_or_default(),
+        })
+    };
+    match root.get("targets").and_then(Value::as_array) {
+        Some(list) => list
+            .iter()
+            .map(|t| one(t.get("file").or(t.get("target")), t.get("intents")))
+            .collect(),
+        None => Ok(vec![one(root.get("target"), root.get("intents"))?]),
+    }
+}
+
+/// `_maxStackCount`, `maxStackCount` and `max_stack_count` compare equal.
+fn same_name(a: &str, b: &str) -> bool {
+    let norm = |s: &str| {
+        s.chars()
+            .filter(|c| *c != '_')
+            .flat_map(char::to_lowercase)
+            .collect::<String>()
+    };
+    norm(a) == norm(b)
+}
+
+/// Turns one intent into a change, or explains why it cannot be applied.
+fn change(
+    table: &Table,
+    body: &[u8],
+    record: &super::Record,
+    i: &Intent,
+) -> std::result::Result<Change, String> {
+    let payload = &body[record.payload..record.end];
+    let at = |offset: usize, original: Vec<u8>, patched: Vec<u8>, label: String| Change {
+        anchor: Anchor::Offset((record.payload + offset) as u64),
+        edit: Edit::Replace {
+            original: Some(original),
+            patched,
+        },
+        label,
+    };
+    if let (Some(old), Value::String(new)) = (&i.old, &i.new) {
+        let (old, new) = (
+            crate::patch::parse::hex_bytes(old).map_err(|e| e.to_string())?,
+            crate::patch::parse::hex_bytes(new).map_err(|e| e.to_string())?,
+        );
+        let hits: Vec<usize> = payload
+            .windows(old.len().max(1))
+            .enumerate()
+            .filter(|(_, w)| *w == old.as_slice())
+            .map(|(p, _)| p)
+            .collect();
+        return match (hits.as_slice(), old.len() == new.len()) {
+            ([one], true) => Ok(at(*one, old, new, format!("{}: raw replace", record.name))),
+            (_, false) => Err("raw replace must keep the length".into()),
+            ([], _) => Err(format!("{}: old bytes not found", record.name)),
+            _ => Err(format!(
+                "{}: old bytes are not unique in the record",
+                record.name
+            )),
+        };
+    }
+    if i.op != "set" {
+        return Err(format!("operation \"{}\" is not supported yet", i.op));
+    }
+    let name = i.field.as_deref().ok_or("an intent without a field")?;
+    let index = table
+        .fields
+        .iter()
+        .position(|f| same_name(&f.name, name))
+        .ok_or_else(|| format!("{name}: no such field in {}", table.class))?;
+    let field = &table.fields[index];
+    if !field.editable() {
+        return Err(format!(
+            "{}: the layout of this field is not proven yet, so it is not changed",
+            field.name
+        ));
+    }
+    let (start, end) = spans(table, payload).ok_or("record does not match the layout")?[index];
+    let bytes = super::value::encode(field, end - start, &i.new)?;
+    Ok(at(
+        start,
+        payload[start..end].to_vec(),
+        bytes,
+        format!("{}.{}", record.name, field.name),
+    ))
+}
+
+/// Resolves intents for a table into changes; failures are explained.
+pub fn resolve(
+    table_file: &str,
+    header: &[u8],
+    body: &[u8],
+    intents: &[Intent],
+) -> (Vec<Change>, Vec<String>) {
+    let Some(table) = super::table(table_file) else {
+        return (
+            Vec::new(),
+            vec![format!(
+                "{table_file}: no verified layout for this table yet"
+            )],
+        );
+    };
+    if let Err(err) = verify(table, header, body) {
+        return (Vec::new(), vec![err.to_string()]);
+    }
+    let all = match records(header, body) {
+        Ok(all) => all,
+        Err(err) => return (Vec::new(), vec![err.to_string()]),
+    };
+    intents
+        .iter()
+        .fold((Vec::new(), Vec::new()), |(mut ok, mut failed), i| {
+            let found = all.iter().find(|r| {
+                i.entry.as_deref().is_none_or(|e| r.name == e)
+                    && i.key.is_none_or(|k| r.key == k)
+                    && (i.entry.is_some() || i.key.is_some())
+            });
+            match found.map(|r| change(table, body, r, i)) {
+                Some(Ok(c)) => ok.push(c),
+                Some(Err(why)) => failed.push(why),
+                None => failed.push(format!("record {:?} / key {:?} not found", i.entry, i.key)),
+            }
+            (ok, failed)
+        })
+}
+
+/// Resolves format-3 intents into byte changes against the current table.
+pub fn with_fields(
+    p: &FilePatch,
+    vpath: &str,
+    header: Option<&[u8]>,
+    data: &[u8],
+) -> (FilePatch, Vec<String>) {
+    if p.fields.is_empty() {
+        return (p.clone(), Vec::new());
+    }
+    let Some(header) = header else {
+        return (p.clone(), vec!["field changes need a data table".into()]);
+    };
+    let (changes, failed) = resolve(vpath, header, data, &p.fields);
+    let mut patch = p.clone();
+    patch.changes.extend(changes);
+    (patch, failed)
+}

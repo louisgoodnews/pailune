@@ -32,6 +32,7 @@ mod save_backup;
 mod savefile;
 mod steam;
 mod symlink;
+mod tables;
 #[cfg(test)]
 mod tests;
 mod ui;

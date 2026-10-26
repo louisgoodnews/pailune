@@ -84,7 +84,7 @@ fn json_patches_apply_in_load_order_and_revert() {
     );
     write(
         &fx.sources.join("D Fields/fields.json"),
-        r#"{ "format": 3, "target": "iteminfo.pabgb", "intents": [] }"#,
+        r#"{ "format": 3, "target": "iteminfo.pabgb", "intents": [{"entry": "Potion", "field": "_maxStackCount", "new": 99}] }"#,
     );
 
     let root = fx.staging.parent().unwrap().to_path_buf();
@@ -121,7 +121,9 @@ fn json_patches_apply_in_load_order_and_revert() {
     );
     let fields = db::events::recent(&conn, 50, Some("D Fields")).unwrap();
     assert!(
-        fields.iter().any(|e| e.message.contains("format 3")),
+        fields
+            .iter()
+            .any(|e| e.message.contains("no verified layout")),
         "{fields:?}"
     );
 

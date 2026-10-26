@@ -32,6 +32,7 @@
   backups and how many to keep, days of logs kept.
 
 ### Mod management
+- Field-name JSON (format 3) for tables whose layout Pylune derived and verified (21 so far).
 - ASI plugins: list with their mod on the Diagnostics page; edit plugin settings (`.ini`).
 - HTML patch files (`*.html.patch`) with CSS-style selectors.
 - XML patch and merge files (`*.xml.patch`, `*.xml.merge`) change the game's XML in place.

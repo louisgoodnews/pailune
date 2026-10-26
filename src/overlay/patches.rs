@@ -162,13 +162,16 @@ pub fn apply_all(
             match target {
                 Err(err) => note(&mut notes, m, false, format!("{file_name}: {err}")),
                 Ok((vpath, mut data, header)) => {
-                    let report = apply(
+                    let (patch, unresolved) =
+                        crate::tables::format3::with_fields(p, &vpath, header.as_deref(), &data);
+                    let mut report = apply(
                         &mut data,
-                        p,
+                        &patch,
                         header.as_deref(),
                         header.is_some(),
                         parsed.allow_partial,
                     );
+                    report.failed.extend(unresolved);
                     let ok = report.failed.is_empty();
                     let mut message = format!(
                         "{vpath}: {} applied, {} already applied, {} failed",

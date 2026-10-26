@@ -44,17 +44,19 @@ pub struct Change {
 }
 
 /// All changes to one game file.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FilePatch {
     /// Virtual path or bare file name as written by the mod author.
     pub game_file: String,
     /// Optional anchor bytes: offsets count from the end of their first match.
     pub signature: Option<Vec<u8>>,
     pub changes: Vec<Change>,
+    /// Format-3 intents, resolved against the table when applied.
+    pub fields: Vec<crate::tables::format3::Intent>,
 }
 
 /// A parsed JSON mod.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct JsonMod {
     pub title: String,
     /// Apply the changes that match even if others do not.

@@ -2,7 +2,7 @@
 //! container of `docs/save-format.md`. The payload is LZ4-compressed, then
 //! ChaCha20-encrypted, with an HMAC-SHA256 over the compressed bytes.
 //!
-//! [`decode`] checks the HMAC before trusting anything; [`encode`] writes a
+//! [`decode`] checks the HMAC before trusting anything; `encode` (tests only, for now) writes a
 //! file the game accepts. Pylune only reads saves so far; writing is used to
 //! prove that the format is fully understood (byte-identical round trips).
 

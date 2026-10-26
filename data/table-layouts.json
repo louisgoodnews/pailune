@@ -1,0 +1,1057 @@
+{
+ "format": 1,
+ "game_version": "2.3.2",
+ "derived": "Pylune table-layout research (docs/research/table-layouts.md)",
+ "tables": {
+  "aidialogtypeinfo": {
+   "class": "AIDialogTypeInfo",
+   "key_size": 4,
+   "records": 168,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_limitDistance",
+     "shape": "fixed:4",
+     "meaning": "float",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_isPlayerSubtitle",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_isShowSubtitle",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_blockByQuestDialogMust",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": false
+    }
+   ]
+  },
+  "breakableobjectinfo": {
+   "class": "BreakableObjectInfo",
+   "key_size": 2,
+   "records": 15,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_breakingImpulseDamage",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_minImpulseDamage",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_breakableHp",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_isBreakToVandalism",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_useGroupSpawnByImpulse",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": false
+    }
+   ]
+  },
+  "categorygroupinfo": {
+   "class": "CategoryGroupInfo",
+   "key_size": 2,
+   "records": 92,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_list",
+     "shape": "list:2",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    }
+   ]
+  },
+  "categoryinfo": {
+   "class": "CategoryInfo",
+   "key_size": 2,
+   "records": 432,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_mainCategoryIndex",
+     "shape": "fixed:2",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_middleCategoryIndex",
+     "shape": "fixed:2",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_subCategoryIndex",
+     "shape": "fixed:2",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    }
+   ]
+  },
+  "characterappearanceindexinfo": {
+   "class": "CharacterAppearanceIndexInfo",
+   "key_size": 8,
+   "records": 8350,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_characterEditName",
+     "shape": "fixed:4",
+     "meaning": "hash",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_appearanceName",
+     "shape": "fixed:4",
+     "meaning": "hash",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_characterScale",
+     "shape": "fixed:4",
+     "meaning": "float",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_characterInfo",
+     "shape": "fixed:4",
+     "meaning": "ref",
+     "offset": "inferred",
+     "name_certain": false
+    }
+   ]
+  },
+  "charactergroupinfo": {
+   "class": "CharacterGroupInfo",
+   "key_size": 2,
+   "records": 503,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_groupName",
+     "shape": "str",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_characterInfoList",
+     "shape": "list:4",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_groupWeaponTypeList",
+     "shape": "list:1",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_groupTierList",
+     "shape": "list:4",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_groupAllyGroupList",
+     "shape": "list:2",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_groupFactionList",
+     "shape": "list:1",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_groupGenderList",
+     "shape": "list:str",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_groupTribeList",
+     "shape": "list:1",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_groupRegionInfoList",
+     "shape": "list:4",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_groupAgeList",
+     "shape": "list:4",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_groupJobInfoList",
+     "shape": "list:2",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_stopAnimConstraintDead",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": false
+    }
+   ]
+  },
+  "crafttoolgroupinfo": {
+   "class": "CraftToolGroupInfo",
+   "key_size": 2,
+   "records": 12,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_craftToolInfoList",
+     "shape": "list:2",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_craftToolType",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_ignoreReduceMaterialCountBuff",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_materialInventoryInfoList",
+     "shape": "list:2",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    }
+   ]
+  },
+  "crafttoolinfo": {
+   "class": "CraftToolInfo",
+   "key_size": 2,
+   "records": 19,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_craftToolGroupInfo",
+     "shape": "fixed:2",
+     "meaning": "ref",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_failItem",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_ingredientsItemGroupInfo",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    }
+   ]
+  },
+  "dyecolorgroupinfo": {
+   "class": "DyeColorGroupInfo",
+   "key_size": 4,
+   "records": 10,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_dyeColorDataList",
+     "shape": "list:8",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_dyeColorGroupName",
+     "shape": "loc",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_iconPath",
+     "shape": "fixed:4",
+     "meaning": "hash",
+     "offset": "proven",
+     "name_certain": true
+    }
+   ]
+  },
+  "gameplayvariableinfo": {
+   "class": "GamePlayVariableInfo",
+   "key_size": 4,
+   "records": 59,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_initialVariable",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_devMemo",
+     "shape": "str",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    }
+   ]
+  },
+  "gimmickeventtableinfo": {
+   "class": "GimmickEventTableInfo",
+   "key_size": 4,
+   "records": 1110,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_usingTypeFlag",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_descriptionText",
+     "shape": "str",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_gimmickIndexMatchingType",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_spawnLevelGroupGimmickOnStage",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": false
+    }
+   ]
+  },
+  "gimmickgateinfo": {
+   "class": "GimmickGateInfo",
+   "key_size": 4,
+   "records": 396,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_position",
+     "shape": "fixed:12",
+     "meaning": "vec3",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_rotation",
+     "shape": "fixed:4",
+     "meaning": "float",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_fieldInfo",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    }
+   ]
+  },
+  "levelgimmicksceneobjectinfo": {
+   "class": "LevelGimmickSceneObjectInfo",
+   "key_size": 4,
+   "records": 175,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_levelName",
+     "shape": "str",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_levelGimmickSceneObjectDataList",
+     "shape": "fixed:32",
+     "meaning": "raw",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_mapIconTextureInfo",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_discoverType",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_ignoreSameGimmickDiscoverDistance",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_discoverGimmickStateHash",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_isEmptyInfo",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_useTeleport",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_useGuideEffect",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_isSubInnerGimmick",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_checkGameLevelLoadState",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_overAbyssFogMapIconTextureInfo",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_overAbyssFogDistance",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_discoverDistance",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_showIconConditionType",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_overAbyssCompletedDiscoverMapIconTextureInfo",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_guideEffectSocketName",
+     "shape": "str",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_oreVeinIndex",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_contentsPhaseInfoForMovePoint",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_useGimmickKnowledgeForUI",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_checkBlockCondition",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_isRestoreStockTargetItem",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_completedDiscoverMapIconTextureInfo",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_discoverNearFog",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_fogMapIconTextureInfo",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_fogDistance",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_overAbyssIconTextureInfo",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    }
+   ]
+  },
+  "localstringinfo": {
+   "class": "LocalStringInfo",
+   "key_size": 4,
+   "records": 46714,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_gameString",
+     "shape": "loc",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_isVisible",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": false
+    }
+   ]
+  },
+  "materialmatchinfo": {
+   "class": "MaterialMatchInfo",
+   "key_size": 4,
+   "records": 116,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_effectWeaponKeyHash",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_effectArmorKeyHash",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_soundWeaponKeyHash",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_soundArmorKeyHash",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_physicsMaterialName",
+     "shape": "loc",
+     "meaning": "raw",
+     "offset": "inferred",
+     "name_certain": false
+    }
+   ]
+  },
+  "materialrelationinfo": {
+   "class": "MaterialRelationInfo",
+   "key_size": 4,
+   "records": 11,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_materialRelationMatchUpDataList",
+     "shape": "list:12",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    }
+   ]
+  },
+  "npcactivitygroupinfo": {
+   "class": "NPCActivityGroupInfo",
+   "key_size": 4,
+   "records": 42,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_selfConditionInfo",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_useContentsOnly",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_npcActivityInfoList",
+     "shape": "list:4",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_totalRate",
+     "shape": "fixed:4",
+     "meaning": "float",
+     "offset": "proven",
+     "name_certain": false
+    }
+   ]
+  },
+  "personalityinfo": {
+   "class": "PersonalityInfo",
+   "key_size": 2,
+   "records": 78,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_personalityName",
+     "shape": "loc",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_traitValueList",
+     "shape": "fixed:32",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    }
+   ]
+  },
+  "skilltreegroupinfo": {
+   "class": "SkillTreeGroupInfo",
+   "key_size": 4,
+   "records": 18,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_skillTreeInfoList",
+     "shape": "list:4",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_skillGroupName",
+     "shape": "loc",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_skillGroupDesc",
+     "shape": "loc",
+     "meaning": "raw",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_uiTextureIconPath",
+     "shape": "fixed:2",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_characterInfo",
+     "shape": "fixed:2",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_factionNodeInfo",
+     "shape": "fixed:8",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    }
+   ]
+  },
+  "uitalktreeinfo": {
+   "class": "UITalkTreeInfo",
+   "key_size": 2,
+   "records": 175,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_rootTalkTreeInfo",
+     "shape": "fixed:2",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_parentTalkTreeInfo",
+     "shape": "fixed:2",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_childTalkTreeInfoList",
+     "shape": "list:2",
+     "meaning": "raw",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_resultDataList",
+     "shape": "fixed:48",
+     "meaning": "raw",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_npcActivityInfo",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_interactionInfo",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_questDialogInfo",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_conditionInfo",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_targetConditionInfo",
+     "shape": "fixed:1",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_buttonText",
+     "shape": "fixed:2",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    },
+    {
+     "name": "_effectInfo",
+     "shape": "fixed:4",
+     "meaning": "int",
+     "offset": "inferred",
+     "name_certain": false
+    }
+   ]
+  },
+  "wantedinfo": {
+   "class": "WantedInfo",
+   "key_size": 2,
+   "records": 35,
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_increasePrice",
+     "shape": "fixed:8",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_useTargetPrice",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": false
+    }
+   ]
+  }
+ }
+}

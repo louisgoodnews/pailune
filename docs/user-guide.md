@@ -63,6 +63,7 @@ mods* is on).
 | Game files for the archives (`files/NNNN/…`, `NNNN/…`, textures `.dds`) | Packed into Pylune's own archive group, which the game reads first. |
 | Prebuilt archive groups (`NNNN/0.pamt`, `*.paz`) | Registered under a free group number. |
 | Byte-patch JSON mods | Applied to the game file inside the archives; each change is checked against the original bytes. |
+| Field-name JSON mods (format 3, `.field.json`) | `set` by field name for tables whose layout Pylune has derived and verified for your game version; other tables or fields are refused with a reason in the Log tab. |
 | `*.css.patch`, `*.css.merge` | Applied to the game's stylesheets. |
 | `*.xml.patch` (JSON or `<xml-patch>`), `*.xml.merge` | Applied to the game's XML files; only the changed parts are rewritten. |
 | `*.html.patch` (`<html-patch>` or comment directives) | Applied to the game's HTML files with CSS-style selectors. |

@@ -131,6 +131,7 @@ mod tests {
             game_file: "x".into(),
             signature: None,
             changes,
+            fields: Vec::new(),
         };
         let mut data = vec![0u8, 1, 2, 3, 4, 5];
         let good = patch(vec![replace(1, &[1, 2], &[9, 9]), replace(4, &[4], &[7])]);

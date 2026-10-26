@@ -97,15 +97,27 @@ fn change(raw: &Value) -> Result<Change> {
     })
 }
 
-/// Parses a JSON mod file. Format-3 ("field JSON") files are recognised
-/// and rejected with an explanation.
+/// Parses a JSON mod file: byte patches (format 2), or field-name intents
+/// (format 3), which are resolved against the table when applied.
 pub fn parse(text_in: &str) -> Result<JsonMod> {
     let root: Value = serde_json::from_str(text_in.trim_start_matches('\u{feff}'))?;
     let format = root.get("format").and_then(Value::as_u64);
-    if format == Some(3) || root.get("intents").is_some() || root.get("targets").is_some() {
-        return Err(invalid(
-            "field-name JSON (format 3) mods are not supported yet".into(),
-        ));
+    let _ = format;
+    if crate::tables::format3::is_format3(&root) {
+        let info = root.get("modinfo").unwrap_or(&root);
+        return Ok(JsonMod {
+            title: text(info, &["title", "name"]).unwrap_or_default(),
+            allow_partial: true,
+            patches: crate::tables::format3::parse(&root)?
+                .into_iter()
+                .map(|t| FilePatch {
+                    game_file: t.target,
+                    signature: None,
+                    changes: Vec::new(),
+                    fields: t.intents,
+                })
+                .collect(),
+        });
     }
     let info = root.get("modinfo").unwrap_or(&root);
     let title = text(info, &["title", "name"])
@@ -125,6 +137,7 @@ pub fn parse(text_in: &str) -> Result<JsonMod> {
                 game_file: text(p, &["game_file", "file"])
                     .ok_or_else(|| invalid("patch without game_file".into()))?,
                 signature: text(p, &["signature"]).map(|s| hex_bytes(&s)).transpose()?,
+                fields: Vec::new(),
                 changes: p
                     .get("changes")
                     .and_then(Value::as_array)
@@ -188,11 +201,13 @@ mod tests {
             ),
             (Anchor::Offset(16), Anchor::Offset(26), Anchor::Offset(26))
         );
+        let fields = parse(r#"{"format":3,"targets":[{"file":"x.pabgb","intents":[{"entry":"A","field":"_n","new":5}]}]}"#).unwrap();
+        assert_eq!(fields.patches[0].fields[0].field.as_deref(), Some("_n"));
         assert!(
-            parse(r#"{"format":3,"target":"x.pabgb","intents":[]}"#)
+            parse(r#"{"format":3,"intents":[]}"#)
                 .unwrap_err()
                 .to_string()
-                .contains("format 3")
+                .contains("without a file")
         );
     }
 }

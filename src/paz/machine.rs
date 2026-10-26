@@ -139,3 +139,48 @@ fn textures_match_the_pathc() {
     println!("{checked} textures checked, {reencoded} raw-chunk textures re-encoded byte for byte");
     assert!(checked > 100 && reencoded > 10);
 }
+
+/// Every shipped table layout decodes every record of the installed game.
+#[test]
+#[ignore = "reads the local game installation"]
+fn shipped_table_layouts_match_the_game() {
+    let dir = game_dir().join("0008");
+    let index = pamt::parse(&fs::read(dir.join("0.pamt")).unwrap()).unwrap();
+    let layouts = crate::tables::layouts();
+    let mut failures = Vec::new();
+    layouts.tables.iter().for_each(|(name, table)| {
+        let path = format!("gamedata/binarystaticinfo__/bin/{name}.staticinfobody");
+        let head = path.replace("body", "header");
+        let read = |p: &str| extract::extract(&dir, p, &index.files[p]).unwrap();
+        if let Err(err) = crate::tables::verify(table, &read(&head), &read(&path)) {
+            failures.push(err.to_string());
+        }
+    });
+    println!(
+        "{} layouts checked, {} failed",
+        layouts.tables.len(),
+        failures.len()
+    );
+    assert!(failures.is_empty(), "{failures:?}");
+}
+
+/// Exports the installed game's decoded data tables into
+/// `PYLUNE_TABLES_OUT=<dir>` for `tools/table-layouts/` (never committed).
+#[test]
+#[ignore = "reads the local game installation"]
+fn export_tables_for_layout_research() {
+    let Ok(out) = std::env::var("PYLUNE_TABLES_OUT") else {
+        return;
+    };
+    let dir = game_dir().join("0008");
+    let index = pamt::parse(&fs::read(dir.join("0.pamt")).unwrap()).unwrap();
+    index
+        .files
+        .iter()
+        .filter(|(p, _)| p.contains("binarystaticinfo__/bin/") && !p.contains("/misc/"))
+        .for_each(|(path, record)| {
+            let data = extract::extract(&dir, path, record).unwrap();
+            let name = path.rsplit('/').next().unwrap();
+            fs::write(std::path::Path::new(&out).join(name), data).unwrap();
+        });
+}

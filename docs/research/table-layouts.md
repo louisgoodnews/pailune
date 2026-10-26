@@ -47,8 +47,28 @@ game reveals and the method. Everything below was measured read-only on build 2.
 5. **Format 3**: `set` (and raw `old/new`) on fields with verified layouts; engine names
    (`_maxStackCount`) and their snake_case forms (`max_stack_count`) are accepted.
 
+## Results (phase 1, 2026-10-26)
+
+* The field names come from the deserializer's own messages ("<Class>의 <field>를 읽어들이는데
+  실패했다" — "failed to read <field> of <Class>"): 657 classes.
+* Records start with `_isBlocked`; in many classes the remaining fields follow the message order
+  rotated to start there, but not in all (`EquipTypeInfo`, `VehicleInfo` differ), so the order is
+  evidence, not proof.
+* Exact fit alone is ambiguous for fixed runs (`CategoryInfo` fits 1+1+4 and 2+2+2). Layouts are
+  therefore chosen by **minimum description length** — wrong boundaries in little-endian data
+  produce large numbers — among all layouts that fit every sampled record exactly; a field's
+  offset is *proven* when every exact layout agrees.
+* **Names**: fields of equal size can swap without breaking an exact fit, so a name is certain
+  only if its shape is unique in the class (and `_isBlocked` at offset 0, seen in every table).
+* Shipped: **21 tables, 129 fields, 38 editable** (`data/table-layouts.json`, game 2.3.2), each
+  verified on every record of the installed game, also in Pylune's Rust decoder
+  (`shipped_table_layouts_match_the_game`). The tool is in `tools/table-layouts/`.
+* Not solved yet: tables whose classes nest structures, optional blocks and other string forms —
+  including `iteminfo` (the inference reaches field 47 of 113), `dropsetinfo`, `skill`,
+  `storeinfo`, `buffinfo`, `characterinfo`.
+
 ## Order of work
 
-Fixed-size tables first (proves the pipeline), then the tables mods target most — `iteminfo`,
+Fixed-size tables first (done: phase 1), then the tables mods target most — `iteminfo`,
 `dropsetinfo`, `skill`, `storeinfo`, `characterinfo`, `buffinfo` — one at a time, each with its
 own verification report.

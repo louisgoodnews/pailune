@@ -44,10 +44,9 @@ Move a line between columns when its status changes.
 
 - [ ] B-07 (step 3) Save editing: body writer, fresh nonce + HMAC (done), per-version checks — *L*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
-- [ ] A-01 format 3 / table inserts with layouts derived from the game
-  (`docs/research/table-layouts.md`): 1. field names from the executable's data sections;
-  2. layout inference verified on every record; 3. fixed-size tables; 4. iteminfo, dropsetinfo,
-  skill, storeinfo, characterinfo, buffinfo one by one; 5. format-3 `set` on verified fields — *L*
+- [ ] A-01 format 3, phase 2: type vocabulary for nested tables (structures, optional blocks,
+  string forms), then iteminfo, dropsetinfo, skill, storeinfo, characterinfo, buffinfo one by one;
+  table inserts afterwards — *L*
 
 ## Owner
 
@@ -55,6 +54,13 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-01 format 3, phase 1 (`src/tables/`, `data/table-layouts.json`, `tools/table-layouts/`):
+  field names from the deserializer's messages in the executable; layouts inferred by exact fit +
+  minimum description length with per-field proof; 21 tables / 38 editable fields, each verified
+  on every record of the installed game (Rust test). Format-3 mods: `set` by field name (engine or
+  snake_case names) and raw `old`/`new`, resolved into verified byte changes; the layout is
+  re-verified against the game on every Apply and refused when the build differs; unproven
+  fields and other operations are refused with a reason.
 - [x] A-01 research: table layouts can be derived from the game (`docs/research/table-layouts.md`):
   513 classes with field names in the executable's data sections, sizes and order verified on
   sample records; method and order of work set (owner decision 2026-10-26: own layouts).
