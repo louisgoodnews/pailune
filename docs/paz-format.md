@@ -623,6 +623,13 @@ DMM log hints at per-type caveats (SOURCE, UNVERIFIED):
 * new UI images were forced to a "self-contained" texture class (last4
   0x0F) and registered in PATHC.
 
+**Data tables need their header in the overlay (2026-10-26).** Test batch 1 packed only the
+patched `*.staticinfobody` files: the overlay held exactly the intended bytes, listed first in
+the PAPGT, yet none of the three tests had an effect in game. CDUMM packs the companion
+`.staticinfoheader`/`.pabgh` with every modified body; the likely reason is that the game reads a
+table's body from the group where it found the header. Pylune now packs the (unchanged) header
+with every patched body. **UNVERIFIED in game** until test batch 1 is repeated.
+
 ### 9.2 Recommended Pylune procedure
 
 Naming: use a **numeric** name above every number in the vanilla PAPGT and

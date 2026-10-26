@@ -25,7 +25,8 @@ Move a line between columns when its status changes.
 
 ## Owner
 
-- [ ] A-01 In-game test batch 1 (`local/test-mods/`, see its `TESTING.md`): arrow stacks
+- [ ] A-01 In-game test batch 1, **second run** (first run 2026-10-26: no effect — overlay held only
+  table bodies; headers are now packed too, see `paz-format.md` §9.1). `local/test-mods/`, see its `TESTING.md`: arrow stacks
   (`ItemInfo._maxStackCount`), hunting amounts (drop-entry amount A/B = min/max?), drop rates
   (drop-entry rate). Also the first in-game check of patched data tables through the overlay.
 - [ ] A-21 (rest) Register Pylune with Nexus (AUP) before a public release

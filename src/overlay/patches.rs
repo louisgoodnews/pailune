@@ -1,5 +1,6 @@
 //! Applying byte-patch JSON mods to vanilla game data for the overlay.
 
+use super::table_paths::{header_of, name_of, variants};
 use crate::error::{IoContext, PyluneError, Result};
 use crate::patch::{self, JsonMod, apply::apply};
 use crate::paz::{
@@ -37,39 +38,6 @@ pub fn read_all(files: &[(String, PathBuf)]) -> Vec<ModPatch> {
                 .and_then(|t| patch::parse::parse(&t)),
         })
         .collect()
-}
-
-/// Old and new extensions of table files (renamed in a game update).
-const ALIASES: [(&str, &str); 2] = [
-    (".pabgb", ".staticinfobody"),
-    (".pabgh", ".staticinfoheader"),
-];
-
-/// The path plus its renamed-extension alias.
-fn variants(path: &str) -> Vec<String> {
-    let lower = path.to_lowercase().replace('\\', "/");
-    let swapped = ALIASES.iter().find_map(|(a, b)| {
-        lower
-            .strip_suffix(a)
-            .map(|s| format!("{s}{b}"))
-            .or_else(|| lower.strip_suffix(b).map(|s| format!("{s}{a}")))
-    });
-    std::iter::once(lower).chain(swapped).collect()
-}
-
-/// The table index belonging to a table body, if `vpath` is one.
-fn header_of(vpath: &str) -> Option<String> {
-    [
-        (".pabgb", ".pabgh"),
-        (".staticinfobody", ".staticinfoheader"),
-    ]
-    .iter()
-    .find_map(|(body, head)| vpath.strip_suffix(body).map(|s| format!("{s}{head}")))
-}
-
-/// File name of a virtual path.
-fn name_of(path: &str) -> String {
-    path.rsplit('/').next().unwrap_or(path).to_string()
 }
 
 /// Files the vanilla scan must locate for these patches.
@@ -193,6 +161,14 @@ pub fn apply_all(
                         .for_each(|f| message.push_str(&format!("; {f}")));
                     note(&mut notes, m, ok, message);
                     if report.applied > 0 || report.already > 0 {
+                        // The game reads a table's body from the group that
+                        // holds its header, so the header goes along.
+                        let companion = header_of(&vpath).zip(header);
+                        if let Some((path, bytes)) = companion
+                            && !packed.contains_key(&path)
+                        {
+                            files.entry(path).or_insert(bytes);
+                        }
                         files.insert(vpath, data);
                     }
                 }

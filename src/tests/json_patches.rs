@@ -114,6 +114,15 @@ fn json_patches_apply_in_load_order_and_revert() {
     assert_eq!(patched[15], 0x63, "entry anchor applied");
     assert_eq!(patched[33], 0xFF, "the later mod wins on the same byte");
     assert_eq!(patched.len(), body.len());
+    // The overlay (first group) carries the table's header with its body.
+    let first = papgt::parse(&fs::read(game.join("meta/0.papgt")).unwrap())
+        .unwrap()
+        .groups[0]
+        .name
+        .clone();
+    let overlay =
+        crate::paz::pamt::parse(&fs::read(game.join(first).join("0.pamt")).unwrap()).unwrap();
+    assert!(overlay.files.contains_key(BODY) && overlay.files.contains_key(HEADER));
     let log = db::events::recent(&conn, 50, Some("C Broken")).unwrap();
     assert!(
         log.iter().any(|e| e.message.contains("do not match")),

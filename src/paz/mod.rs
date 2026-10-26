@@ -23,6 +23,8 @@ pub mod write;
 #[cfg(test)]
 mod machine;
 #[cfg(test)]
+mod machine_overlay;
+#[cfg(test)]
 mod machine_tables;
 
 /// Compression of an archive entry (flags bits 0–3).
