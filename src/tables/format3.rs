@@ -10,6 +10,7 @@ use super::{Table, records, spans, verify};
 use crate::error::{PyluneError, Result};
 use crate::patch::{Anchor, Change, Edit, FilePatch};
 use serde_json::Value;
+use std::collections::HashMap;
 
 /// One intent of a format-3 file.
 #[derive(Debug, Clone, PartialEq)]
@@ -173,16 +174,27 @@ pub fn resolve(
         Ok(all) => all,
         Err(err) => return (Vec::new(), vec![err.to_string()]),
     };
+    // Records by key and by name: mods like Fat Stacks carry thousands of
+    // intents against thousands of records.
+    let mut by_key: HashMap<u64, Vec<&super::Record>> = HashMap::new();
+    let mut by_name: HashMap<&str, Vec<&super::Record>> = HashMap::new();
+    all.iter().for_each(|r| {
+        by_key.entry(r.key).or_default().push(r);
+        by_name.entry(r.name.as_str()).or_default().push(r);
+    });
     intents
         .iter()
         .fold((Vec::new(), Vec::new()), |(mut ok, mut failed), i| {
-            let found: Vec<&super::Record> = all
-                .iter()
-                .filter(|r| {
-                    i.entry.as_deref().is_none_or(|e| r.name == e)
-                        && i.key.is_none_or(|k| r.key == k)
-                        && (i.entry.is_some() || i.key.is_some())
-                })
+            let candidates = match (i.key, i.entry.as_deref()) {
+                (Some(key), _) => by_key.get(&key),
+                (None, Some(name)) => by_name.get(name),
+                (None, None) => None,
+            };
+            let found: Vec<&super::Record> = candidates
+                .into_iter()
+                .flatten()
+                .copied()
+                .filter(|r| i.entry.as_deref().is_none_or(|e| r.name == e))
                 .collect();
             match found.as_slice() {
                 [one] => match change(&layout, body, one, i) {

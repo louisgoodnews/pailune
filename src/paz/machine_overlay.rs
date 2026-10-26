@@ -43,3 +43,52 @@ fn deployed_overlay_against_vanilla() {
         }
     }
 }
+
+/// The arrow test against Fat Stacks 10x, as the conflict analysis sees
+/// them on the installed game (`PYLUNE_TEST_MODS=<dir>`).
+#[test]
+#[ignore = "reads the local game installation"]
+fn json_value_conflicts_on_the_real_tables() {
+    let Ok(dir) = std::env::var("PYLUNE_TEST_MODS") else {
+        return;
+    };
+    let dir = std::path::Path::new(&dir);
+    let fat = fs::read_dir(dir)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .find(|e| e.file_name().to_string_lossy().starts_with("Fat Stacks"))
+        .unwrap()
+        .path();
+    let patches = [
+        (
+            "Arrow Test".to_string(),
+            dir.join("Pylune Test 1 - Arrow Stacks/arrow_stacks.json"),
+        ),
+        (
+            "Fat Stacks".to_string(),
+            fat.join("fat_stacks_10x.field.json"),
+        ),
+        (
+            "Drops".to_string(),
+            dir.join("Pylune Test 3 - Drop Rates/drop_rates.json"),
+        ),
+    ];
+    let mut config = crate::config::Config::default();
+    config.game.dir =
+        crate::steam::library::find_game(crate::config::CRIMSON_DESERT_APP_ID).unwrap();
+    let info = crate::steam::locate::resolve(&config);
+    let started = std::time::Instant::now();
+    // The first run scans the game's indexes; later runs reuse the scan.
+    crate::overlay::value_conflicts::overlaps(&info, &patches).unwrap();
+    println!("first run {:?}", started.elapsed());
+    let started = std::time::Instant::now();
+    let found = crate::overlay::value_conflicts::overlaps(&info, &patches).unwrap();
+    println!("{:?} in {:?}", found, started.elapsed());
+    assert_eq!(found.len(), 1);
+    assert_eq!(
+        (found[0].earlier.as_str(), found[0].later.as_str()),
+        ("Arrow Test", "Fat Stacks")
+    );
+    let values: Vec<&String> = found[0].values.iter().collect();
+    assert_eq!(values, ["Arrow", "Pyeonjeon_Arrow"]);
+}

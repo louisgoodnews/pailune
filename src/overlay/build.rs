@@ -79,6 +79,15 @@ fn snapshot(info: &SteamInfo, name: &str) -> Result<Vec<u8>> {
     })
 }
 
+/// The vanilla `0.papgt`: the snapshot once Pylune has deployed, else the
+/// live file (still untouched then).
+pub(super) fn vanilla_papgt(info: &SteamInfo) -> Result<Vec<u8>> {
+    snapshot(info, "0.papgt").or_else(|_| {
+        let live = info.meta_dir.join("0.papgt");
+        fs::read(&live).at(&live)
+    })
+}
+
 /// Writes `bytes` to `path`, creating the parent folder.
 fn write_file(path: &Path, bytes: &[u8]) -> Result<()> {
     if let Some(dir) = path.parent() {
@@ -130,7 +139,7 @@ pub fn build_from(
             .iter()
             .map(|(_, target, _)| target.clone()),
     );
-    let base = vanilla::load(&info.game_dir, vanilla_bytes, &wanted)?;
+    let base = vanilla::load_cached(&info.game_dir, vanilla_bytes, &wanted)?;
     let _ = fs::remove_dir_all(out_dir);
     let (mut patched, mut patch_notes) =
         super::patches::apply_all(&info.game_dir, &base, &patch_mods, &input.packs);

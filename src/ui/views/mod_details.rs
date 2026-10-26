@@ -81,8 +81,13 @@ fn contest_list(ui: &mut egui::Ui, title: &str, contests: &[Contest], verb: &str
         .id_salt(title)
         .show(ui, |ui| {
             contests.iter().for_each(|c| {
+                let values = match c.values.as_slice() {
+                    [] => String::new(),
+                    few @ [_, _] | few @ [_] => format!(" ({})", few.join(", ")),
+                    many => format!(" ({}, … {} values)", many[..2].join(", "), many.len()),
+                };
                 ui.label(
-                    RichText::new(format!("{} — {verb} {}", c.file.display(), c.other))
+                    RichText::new(format!("{}{values} — {verb} {}", c.file.display(), c.other))
                         .small()
                         .monospace(),
                 );

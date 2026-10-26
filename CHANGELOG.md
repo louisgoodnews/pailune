@@ -39,6 +39,11 @@
 - FOMOD installers: the installer's pages appear in the details panel; choices are remembered.
 - Mod lists: export your whole setup and import it elsewhere; missing mods can be downloaded.
 - Move a mod straight to a load-order number from its details panel.
+- Conflicts between JSON mods: mods changing the same values of a game file are listed with the
+  records involved; on the same values the later mod now overrides the earlier one (its original
+  bytes are checked against the unmodded game) instead of failing.
+- Faster Apply and analysis: the scan of the game's archive indexes is reused while they are
+  unchanged; format-3 intents are matched to records by key.
 - JSON mods with alternative files (e.g. *Fat Stacks* 2x … 100x) offer them as options; only the
   chosen file is applied.
 - JSON mod editor in the details panel: every change with its original and new value, editable as

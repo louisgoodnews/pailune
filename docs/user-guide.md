@@ -99,6 +99,13 @@ are kept with the mod (also in mod lists and backups); press *Apply* after chang
 A ⚔ badge shows how many files a mod wins and loses against others. The details panel lists them;
 move a mod further down to make it win.
 
+JSON mods conflict when they change the same values of a game file — for example two stack-size
+mods that both change arrows. The list then names the file and the records involved
+(`iteminfo.staticinfobody (Arrow, Pyeonjeon_Arrow) — overridden by Fat Stacks`). JSON mods that
+change different values of the same file do not conflict; they are all applied. On the same
+values the lower mod wins: its original bytes are checked against the unmodded game, so it
+replaces the other mod's value instead of failing.
+
 ## Play
 
 **▶ PLAY** starts the game through Steam with the active profile's launch options (or the default

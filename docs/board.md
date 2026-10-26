@@ -33,6 +33,9 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] Value-level conflicts between JSON patches (`overlay/value_conflicts.rs`): overlapping byte
+  ranges after resolving against vanilla, named by record; later mod overrides earlier (`apply_over`);
+  cached vanilla scan (2.3 s → 21 ms on repeat).
 - [x] Alternative JSON files as options (`mod_engine/alternatives.rs`): files of one mod that change
   the same values are a choice (titles from `modinfo`, natural order); only the chosen one deploys.
 - [x] JSON mod viewer/editor (details panel): changes table with numbers and hex, raw JSON with

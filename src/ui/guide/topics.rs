@@ -82,6 +82,7 @@ pub const TOPICS: &[Topic] = &[
         body: &[
             "A ⚔ badge shows how many files a mod wins and loses against others.",
             "Select the mod and open its conflict list: files it loses are replaced by a mod lower in the list. Move it further down to make it win.",
+            "JSON mods conflict only where they change the same values; the list names the records (e.g. Arrow). The lower mod's values win.",
             "Check the Log tab for messages about this mod.",
         ],
     },

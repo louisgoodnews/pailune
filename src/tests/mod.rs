@@ -16,6 +16,7 @@ mod staging;
 mod storage;
 mod ui;
 mod ui_prefs;
+mod value_conflicts;
 mod xml_patches;
 
 pub(super) use jobs::wait_all as wait_all_jobs;

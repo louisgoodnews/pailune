@@ -11,11 +11,11 @@ use crate::paz::papgt::{self, GroupEntry, Papgt};
 use std::fs;
 use std::sync::Arc;
 
-const BODY: &str = "gamedata/binarystaticinfo__/bin/iteminfo.staticinfobody";
-const HEADER: &str = "gamedata/binarystaticinfo__/bin/iteminfo.staticinfoheader";
+pub(super) const BODY: &str = "gamedata/binarystaticinfo__/bin/iteminfo.staticinfobody";
+pub(super) const HEADER: &str = "gamedata/binarystaticinfo__/bin/iteminfo.staticinfoheader";
 
 /// A two-record item table: "Potion" (stack 0x05) and "Arrow" (stack 0x10).
-fn item_table() -> (Vec<u8>, Vec<u8>) {
+pub(super) fn item_table() -> (Vec<u8>, Vec<u8>) {
     let record = |key: u32, name: &str, stack: u8| {
         [
             &key.to_le_bytes()[..],
@@ -37,7 +37,7 @@ fn item_table() -> (Vec<u8>, Vec<u8>) {
     ([a, b].concat(), header)
 }
 
-fn latin1(bytes: &[u8]) -> String {
+pub(super) fn latin1(bytes: &[u8]) -> String {
     bytes.iter().map(|b| *b as char).collect()
 }
 

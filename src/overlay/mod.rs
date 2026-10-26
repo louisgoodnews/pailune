@@ -12,6 +12,7 @@ pub mod collect;
 pub mod patches;
 mod table_paths;
 pub mod textures;
+pub mod value_conflicts;
 
 #[cfg(test)]
 mod machine;

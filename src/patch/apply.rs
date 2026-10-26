@@ -2,6 +2,7 @@
 
 use super::table::TableIndex;
 use super::{Anchor, ApplyReport, Change, Edit, FilePatch};
+use std::collections::HashMap;
 
 /// A change resolved to an absolute offset.
 struct Resolved<'a> {
@@ -25,9 +26,67 @@ fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
         .position(|w| w == needle)
 }
 
+/// Where a patch's changes start: the signature's end (if any) and the
+/// table's record anchors. `None` when the signature is missing.
+struct Frame {
+    base: usize,
+    anchors: Option<HashMap<String, usize>>,
+}
+
+impl Frame {
+    fn of(data: &[u8], patch: &FilePatch, header: Option<&[u8]>) -> Option<Self> {
+        let base = match &patch.signature {
+            Some(sig) => find(data, sig)? + sig.len(),
+            None => 0,
+        };
+        let anchors = header
+            .and_then(super::table::parse_index)
+            .map(|i: TableIndex| i.name_anchors(data));
+        Some(Self { base, anchors })
+    }
+
+    /// Absolute offset of a change.
+    fn position(&self, change: &Change) -> Option<usize> {
+        match &change.anchor {
+            Anchor::Offset(o) => usize::try_from(*o)
+                .ok()
+                .and_then(|o| self.base.checked_add(o)),
+            Anchor::Entry { name, rel_offset } => self
+                .anchors
+                .as_ref()
+                .and_then(|a| a.get(name))
+                .and_then(|a| {
+                    usize::try_from(*rel_offset)
+                        .ok()
+                        .and_then(|r| a.checked_add(r))
+                }),
+        }
+    }
+}
+
+/// Byte ranges `(start, end, label)` the replacements of `patch` cover in
+/// `data` (inserts and unresolvable changes are left out).
+pub fn spans(data: &[u8], patch: &FilePatch, header: Option<&[u8]>) -> Vec<(usize, usize, String)> {
+    let Some(frame) = Frame::of(data, patch, header) else {
+        return Vec::new();
+    };
+    patch
+        .changes
+        .iter()
+        .filter_map(|c| match &c.edit {
+            Edit::Replace { original, patched } => frame.position(c).map(|at| {
+                let len = original.as_ref().map_or(patched.len(), Vec::len);
+                (at, at + len, describe(c, Some(at)))
+            }),
+            Edit::Insert { .. } => None,
+        })
+        .collect()
+}
+
 /// Applies `patch` to `data`. `header` is the table index for entry
 /// anchors; `is_table` forbids inserts (they would break the index).
 /// Without `allow_partial`, any failing change leaves `data` untouched.
+#[cfg(test)]
 pub fn apply(
     data: &mut Vec<u8>,
     patch: &FilePatch,
@@ -35,34 +94,32 @@ pub fn apply(
     is_table: bool,
     allow_partial: bool,
 ) -> ApplyReport {
-    let base = match &patch.signature {
-        Some(sig) => match find(data, sig) {
-            Some(pos) => pos + sig.len(),
-            None => {
-                return ApplyReport {
-                    failed: vec!["signature not found".into()],
-                    ..ApplyReport::default()
-                };
-            }
-        },
-        None => 0,
+    apply_over(data, patch, header, is_table, allow_partial, None)
+}
+
+/// [`apply`] on data that earlier mods may have changed: an `original` that
+/// matches `reference` (the unmodded bytes, same length) also counts, so a
+/// later mod overrides an earlier one instead of failing — later mods win.
+pub fn apply_over(
+    data: &mut Vec<u8>,
+    patch: &FilePatch,
+    header: Option<&[u8]>,
+    is_table: bool,
+    allow_partial: bool,
+    reference: Option<&[u8]>,
+) -> ApplyReport {
+    let Some(frame) = Frame::of(data, patch, header) else {
+        return ApplyReport {
+            failed: vec!["signature not found".into()],
+            ..ApplyReport::default()
+        };
     };
-    let anchors = header
-        .and_then(super::table::parse_index)
-        .map(|i: TableIndex| i.name_anchors(data));
+    // Positions match the reference only while no insert moved them.
+    let reference = reference.filter(|r| r.len() == data.len());
     let mut report = ApplyReport::default();
     let mut valid: Vec<Resolved> = Vec::new();
     patch.changes.iter().for_each(|change| {
-        let at = match &change.anchor {
-            Anchor::Offset(o) => usize::try_from(*o).ok().and_then(|o| base.checked_add(o)),
-            Anchor::Entry { name, rel_offset } => {
-                anchors.as_ref().and_then(|a| a.get(name)).and_then(|a| {
-                    usize::try_from(*rel_offset)
-                        .ok()
-                        .and_then(|r| a.checked_add(r))
-                })
-            }
-        };
+        let at = frame.position(change);
         let verdict = match (at, &change.edit) {
             (None, _) => Err("entry not found in the table".to_string()),
             (Some(_), Edit::Insert { .. }) if is_table => {
@@ -87,6 +144,13 @@ pub fn apply(
                     None => Err("offset beyond the end of the file".into()),
                     Some(now) if now == patched.as_slice() => Ok(true),
                     Some(now) if original.as_ref().is_none_or(|o| o.as_slice() == now) => Ok(false),
+                    Some(_)
+                        if original.as_ref().is_some_and(|o| {
+                            reference.and_then(|r| r.get(at..at + span)) == Some(o.as_slice())
+                        }) =>
+                    {
+                        Ok(false)
+                    }
                     Some(_) => Err("original bytes do not match (different game version?)".into()),
                 }
             }
@@ -146,61 +210,4 @@ pub fn apply(
     });
     report.applied = valid.len();
     report
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::patch::Edit;
-
-    fn replace(at: u64, original: &[u8], patched: &[u8]) -> Change {
-        Change {
-            anchor: Anchor::Offset(at),
-            edit: Edit::Replace {
-                original: Some(original.to_vec()),
-                patched: patched.to_vec(),
-            },
-            label: String::new(),
-        }
-    }
-
-    #[test]
-    fn verifies_originals_and_respects_partial_apply() {
-        let patch = |changes| FilePatch {
-            game_file: "x".into(),
-            signature: None,
-            changes,
-            fields: Vec::new(),
-        };
-        let mut data = vec![0u8, 1, 2, 3, 4, 5];
-        let good = patch(vec![replace(1, &[1, 2], &[9, 9]), replace(4, &[4], &[7])]);
-        assert_eq!(apply(&mut data, &good, None, false, false).applied, 2);
-        assert_eq!(data, [0, 9, 9, 3, 7, 5]);
-        assert_eq!(
-            apply(&mut data, &good, None, false, false).already,
-            2,
-            "idempotent"
-        );
-        let bad = patch(vec![replace(0, &[0], &[5]), replace(3, &[42], &[1])]);
-        let strict = apply(&mut data, &bad, None, false, false);
-        assert_eq!(
-            (strict.applied, strict.failed.len(), data[0]),
-            (0, 1, 0),
-            "nothing applied"
-        );
-        assert_eq!(apply(&mut data, &bad, None, false, true).applied, 1);
-        assert_eq!(data[0], 5);
-        let insert = patch(vec![Change {
-            anchor: Anchor::Offset(1),
-            edit: Edit::Insert { bytes: vec![0xAA] },
-            label: "ins".into(),
-        }]);
-        assert_eq!(
-            apply(&mut data, &insert, None, true, false).failed.len(),
-            1,
-            "no inserts into tables"
-        );
-        apply(&mut data, &insert, None, false, false);
-        assert_eq!(data[..3], [5, 0xAA, 9]);
-    }
 }

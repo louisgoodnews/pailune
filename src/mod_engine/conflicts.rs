@@ -14,6 +14,9 @@ pub struct Contest {
     pub file: PathBuf,
     /// The mod this one wins against or loses to.
     pub other: String,
+    /// For changes inside a game file (JSON patches): the records both
+    /// mods change; empty when the whole file is contested.
+    pub values: Vec<String>,
 }
 
 /// Conflicts of a single mod.
@@ -74,6 +77,7 @@ pub fn analyze(config: &Config, staging: &Path, registry: &Registry) -> Result<C
                         Contest {
                             file: file.clone(),
                             other: winner.clone(),
+                            values: Vec::new(),
                         },
                     ),
                     (
@@ -82,6 +86,7 @@ pub fn analyze(config: &Config, staging: &Path, registry: &Registry) -> Result<C
                         Contest {
                             file: file.clone(),
                             other: loser,
+                            values: Vec::new(),
                         },
                     ),
                 ]
@@ -95,4 +100,32 @@ pub fn analyze(config: &Config, staging: &Path, registry: &Registry) -> Result<C
             }
             report
         }))
+}
+
+/// Adds conflicts inside game files: `(game file, earlier mod, later mod,
+/// values both change)`; the later mod wins, as on Apply.
+pub fn add_overlaps(
+    report: &mut ConflictReport,
+    overlaps: impl IntoIterator<Item = (String, String, String, Vec<String>)>,
+) {
+    overlaps
+        .into_iter()
+        .for_each(|(vpath, earlier, later, values)| {
+            let file = Path::new(ARCHIVE_PREFIX).join(vpath);
+            let contest = |other: &str| Contest {
+                file: file.clone(),
+                other: other.to_string(),
+                values: values.clone(),
+            };
+            report
+                .entry(earlier.clone())
+                .or_default()
+                .loses
+                .push(contest(&later));
+            report
+                .entry(later)
+                .or_default()
+                .wins
+                .push(contest(&earlier));
+        });
 }

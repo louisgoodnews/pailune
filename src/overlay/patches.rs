@@ -2,7 +2,7 @@
 
 use super::table_paths::{header_of, name_of, variants};
 use crate::error::{IoContext, PyluneError, Result};
-use crate::patch::{self, JsonMod, apply::apply};
+use crate::patch::{self, JsonMod, apply::apply_over};
 use crate::paz::{
     extract,
     vanilla::{Vanilla, Wanted},
@@ -59,7 +59,7 @@ pub fn wanted(mods: &[ModPatch]) -> Wanted {
 
 /// Resolves a mod's `game_file` to a vanilla virtual path: exact path (or
 /// alias) first, then a unique file name.
-fn resolve(base: &Vanilla, game_file: &str) -> Result<String> {
+pub(super) fn resolve(base: &Vanilla, game_file: &str) -> Result<String> {
     let names = variants(game_file);
     names
         .iter()
@@ -78,7 +78,7 @@ fn resolve(base: &Vanilla, game_file: &str) -> Result<String> {
 }
 
 /// Vanilla plaintext of a located file.
-fn vanilla_bytes(game_dir: &Path, base: &Vanilla, vpath: &str) -> Result<Vec<u8>> {
+pub(super) fn vanilla_bytes(game_dir: &Path, base: &Vanilla, vpath: &str) -> Result<Vec<u8>> {
     let (group, record) = base
         .locate(vpath)
         .ok_or_else(|| PyluneError::Invalid(format!("{vpath} not in the game")))?;
@@ -95,6 +95,8 @@ pub fn apply_all(
     packed: &BTreeMap<String, PathBuf>,
 ) -> (BTreeMap<String, Vec<u8>>, Vec<PatchNote>) {
     let mut files: BTreeMap<String, Vec<u8>> = BTreeMap::new();
+    // What each file looked like before any mod changed it.
+    let mut unmodded: BTreeMap<String, Vec<u8>> = BTreeMap::new();
     let mut notes = Vec::new();
     let note = |notes: &mut Vec<PatchNote>, m: &ModPatch, ok, message: String| {
         notes.push(PatchNote {
@@ -117,10 +119,14 @@ pub fn apply_all(
             let target = resolve(base, &p.game_file).and_then(|vpath| {
                 let current = match files.get(&vpath) {
                     Some(bytes) => bytes.clone(),
-                    None => match packed.get(&vpath) {
-                        Some(source) => fs::read(source).at(source)?,
-                        None => vanilla_bytes(game_dir, base, &vpath)?,
-                    },
+                    None => {
+                        let first = match packed.get(&vpath) {
+                            Some(source) => fs::read(source).at(source)?,
+                            None => vanilla_bytes(game_dir, base, &vpath)?,
+                        };
+                        unmodded.insert(vpath.clone(), first.clone());
+                        first
+                    }
                 };
                 // The index must come from the same place as the body.
                 let header = header_of(&vpath)
@@ -139,12 +145,14 @@ pub fn apply_all(
                 Ok((vpath, mut data, header)) => {
                     let (patch, unresolved) =
                         crate::tables::format3::with_fields(p, &vpath, header.as_deref(), &data);
-                    let mut report = apply(
+                    // Later mods override earlier ones on the same bytes.
+                    let mut report = apply_over(
                         &mut data,
                         &patch,
                         header.as_deref(),
                         header.is_some(),
                         parsed.allow_partial,
+                        unmodded.get(&vpath).map(Vec::as_slice),
                     );
                     report.failed.extend(unresolved);
                     let ok = report.failed.is_empty();

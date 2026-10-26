@@ -95,6 +95,37 @@ pub fn load(game_dir: &Path, papgt_bytes: &[u8], wanted: &Wanted) -> Result<Vani
     })
 }
 
+/// What a [`load`] result depends on: the table, the wanted files, and the
+/// size and modification time of every group index.
+type CacheKey = (Vec<u8>, Wanted, Vec<(u64, Option<std::time::SystemTime>)>);
+
+/// [`load`], reusing the last result while nothing it read has changed
+/// (scanning every index of the game takes seconds).
+pub fn load_cached(game_dir: &Path, papgt_bytes: &[u8], wanted: &Wanted) -> Result<Vanilla> {
+    static LAST: std::sync::Mutex<Option<(CacheKey, Vanilla)>> = std::sync::Mutex::new(None);
+    let table = papgt::parse(papgt_bytes)?;
+    let indexes = table
+        .groups
+        .iter()
+        .map(|g| {
+            fs::metadata(game_dir.join(&g.name).join("0.pamt"))
+                .map_or((0, None), |m| (m.len(), m.modified().ok()))
+        })
+        .collect();
+    let key: CacheKey = (papgt_bytes.to_vec(), wanted.clone(), indexes);
+    if let Ok(last) = LAST.lock()
+        && let Some((cached, vanilla)) = last.as_ref()
+        && *cached == key
+    {
+        return Ok(vanilla.clone());
+    }
+    let vanilla = load(game_dir, papgt_bytes, wanted)?;
+    if let Ok(mut last) = LAST.lock() {
+        *last = Some((key, vanilla.clone()));
+    }
+    Ok(vanilla)
+}
+
 impl Vanilla {
     /// Storage flags for a file: the shadowed vanilla entry's, else the
     /// usual flags of its extension, else plain LZ4.
