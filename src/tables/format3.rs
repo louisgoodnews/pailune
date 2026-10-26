@@ -7,7 +7,6 @@
 //! `array_append`, `scale`) are refused with a message.
 
 use super::{Table, records, spans, verify};
-use crate::error::{PyluneError, Result};
 use crate::patch::{Anchor, Change, Edit, FilePatch};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -24,6 +23,9 @@ pub struct Intent {
     pub new: Value,
     /// Raw replace: bytes to find in the record.
     pub old: Option<String>,
+    /// Format 3.1: records chosen by field values (`"match"`), not yet
+    /// supported.
+    pub matches: Option<Value>,
 }
 
 /// The intents for one table file.
@@ -33,50 +35,7 @@ pub struct FieldPatch {
     pub intents: Vec<Intent>,
 }
 
-/// Whether a parsed JSON document is a format-3 mod.
-pub fn is_format3(root: &Value) -> bool {
-    root.get("format").and_then(Value::as_u64) == Some(3)
-        || root.get("intents").is_some()
-        || root.get("targets").is_some()
-}
-
-fn intent(v: &Value) -> Intent {
-    let text = |k: &str| v.get(k).and_then(Value::as_str).map(str::to_string);
-    Intent {
-        entry: text("entry"),
-        key: v.get("key").and_then(|k| {
-            k.as_u64()
-                .or_else(|| k.as_str().and_then(|s| s.parse().ok()))
-        }),
-        field: text("field"),
-        op: text("op").unwrap_or_else(|| "set".into()),
-        new: v.get("new").cloned().unwrap_or(Value::Null),
-        old: text("old"),
-    }
-}
-
-/// Reads the targets of a format-3 document (singular or plural form).
-pub fn parse(root: &Value) -> Result<Vec<FieldPatch>> {
-    let one = |file: Option<&Value>, intents: Option<&Value>| -> Result<FieldPatch> {
-        Ok(FieldPatch {
-            target: file
-                .and_then(Value::as_str)
-                .ok_or_else(|| PyluneError::Invalid("format-3 target without a file".into()))?
-                .to_string(),
-            intents: intents
-                .and_then(Value::as_array)
-                .map(|a| a.iter().map(intent).collect())
-                .unwrap_or_default(),
-        })
-    };
-    match root.get("targets").and_then(Value::as_array) {
-        Some(list) => list
-            .iter()
-            .map(|t| one(t.get("file").or(t.get("target")), t.get("intents")))
-            .collect(),
-        None => Ok(vec![one(root.get("target"), root.get("intents"))?]),
-    }
-}
+pub use super::format3_read::{is_format3, parse};
 
 /// `_maxStackCount`, `maxStackCount` and `max_stack_count` compare equal.
 fn same_name(a: &str, b: &str) -> bool {
@@ -155,6 +114,20 @@ fn change(
     ))
 }
 
+/// Why Pylune cannot carry out an intent of a newer format revision yet.
+fn unsupported(i: &Intent) -> Option<String> {
+    let field = i.field.as_deref().unwrap_or_default();
+    match (&i.matches, field.contains(['[', '.'])) {
+        (Some(_), _) => Some(format!(
+            "{field}: choosing records by \"match\" (format 3.1) is not supported yet"
+        )),
+        (None, true) => Some(format!(
+            "{field}: nested fields (format 3.1) are not supported yet"
+        )),
+        (None, false) => None,
+    }
+}
+
 /// Resolves intents for a table into changes; failures are explained.
 pub fn resolve(
     table_file: &str,
@@ -185,6 +158,10 @@ pub fn resolve(
     intents
         .iter()
         .fold((Vec::new(), Vec::new()), |(mut ok, mut failed), i| {
+            if let Some(why) = unsupported(i) {
+                failed.push(why);
+                return (ok, failed);
+            }
             let candidates = match (i.key, i.entry.as_deref()) {
                 (Some(key), _) => by_key.get(&key),
                 (None, Some(name)) => by_name.get(name),

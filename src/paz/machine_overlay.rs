@@ -92,3 +92,142 @@ fn json_value_conflicts_on_the_real_tables() {
     let values: Vec<&String> = found[0].values.iter().collect();
     assert_eq!(values, ["Arrow", "Pyeonjeon_Arrow"]);
 }
+
+/// What Pylune would do with the mod in `PYLUNE_DRY_RUN_MOD=<dir>`: file
+/// placements, options, and an overlay built into `PYLUNE_DRY_RUN_OUT`
+/// from the installed game (read only; nothing is written to the game).
+#[test]
+#[ignore = "reads the local game installation"]
+fn dry_run_a_mod_against_the_game() {
+    let (Ok(dir), Ok(out)) = (
+        std::env::var("PYLUNE_DRY_RUN_MOD"),
+        std::env::var("PYLUNE_DRY_RUN_OUT"),
+    ) else {
+        return;
+    };
+    let root = std::path::PathBuf::from(dir);
+    let mut counts = std::collections::BTreeMap::<String, (usize, Vec<String>)>::new();
+    walkdir::WalkDir::new(&root)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file())
+        .for_each(|e| {
+            let rel = e.path().strip_prefix(&root).unwrap();
+            let entry = counts
+                .entry(format!("{:?}", crate::mod_engine::plan::placement(rel)))
+                .or_default();
+            entry.0 += 1;
+            if entry.1.len() < 3 {
+                entry.1.push(rel.display().to_string());
+            }
+        });
+    counts
+        .iter()
+        .for_each(|(p, (n, ex))| println!("{p}: {n} e.g. {ex:?}"));
+    println!("options: {:?}", crate::mod_engine::variants::titled(&root));
+    let name = root.file_name().unwrap().to_string_lossy().into_owned();
+    let registry = crate::mod_engine::model::Registry {
+        mods: vec![crate::mod_engine::model::ModEntry {
+            enabled: true,
+            ..crate::mod_engine::registry::discovered(&name, 0)
+        }],
+    };
+    let input = crate::overlay::collect::collect(root.parent().unwrap(), &registry).unwrap();
+    println!(
+        "overlay input: {} packed, {} prebuilt, {} JSON, {} text patches",
+        input.packs.len(),
+        input.prebuilt.len(),
+        input.patches.len(),
+        input.text_patches.len()
+    );
+    let mut config = crate::config::Config::default();
+    config.game.dir =
+        crate::steam::library::find_game(crate::config::CRIMSON_DESERT_APP_ID).unwrap();
+    let info = crate::steam::locate::resolve(&config);
+    let papgt = crate::overlay::build::vanilla_papgt(&info).unwrap();
+    let pathc = fs::read(info.meta_dir.join("0.pathc.bak")).ok();
+    // Per extension: files, how many replace a game file, storage flags.
+    let wanted = crate::paz::vanilla::Wanted {
+        paths: input.packs.keys().cloned().collect(),
+        names: Default::default(),
+    };
+    let base = crate::paz::vanilla::load_cached(&info.game_dir, &papgt, &wanted).unwrap();
+    let mut by_ext =
+        std::collections::BTreeMap::<String, (usize, usize, std::collections::BTreeSet<u16>)>::new(
+        );
+    input.packs.keys().for_each(|v| {
+        let ext = v.rsplit('.').next().unwrap_or_default().to_string();
+        let entry = by_ext.entry(ext).or_default();
+        entry.0 += 1;
+        entry.1 += usize::from(base.replaces(v));
+        entry.2.insert(base.flags_for(v));
+    });
+    by_ext.iter().for_each(|(e, (n, r, f))| {
+        println!("ext {e}: {n} files, {r} replace game files, flags {:x?}", f)
+    });
+    match crate::overlay::build::build_from(&info, &papgt, pathc.as_deref(), &input, out.as_ref()) {
+        Ok(plan) => {
+            println!(
+                "overlay: {} packed, {} replace game files, groups {:?}",
+                plan.packed, plan.replaced, plan.groups
+            );
+            plan.skipped
+                .iter()
+                .take(10)
+                .for_each(|s| println!("skipped: {s}"));
+            plan.patch_notes
+                .iter()
+                .for_each(|n| println!("patch: {n:?}"));
+        }
+        Err(err) => println!("overlay build failed: {err}"),
+    }
+}
+
+/// How vanilla `.pac` meshes are stored: flags, stored vs. original size,
+/// and the first bytes of a type-1 entry (research for new meshes).
+#[test]
+#[ignore = "reads the local game installation"]
+fn vanilla_pac_storage() {
+    let game = crate::steam::library::find_game(crate::config::CRIMSON_DESERT_APP_ID).unwrap();
+    let table = papgt::parse(&fs::read(game.join("meta/0.papgt.bak")).unwrap()).unwrap();
+    let mut stats = std::collections::BTreeMap::<u16, (usize, usize)>::new();
+    let mut samples = 0;
+    for group in table.groups.iter().map(|g| g.name.clone()) {
+        let dir = game.join(&group);
+        let Ok(index) = fs::read(dir.join("0.pamt"))
+            .map_err(|_| ())
+            .and_then(|b| pamt::parse(&b).map_err(|_| ()))
+        else {
+            continue;
+        };
+        for (vpath, record) in index.files.iter().filter(|(p, _)| p.ends_with(".pac")) {
+            if record.flags == 0 {
+                println!("plain: {group}/{vpath} {record:?}");
+            }
+            let entry = stats.entry(record.flags).or_default();
+            entry.0 += 1;
+            entry.1 += usize::from(record.stored_size == record.orig_size);
+            if record.flags & 0x0F == 1 && samples < 4 {
+                samples += 1;
+                let stored = extract::read_stored(&dir, record).unwrap();
+                println!(
+                    "{group}/{vpath}: stored {} orig {} head {:02x?}",
+                    record.stored_size,
+                    record.orig_size,
+                    &stored[..48.min(stored.len())]
+                );
+                match extract::decode(vpath, record, stored.clone()) {
+                    Ok(d) => println!(
+                        "  decodes to {} bytes, head {:02x?}",
+                        d.len(),
+                        &d[..32.min(d.len())]
+                    ),
+                    Err(e) => println!("  decode: {e}"),
+                }
+            }
+        }
+    }
+    stats
+        .iter()
+        .for_each(|(f, (n, same))| println!("flags {f:#06x}: {n} .pac, {same} stored == orig"));
+}

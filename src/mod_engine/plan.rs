@@ -118,7 +118,12 @@ pub fn deployable_files(mod_root: &Path, variant: Option<&str>) -> Result<Vec<Mo
                 .collect(),
         );
     }
-    let options = super::variants::variants(mod_root);
+    // Layout folders: one is a wrapper (always "chosen"), several are
+    // options; without any, alternative JSON files may be the options.
+    let options = match super::variants::layout_folders(mod_root) {
+        folders if folders.is_empty() => super::variants::variants(mod_root),
+        folders => folders,
+    };
     let chosen = super::variants::effective(&options, variant).cloned();
     WalkDir::new(mod_root)
         .sort_by_file_name()

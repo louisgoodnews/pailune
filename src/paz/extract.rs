@@ -33,8 +33,16 @@ pub fn decode(vpath: &str, record: &FileRecord, mut stored: Vec<u8>) -> Result<V
         Compression::None => Ok(stored),
         Compression::Lz4 => lz4_flex::block::decompress(&stored, record.orig_size as usize)
             .map_err(|e| PyluneError::Archive(format!("{vpath}: LZ4: {e}"))),
-        Compression::DdsPartial => super::dds::decode(&stored, record.orig_size as usize)
-            .map_err(|e| PyluneError::Archive(format!("{vpath}: {e}"))),
+        Compression::DdsPartial if vpath.ends_with(".dds") => {
+            super::dds::decode(&stored, record.orig_size as usize)
+                .map_err(|e| PyluneError::Archive(format!("{vpath}: {e}")))
+        }
+        // Other partial files (`.pac` meshes) stored uncompressed are the
+        // file itself; compressed ones are not understood yet.
+        Compression::DdsPartial if stored.len() == record.orig_size as usize => Ok(stored),
+        Compression::DdsPartial => Err(PyluneError::Archive(format!(
+            "{vpath}: compressed partial storage of this file type is not supported yet"
+        ))),
         Compression::Unknown(n) => Err(PyluneError::Archive(format!(
             "{vpath}: unknown compression {n}"
         ))),

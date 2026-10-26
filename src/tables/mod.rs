@@ -9,6 +9,7 @@
 //! (no other field of the class has the same shape, so names cannot swap).
 
 pub mod format3;
+mod format3_read;
 pub mod value;
 
 use crate::error::{PyluneError, Result};

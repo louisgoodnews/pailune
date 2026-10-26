@@ -47,7 +47,7 @@ fn pack(
                 (None, Some(source)) => fs::read(source).at(source)?,
                 (None, None) => return Ok((packed, skipped)),
             };
-            let flags = base.flags_for(vpath);
+            let flags = super::storage::storage_flags(vpath, base.flags_for(vpath));
             let result = match is_texture(vpath) {
                 true => super::textures::pack(vpath, &data, flags, textures),
                 false => encode::encode(vpath, &data, flags).map(|stored| Packed {
@@ -81,7 +81,7 @@ fn snapshot(info: &SteamInfo, name: &str) -> Result<Vec<u8>> {
 
 /// The vanilla `0.papgt`: the snapshot once Pylune has deployed, else the
 /// live file (still untouched then).
-pub(super) fn vanilla_papgt(info: &SteamInfo) -> Result<Vec<u8>> {
+pub(crate) fn vanilla_papgt(info: &SteamInfo) -> Result<Vec<u8>> {
     snapshot(info, "0.papgt").or_else(|_| {
         let live = info.meta_dir.join("0.papgt");
         fs::read(&live).at(&live)

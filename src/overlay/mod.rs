@@ -10,6 +10,7 @@
 pub mod build;
 pub mod collect;
 pub mod patches;
+mod storage;
 mod table_paths;
 pub mod textures;
 pub mod value_conflicts;

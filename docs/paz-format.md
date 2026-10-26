@@ -589,6 +589,19 @@ format or size, update PATHC (§6.3).
 
 ---
 
+### 7.5 Type 1 outside textures: `.pac` meshes (2026-10-26, read-only scan)
+
+Type 1 is not texture-only. On build 2.3.2, 12 961 `.pac` meshes use flags `0x0001`; 10 047 of
+them are stored uncompressed (`stored_size == orig_size`), and their bytes are the plain file
+(magic `PAR `, then a small header of section sizes). Two meshes are stored with flags `0x0000`
+(`6_object/tools/cd_t0000_carddeck_0001.pac`, `…/cd_t9999_knowledgeimage_background_texture.pac`),
+so the game's mesh loader accepts plain storage. The compressed variant (2 914 meshes) is not
+decoded yet. Pylune therefore stores new or replaced non-texture files whose siblings use type 1
+**plain** (flags with compression 0, encryption kept), and reads uncompressed type-1 meshes as
+they are. **UNVERIFIED in game** (first user: *Character Creator*, 69 new head meshes).
+
+---
+
 ## 8. `meta/0.papk` (32 bytes)
 
 Opaque, high-entropy, unchanged by every mod manager studied. Purpose

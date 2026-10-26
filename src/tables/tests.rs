@@ -25,6 +25,7 @@ fn set(key: u64, field: &str, new: serde_json::Value) -> Intent {
         op: "set".into(),
         new,
         old: None,
+        matches: None,
     }
 }
 
@@ -98,6 +99,7 @@ fn raw_replaces_work_on_tables_without_a_layout() {
         op: "set".into(),
         new: serde_json::json!("d0070000"),
         old: Some("d0070000".into()),
+        matches: None,
     };
     let swap = Intent {
         new: serde_json::json!("e8030000"),

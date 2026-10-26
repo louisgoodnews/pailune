@@ -27,10 +27,11 @@ fn has_layout(dir: &Path) -> bool {
 
 /// The options of a staged mod with their display names: variant folders
 /// (sorted), else alternative JSON files (titled by their `modinfo`); empty
-/// unless there are at least two.
+/// unless there are at least two. A single layout folder is no choice but a
+/// wrapper (see [`layout_folders`]).
 pub fn titled(mod_root: &Path) -> Vec<(String, String)> {
-    match folders(mod_root).as_slice() {
-        [] => super::alternatives::alternatives(mod_root)
+    match layout_folders(mod_root).as_slice() {
+        [] | [_] => super::alternatives::alternatives(mod_root)
             .into_iter()
             .map(|(path, title)| {
                 let shown = match title.is_empty() {
@@ -49,9 +50,11 @@ pub fn variants(mod_root: &Path) -> Vec<String> {
     titled(mod_root).into_iter().map(|(v, _)| v).collect()
 }
 
-/// The variant folders of a staged mod, sorted; empty unless there are at
-/// least two alternatives.
-fn folders(mod_root: &Path) -> Vec<String> {
+/// Folders at the mod root that hold game-layout content (`NNNN/`, `files/`,
+/// `bin64/`), sorted. Several are alternative options; a single one is a
+/// wrapper (`Mod/Mod Enhanced/0009/…` next to the mod's plugin or JSON) that
+/// is deployed as if its content sat at the root.
+pub fn layout_folders(mod_root: &Path) -> Vec<String> {
     let mut found: Vec<String> = fs::read_dir(mod_root)
         .map(|entries| {
             entries
@@ -64,10 +67,7 @@ fn folders(mod_root: &Path) -> Vec<String> {
         })
         .unwrap_or_default();
     found.sort();
-    match found.len() {
-        0 | 1 => Vec::new(),
-        _ => found,
-    }
+    found
 }
 
 /// The variant to deploy: the chosen one if it still exists, else the first.
@@ -110,6 +110,36 @@ mod tests {
         assert!(
             variants(&root.join("Human Female")).is_empty(),
             "a single layout is no variant set"
+        );
+    }
+
+    #[test]
+    fn a_single_layout_folder_is_a_wrapper() {
+        use crate::mod_engine::plan::{Placement, deployable_files};
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        [
+            "Plugin.asi",
+            "Mod Enhanced/0009/character/a.pac",
+            "readme.txt",
+        ]
+        .iter()
+        .for_each(|p| {
+            fs::create_dir_all(root.join(p).parent().unwrap()).unwrap();
+            fs::write(root.join(p), "x").unwrap();
+        });
+        assert!(variants(root).is_empty(), "no choice to make");
+        let files: Vec<(String, Placement)> = deployable_files(root, None)
+            .unwrap()
+            .into_iter()
+            .map(|f| (f.rel.to_string_lossy().replace('\\', "/"), f.place))
+            .collect();
+        assert_eq!(
+            files,
+            [
+                ("0009/character/a.pac".to_string(), Placement::Pack),
+                ("Plugin.asi".to_string(), Placement::Bin64)
+            ]
         );
     }
 }

@@ -31,7 +31,8 @@ mod machine_tables;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Compression {
     None,
-    /// DDS with per-mip LZ4 chunks ("partial").
+    /// "Partial": DDS with per-mip LZ4 chunks; also used by `.pac` meshes
+    /// (`PAR ` header), most of them stored uncompressed.
     DdsPartial,
     Lz4,
     /// A value the format documentation has never observed.

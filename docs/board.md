@@ -12,6 +12,11 @@ Move a line between columns when its status changes.
 
 ## Backlog (large)
 
+- [ ] A-01 format 3.1: records chosen by `match`, nested fields (`prefab_data_list[*].…`) and
+  list values that change a record's length (table rewrite with new index offsets). Needed by
+  *Character Creator*'s "Equip All Armor"; needs the full ItemInfo layout first — *L*
+- [ ] A-01 compressed type-1 `.pac` meshes (2 914 in the game): decode for reading and patching — *M*
+
 - [ ] B-16 JSON mod creation (D-13): new mod → data browser → change from the browser → check
   against the game → test loop → package (roadmap phase 15) — *L*
 - [ ] B-17 ASI mod creation (D-13), after B-16: research + decision record first, then templates,

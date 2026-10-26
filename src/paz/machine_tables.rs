@@ -70,6 +70,7 @@ fn raw_field_change_on_the_real_item_table() {
         field: None,
         op: "set".into(),
         old: Some("006400000000000000".into()),
+        matches: None,
         new: serde_json::json!("00e703000000000000"),
     };
     let (changes, failed) =

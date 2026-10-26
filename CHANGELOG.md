@@ -44,6 +44,11 @@
   bytes are checked against the unmodded game) instead of failing.
 - Faster Apply and analysis: the scan of the game's archive indexes is reused while they are
   unchanged; format-3 intents are matched to records by key.
+- Mods that wrap their game folders in one extra folder next to a plugin or JSON file
+  (`Mod/Mod Enhanced/0009/…`) now deploy; before, those files were left out.
+- New `.pac` meshes are packed (stored plain, as some game meshes are) instead of being refused
+  as textures.
+- Format-3.1 intents (records chosen by `match`, nested fields) are refused with a clear reason.
 - JSON mods with alternative files (e.g. *Fat Stacks* 2x … 100x) offer them as options; only the
   chosen file is applied.
 - JSON mod editor in the details panel: every change with its original and new value, editable as
