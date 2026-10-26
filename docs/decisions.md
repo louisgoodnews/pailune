@@ -79,6 +79,19 @@ game's first write.
 **Why.** The Rust ecosystem's convention: compatible with almost every downstream use, and the
 Apache option adds an explicit patent grant.
 
+## D-13 Pylune also creates mods (accepted 2026-10-26)
+
+**Context.** The vision listed "editing mods" as a non-goal. Pylune since gained what mod
+authors need most: a verified reader for the game's archives and data tables, derived table
+layouts, byte-checked patching and a JSON editor. The owner asked for mod creation.
+**Decision.** Pylune is a mod manager *and* a modding tool. Creation starts with JSON mods
+(B-16, built on the table reader and layouts), then ASI plugins (B-17, tooling around the
+author's own code). The installed game stays read-only; created mods are ordinary staged mods
+and deploy through the same journaled path.
+**Limits.** No analysis of the game's protected code (unchanged); no bundling of game data or
+third-party schemas into created mods beyond the changed bytes.
+**Supersedes** the "Editing mods" non-goal in [vision.md](vision.md).
+
 ## D-12 No script runtime in Pylune (accepted 2026-10-26)
 
 **Context.** B-13 asked whether scripts can be injected into the running game. The archives

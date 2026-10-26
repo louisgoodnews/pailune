@@ -177,6 +177,16 @@ Requested after the A-items were largely done. Sizes: **S** small, **M** medium,
 | B-15 | S | Move to position | Move a mod to a given load-order number (details panel field and a list action), instead of repeated up/down. |
 | B-14 | M–L | MCP server for agentic use | A command-line mode that exposes Pylune's actions as Model Context Protocol tools, so agents can manage mods without the window. |
 
+## Addendum 3 — 2026-10-26: Pylune as a modding tool (B-16, B-17)
+
+The owner widened the scope: Pylune should also help **create** mods, not only install and edit
+them (decision D-13). JSON mods come first, ASI mods second.
+
+| ID | Size | Request | Scope |
+|----|------|---------|-------|
+| B-16 | L | JSON mod creation | Start a new JSON mod, browse the game's data tables, pick records and fields (or raw bytes) and turn them into checked changes, test them in game, package the result for sharing. |
+| B-17 | L (research first) | ASI mod creation | Scaffold, build, deploy and debug ASI plugins from Pylune: project templates, a build that works on Linux, the test loop with the game and its log, packaging. Pylune provides the tooling; what a plugin hooks is the author's work (Pylune never analyses the game's protected code). |
+
 ### B-07 — Save files: what we know (read-only look, build 2.3.2)
 
 - Location: `<prefix>/drive_c/users/steamuser/AppData/Local/Pearl Abyss/CD/save/<Steam account id>/slot<N>/`

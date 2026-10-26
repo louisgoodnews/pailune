@@ -37,7 +37,6 @@ and they care a great deal about not breaking their game or their saves.
 
 - Other games. Formats, paths and defaults are specific to *Crimson Desert*; generality would
   cost clarity. (The archive and overlay code is separable should that ever change.)
-- Editing mods. Pylune installs and orders them; making them is a job for other tools.
 - Bypassing Nexus Mods' download rules (Premium vs. free accounts are respected).
 
 ## Principles in practice
@@ -51,6 +50,8 @@ and they care a great deal about not breaking their game or their saves.
 
 ## Where it is going
 
-Open work is tracked in [board.md](board.md) and ordered in [roadmap.md](roadmap.md). The large
-remaining items are more patch formats inside the archives (XML/HTML patches, new texture ids,
-table inserts, field-name JSON) and installer scripts for mods with many options.
+Open work is tracked in [board.md](board.md) and ordered in [roadmap.md](roadmap.md). Pylune is
+growing from a mod manager into a **modding tool** as well (decision D-13): first creating JSON
+mods from the game's data tables, then building and testing ASI plugins. Creating mods follows
+the same goals — the installed game is never modified, every change is checked against the
+original bytes, and a created mod is just another mod in the list.
