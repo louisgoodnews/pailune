@@ -9,6 +9,8 @@
 | [extending.md](extending.md) | Contributors | Step-by-step guides for common extensions and the code conventions. |
 | [decisions.md](decisions.md) | Contributors | Architecture decision records: what was chosen and why. |
 | [ux-principles.md](ux-principles.md) | Contributors | Evidence-based interface rules (R-01 … R-29) and where they live. |
+| [save-format.md](save-format.md) | Contributors | The save-game container and decoding options. |
+| [research/script-bridge.md](research/script-bridge.md) | Contributors | Whether scripts can run inside the game. |
 | [paz-format.md](paz-format.md) | Contributors | The game's archive formats as far as Pylune needs them. |
 | [audit.md](audit.md) · [roadmap.md](roadmap.md) · [board.md](board.md) | Maintainers | Findings, plan and status of every work item. |
 

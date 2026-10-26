@@ -39,8 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] B-07 (research) Save format: read-only decoding, `docs/save-format.md` — *L*
-- [ ] B-13 (research) Script bridge report + decision record
 
 ## Backlog (large)
 
@@ -52,10 +50,18 @@ Move a line between columns when its status changes.
 
 ## Owner
 
+- [ ] B-07 Choose how saves are decoded (`docs/save-format.md` § Options; recommended: read-only
+  inspector on `crimson-rs`, MIT)
+- [ ] B-13 Accept or reject D-12 (no script runtime; better ASI plugin management instead)
 - [ ] A-21 (rest) Register Pylune with Nexus (AUP) before a public release
 
 ## Done
 
+- [x] B-07 research: save container documented (`docs/save-format.md`) — header verified on real
+  saves, payload is LZ4 + ChaCha20 with HMAC-SHA256 (archive key scheme ruled out by experiment;
+  community library `crimson-rs` documents the key scheme).
+- [x] B-13 research (`docs/research/script-bridge.md`): no script files among 2 052 523 archived
+  files; native mods are ASI plugins with per-patch pattern hooks; proposal D-12.
 - [x] B-14 command line and MCP (`src/cli/`, `src/mcp/`): 25 commands with `--json` and exit
   codes, `--yes` for irreversible ones; read-only commands read the database (work with the
   window open), changing ones drive a headless `PyluneApp` under the instance lock (same rules as
