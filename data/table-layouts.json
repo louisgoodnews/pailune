@@ -507,6 +507,29 @@
     }
    ]
   },
+  "iteminfo": {
+   "class": "ItemInfo",
+   "key_size": 4,
+   "records": 6816,
+   "partial": true,
+   "evidence": "leading fields solved on 6753 of 6816 records (phase 2 engine); _maxStackCount confirmed on 2391 records by the published Fat Stacks mod (new = multiple of the u64 at +1)",
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_maxStackCount",
+     "shape": "fixed:8",
+     "meaning": "int",
+     "offset": "proven",
+     "name_certain": true
+    }
+   ]
+  },
   "levelgimmicksceneobjectinfo": {
    "class": "LevelGimmickSceneObjectInfo",
    "key_size": 4,

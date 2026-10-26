@@ -3,7 +3,8 @@
 //!
 //! A layout is trusted only after it decodes **every record** of the
 //! installed table with no byte left over ([`verify`]); otherwise its table
-//! is treated as unknown for this game build. Each field records whether its
+//! is treated as unknown for this game build. A *partial* layout lists only
+//! a table's leading fields; it is trusted when those decode on every record. Each field records whether its
 //! offset is proven (every exact fit agrees) and whether its name is certain
 //! (no other field of the class has the same shape, so names cannot swap).
 
@@ -31,6 +32,10 @@ pub struct Table {
     pub class: String,
     pub key_size: usize,
     pub records: usize,
+    /// Only the leading fields are known; the rest of each record is left
+    /// as it is.
+    #[serde(default)]
+    pub partial: bool,
     pub fields: Vec<Field>,
 }
 
@@ -103,7 +108,8 @@ fn skip(shape: &str, data: &[u8], at: usize) -> Option<usize> {
 }
 
 /// Field spans `(start, end)` within one record payload; `None` if the
-/// layout does not account for every byte.
+/// layout does not account for every byte (for partial layouts: if the
+/// leading fields do not fit).
 pub fn spans(table: &Table, payload: &[u8]) -> Option<Vec<(usize, usize)>> {
     let mut at = 0;
     let spans = table
@@ -116,7 +122,7 @@ pub fn spans(table: &Table, payload: &[u8]) -> Option<Vec<(usize, usize)>> {
             Some(span)
         })
         .collect::<Option<Vec<_>>>()?;
-    (at == payload.len()).then_some(spans)
+    (table.partial || at == payload.len()).then_some(spans)
 }
 
 /// A record of a table body: where it starts, its key, name and payload.

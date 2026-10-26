@@ -29,5 +29,16 @@ for t in sorted(TABLES):
         name_proven = offset_proven and (same==1 or (i==0 and f=='_isBlocked'))
         fields.append({"name":f,"shape":shapes[i],"meaning":meaning(f,k),"offset":"proven" if offset_proven else "inferred","name_certain":name_proven})
     out[t]={"class":cls,"key_size":ks,"records":len(recs),"fields":fields}
+# Partial layouts: only the leading fields, for tables whose full layout is not solved yet. Each
+# must decode on every record; the evidence is written next to it.
+PARTIAL={'iteminfo':("ItemInfo",[("_isBlocked","fixed:1","bool"),("_maxStackCount","fixed:8","int")],
+  "leading fields solved on 6753 of 6816 records (phase 2 engine); _maxStackCount confirmed on 2391 "
+  "records by the published Fat Stacks mod (new = multiple of the u64 at +1)")}
+for t,(cls,lead,evidence) in PARTIAL.items():
+    ks,recs=records(t)
+    need=sum(int(sh.split(':')[1]) for _,sh,_ in lead)
+    if t in out or any(len(payload)<need for _,_,payload in recs): continue
+    out[t]={"class":cls,"key_size":ks,"records":len(recs),"partial":True,"evidence":evidence,
+      "fields":[{"name":f,"shape":sh,"meaning":m,"offset":"proven","name_certain":True} for f,sh,m in lead]}
 json.dump({"format":1,"game_version":"2.3.2","derived":"Pylune table-layout research (docs/research/table-layouts.md)","tables":out},open(sys.argv[1],'w'),indent=1)
 print(len(out),"tables;",sum(1 for t in out.values() for f in t['fields'] if f['name_certain']),"editable fields;",sum(len(t['fields']) for t in out.values()),"fields")

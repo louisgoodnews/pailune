@@ -120,16 +120,30 @@ fn test_mods_apply_to_the_real_tables() {
             let parsed =
                 crate::patch::parse::parse(&fs::read_to_string(e.path()).unwrap()).unwrap();
             parsed.patches.iter().for_each(|p| {
-                let mut body = read(&p.game_file);
-                let head = read(&p.game_file.replace("staticinfobody", "staticinfoheader"));
-                let report = crate::patch::apply::apply(&mut body, p, Some(&head), true, false);
+                let stem = p
+                    .game_file
+                    .rsplit('/')
+                    .next()
+                    .unwrap()
+                    .split('.')
+                    .next()
+                    .unwrap();
+                let path = format!("gamedata/binarystaticinfo__/bin/{stem}.staticinfobody");
+                let mut body = read(&path);
+                let head = read(&path.replace("staticinfobody", "staticinfoheader"));
+                // Format-3 intents become byte changes first, as on Apply.
+                let (p, unresolved) =
+                    crate::tables::format3::with_fields(p, &path, Some(&head), &body);
+                let report = crate::patch::apply::apply(&mut body, &p, Some(&head), true, false);
                 println!(
-                    "{}: {} applied, failed {:?}",
+                    "{}: {} applied, failed {:?} {:?}",
                     e.path().display(),
                     report.applied,
-                    report.failed
+                    &report.failed[..report.failed.len().min(3)],
+                    &unresolved[..unresolved.len().min(3)]
                 );
-                assert!(report.failed.is_empty() && report.applied == p.changes.len());
+                assert!(unresolved.is_empty() && report.failed.is_empty());
+                assert_eq!(report.applied, p.changes.len());
             });
         });
 }

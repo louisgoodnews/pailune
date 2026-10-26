@@ -72,7 +72,7 @@ fn shipped_layouts_load_and_wanted_info_resolves() {
 fn unproven_fields_and_unknown_tables_are_refused() {
     let (header, body) = wanted();
     let (_, failed) = resolve(
-        "iteminfo.pabgb",
+        "skill.pabgb",
         &header,
         &body,
         &[set(0x0601, "_maxStackCount", serde_json::json!(999))],
@@ -104,7 +104,7 @@ fn raw_replaces_work_on_tables_without_a_layout() {
         ..raw.clone()
     };
     let (changes, failed) = resolve(
-        "iteminfo.pabgb",
+        "skill.pabgb",
         &header,
         &body,
         &[swap, set(0x0602, "_maxStackCount", serde_json::json!(1))],
@@ -129,4 +129,59 @@ fn ambiguous_record_names_are_refused() {
         changes.is_empty() && failed[0].contains("share this name"),
         "{failed:?}"
     );
+}
+
+/// An item table: u32 keys, `_isBlocked`, `_maxStackCount`, then fields no
+/// layout describes yet (different lengths per record).
+fn items() -> (Vec<u8>, Vec<u8>) {
+    let mut body = Vec::new();
+    let mut header = vec![2, 0];
+    for (key, name, stack, rest) in [(50001u32, "Arrow", 100u64, 7usize), (2200, "Bow", 1, 30)] {
+        header.extend_from_slice(&key.to_le_bytes());
+        header.extend_from_slice(&(body.len() as u32).to_le_bytes());
+        body.extend_from_slice(&key.to_le_bytes());
+        body.extend_from_slice(&(name.len() as u32).to_le_bytes());
+        body.extend_from_slice(name.as_bytes());
+        body.push(0);
+        body.extend_from_slice(&stack.to_le_bytes());
+        body.extend(std::iter::repeat_n(0xAB, rest));
+    }
+    (header, body)
+}
+
+#[test]
+fn partial_layouts_change_leading_fields_only() {
+    let (header, body) = items();
+    let table = table("iteminfo.pabgb").expect("partial iteminfo layout");
+    assert!(table.partial);
+    verify(table, &header, &body).unwrap();
+    // As Fat Stacks writes it: entry, key and the snake_case field name.
+    let arrow = Intent {
+        entry: Some("Arrow".into()),
+        ..set(50001, "max_stack_count", serde_json::json!(200))
+    };
+    let (changes, failed) = resolve(
+        "iteminfo.pabgb",
+        &header,
+        &body,
+        &[arrow, set(2200, "_itemName", serde_json::json!(1))],
+    );
+    assert_eq!(changes.len(), 1, "{failed:?}");
+    assert!(failed[0].contains("no such field"), "{failed:?}");
+    assert_eq!(
+        changes[0].edit,
+        crate::patch::Edit::Replace {
+            original: Some(100u64.to_le_bytes().to_vec()),
+            patched: 200u64.to_le_bytes().to_vec()
+        }
+    );
+    // A record too short for the leading fields disables the table.
+    let cut = body.len() - 30 - 8;
+    let (_, failed) = resolve(
+        "iteminfo.pabgb",
+        &header,
+        &body[..cut],
+        &[set(50001, "_maxStackCount", serde_json::json!(5))],
+    );
+    assert!(failed[0].contains("does not match"), "{failed:?}");
 }

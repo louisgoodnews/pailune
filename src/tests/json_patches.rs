@@ -128,11 +128,13 @@ fn json_patches_apply_in_load_order_and_revert() {
         log.iter().any(|e| e.message.contains("do not match")),
         "{log:?}"
     );
+    // The fixture's 5-byte records are too short for the item layout's
+    // leading fields, so field changes are refused, not guessed.
     let fields = db::events::recent(&conn, 50, Some("D Fields")).unwrap();
     assert!(
         fields
             .iter()
-            .any(|e| e.message.contains("no verified layout")),
+            .any(|e| e.message.contains("does not match this game build")),
         "{fields:?}"
     );
 
