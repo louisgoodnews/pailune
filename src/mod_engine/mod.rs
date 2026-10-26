@@ -1,6 +1,7 @@
 //! Mod management: staging, archives, classification, load order,
 //! deployment planning, conflict analysis and mod details.
 
+pub mod alternatives;
 pub mod archive;
 pub mod classify;
 pub mod conflicts;

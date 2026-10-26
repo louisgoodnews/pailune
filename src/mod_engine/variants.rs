@@ -1,6 +1,8 @@
 //! Multi-variant mods: one archive with several alternative option folders
 //! (e.g. `Character Creator/Human Female/0009/…` and `…/Dwarf Female/0009/…`).
 //! Only the chosen variant is deployed; shared files at the root always are.
+//! Without option folders, overlapping JSON files are the options instead
+//! ([`super::alternatives`]); a variant is then the file's relative path.
 
 use super::plan::is_archive_dir;
 use std::fs;
@@ -23,9 +25,33 @@ fn has_layout(dir: &Path) -> bool {
         .any(|e| e.file_type().is_dir() && is_layout_dir(&e.file_name().to_string_lossy()))
 }
 
+/// The options of a staged mod with their display names: variant folders
+/// (sorted), else alternative JSON files (titled by their `modinfo`); empty
+/// unless there are at least two.
+pub fn titled(mod_root: &Path) -> Vec<(String, String)> {
+    match folders(mod_root).as_slice() {
+        [] => super::alternatives::alternatives(mod_root)
+            .into_iter()
+            .map(|(path, title)| {
+                let shown = match title.is_empty() {
+                    true => path.clone(),
+                    false => title,
+                };
+                (path, shown)
+            })
+            .collect(),
+        found => found.iter().map(|f| (f.clone(), f.clone())).collect(),
+    }
+}
+
+/// The options of a staged mod (see [`titled`]).
+pub fn variants(mod_root: &Path) -> Vec<String> {
+    titled(mod_root).into_iter().map(|(v, _)| v).collect()
+}
+
 /// The variant folders of a staged mod, sorted; empty unless there are at
 /// least two alternatives.
-pub fn variants(mod_root: &Path) -> Vec<String> {
+fn folders(mod_root: &Path) -> Vec<String> {
     let mut found: Vec<String> = fs::read_dir(mod_root)
         .map(|entries| {
             entries

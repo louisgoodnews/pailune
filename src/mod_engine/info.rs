@@ -37,6 +37,10 @@ pub fn details(mod_root: &Path, variant: Option<&str>) -> Result<ModDetails> {
         Ok(installer) => (installer, None),
         Err(err) => (None, Some(err)),
     };
+    let options = match (&installer, &installer_error) {
+        (None, None) => super::variants::titled(mod_root),
+        _ => Vec::new(),
+    };
     let deployed: HashMap<PathBuf, Placement> = deployable_files(mod_root, variant)?
         .into_iter()
         .map(|f| (f.source, f.place))
@@ -72,10 +76,8 @@ pub fn details(mod_root: &Path, variant: Option<&str>) -> Result<ModDetails> {
             .map(|f| f.rel.clone())
             .collect(),
         files,
-        variants: match (&installer, &installer_error) {
-            (None, None) => super::variants::variants(mod_root),
-            _ => Vec::new(),
-        },
+        variants: options.iter().map(|(v, _)| v.clone()).collect(),
+        variant_labels: options.into_iter().map(|(_, l)| l).collect(),
         installer,
         installer_error,
     })

@@ -59,11 +59,12 @@ pub const TOPICS: &[Topic] = &[
     },
     Topic {
         title: "Choose an option of a mod",
-        keywords: "variant option choice fomod folder",
+        keywords: "variant option choice fomod folder json multiplier alternative",
         body: &[
             "Some mods ship several versions in separate folders. Select the mod; the details panel offers a choice.",
             "Only the chosen option is deployed. Press Apply after changing it.",
             "Mods with a FOMOD installer show its pages in the details panel; the recommended choices are used until you change them.",
+            "JSON mods with one file per choice (e.g. 2x, 5x, 10x) offer those files as options; only the chosen file is applied.",
         ],
     },
     Topic {

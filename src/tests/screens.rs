@@ -101,6 +101,24 @@ fn screens() {
             std::thread::sleep(std::time::Duration::from_millis(500));
             app.poll();
             app.dispatch(Action::Mod(ModAction::Select("Arrow Stacks".into())));
+            let stacks = fx.sources.join("Fat Stacks");
+            std::fs::create_dir_all(&stacks).unwrap();
+            [2, 10].iter().for_each(|f| {
+                let file = stacks.join(format!("fat_stacks_{f}x.field.json"));
+                std::fs::write(
+                    file,
+                    ARROWS.replace("Arrow Stacks", &format!("Fat Stacks {f}X")),
+                )
+                .unwrap();
+            });
+            let app = h.state_mut();
+            app.dispatch(Action::Mod(ModAction::ImportPaths(vec![stacks])));
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            app.poll();
+            app.dispatch(Action::Mod(ModAction::Select("Fat Stacks".into())));
+            shoot(&mut h, &format!("{tag}-json-options"));
+            h.state_mut()
+                .dispatch(Action::Mod(ModAction::Select("Arrow Stacks".into())));
             // Tall enough to show the editor under the details.
             h.set_size(eframe::egui::vec2(1200.0, 1100.0));
             shoot(&mut h, &format!("{tag}-json-editor"));

@@ -33,6 +33,8 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] Alternative JSON files as options (`mod_engine/alternatives.rs`): files of one mod that change
+  the same values are a choice (titles from `modinfo`, natural order); only the chosen one deploys.
 - [x] JSON mod viewer/editor (details panel): changes table with numbers and hex, raw JSON with
   live checking, Save marks the setup for Apply (`src/patch/document.rs`, `ui/views/json_editor/`).
 - [x] Code review of the recent features (27 findings, three passes, all fixed with tests):

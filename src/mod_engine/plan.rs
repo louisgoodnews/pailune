@@ -130,15 +130,20 @@ pub fn deployable_files(mod_root: &Path, variant: Option<&str>) -> Result<Vec<Mo
                 .strip_prefix(mod_root)
                 .unwrap_or(&source)
                 .to_path_buf();
+            // Option folders only hold files (a root file is never one).
             let first = full
                 .components()
                 .next()
+                .filter(|_| full.components().count() > 1)
                 .map(|c| c.as_os_str().to_string_lossy().into_owned());
+            // Alternative JSON files are options by their relative path.
+            let key = full.to_string_lossy().replace('\\', "/");
             let rel = match first.filter(|f| options.contains(f)) {
                 Some(f) if Some(&f) == chosen.as_ref() => {
                     Some(full.strip_prefix(&f).unwrap_or(&full).to_path_buf())
                 }
                 Some(_) => None,
+                None if options.contains(&key) && chosen.as_ref() != Some(&key) => None,
                 None => Some(full),
             };
             Ok(rel.map(|rel| ModFile {

@@ -83,6 +83,11 @@ Saved edits take effect with the next *Apply*; the original bytes are still veri
 Some mods ship several versions in separate folders. The details panel then offers a choice;
 only the chosen option is deployed. Press *Apply* after changing it.
 
+JSON mods that ship one file per choice (for example *Fat Stacks* with `…_2x.field.json` up to
+`…_100x.field.json`) are handled the same way: files that change the same values are offered as
+options, named by their titles, and only the chosen one is applied. JSON files that change
+different values are always applied together.
+
 Mods with a **FOMOD installer** (`fomod/ModuleConfig.xml`, common on Nexus Mods) show the
 installer's pages in the details panel instead: radio buttons and checkboxes as the author
 defined them, with descriptions, recommended choices and pages that appear depending on earlier

@@ -111,6 +111,18 @@ fn test_mods_apply_to_the_real_tables() {
     let group = game_dir().join("0008");
     let index = pamt::parse(&fs::read(group.join("0.pamt")).unwrap()).unwrap();
     let read = |p: &str| extract::extract(&group, p, &index.files[p]).unwrap();
+    // Mods offering alternative JSON files, as the details panel will.
+    fs::read_dir(&dir)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .for_each(|e| {
+            let options = crate::mod_engine::variants::titled(&e.path());
+            println!(
+                "{}: {} option(s) {options:?}",
+                e.file_name().to_string_lossy(),
+                options.len()
+            );
+        });
     let files = walkdir::WalkDir::new(dir)
         .into_iter()
         .filter_map(|e| e.ok());

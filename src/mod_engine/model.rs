@@ -96,8 +96,11 @@ pub struct ModDetails {
     pub total_bytes: u64,
     /// Readme / changelog candidates, relative to the mod root.
     pub readmes: Vec<PathBuf>,
-    /// Option folders of a multi-variant mod (empty otherwise).
+    /// Option folders of a multi-variant mod, or its alternative JSON files
+    /// (empty otherwise).
     pub variants: Vec<String>,
+    /// Display names of `variants`, in the same order.
+    pub variant_labels: Vec<String>,
     /// The mod's FOMOD installer, if it has one (then `variants` is empty).
     pub installer: Option<crate::fomod::Config>,
     /// Why the mod's FOMOD installer could not be read (nothing deploys).
