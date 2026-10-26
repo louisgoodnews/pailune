@@ -173,42 +173,56 @@ fn edit_bar(ui: &mut egui::Ui, view: &mut SaveView) -> Vec<Action> {
     actions
 }
 
-/// Renders the viewer while one is open.
-pub fn show(ctx: &egui::Context, app: &mut PyluneApp) -> Vec<Action> {
+/// The open save, filling `ui` (the Saves tab's main area).
+pub fn panel(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     let Some(view) = &mut app.save_view else {
+        ui.add_space(40.0);
+        ui.vertical_centered(|ui| {
+            ui.label(RichText::new("Choose a save on the left").size(18.0));
+            ui.label(
+                RichText::new("Its contents open here; numbers and flags can be changed.")
+                    .color(muted()),
+            );
+        });
         return Vec::new();
     };
-    let mut open = true;
     let mut actions = Vec::new();
-    egui::Window::new(format!("Save: {}", view.slot))
-        .open(&mut open)
-        .default_size([600.0, 560.0])
-        .show(ctx, |ui| {
-            ui.label(
-                RichText::new(
-                    "Change values, then Save changes — all saves are backed up first. Numbers \
-                     like item or quest keys refer to the game's data tables.",
-                )
-                .color(muted()),
-            );
-            actions.extend(edit_bar(ui, view));
-            ui.add(
-                egui::TextEdit::singleline(&mut view.query)
-                    .hint_text("🔍 Search, e.g. _level, ItemSaveData, 50001")
-                    .desired_width(f32::INFINITY),
-            );
-            let needle = view.query.to_lowercase();
-            let found = cached_hits(ui, &view.slot, &view.tree, &needle);
-            let mut walk = Walk {
-                searching: !needle.is_empty(),
-                edits: &mut view.edits,
-            };
-            egui::ScrollArea::vertical()
-                .auto_shrink([false, false])
-                .show(ui, |ui| level(ui, &view.tree, &found, "save", &mut walk));
-        });
-    if !open {
-        actions.push(Action::Backup(BackupAction::CloseSaveView));
-    }
+    ui.horizontal(|ui| {
+        ui.heading(slot_title(&view.slot));
+        if ui.button("Close").clicked() {
+            actions.push(Action::Backup(BackupAction::CloseSaveView));
+        }
+    });
+    ui.label(
+        RichText::new(
+            "Change values, then Save changes — all saves are backed up first. Numbers like \
+             item or quest keys refer to the game's data tables.",
+        )
+        .color(muted()),
+    );
+    actions.extend(edit_bar(ui, view));
+    ui.add(
+        egui::TextEdit::singleline(&mut view.query)
+            .hint_text("🔍 Search, e.g. _level, ItemSaveData, 50001")
+            .desired_width(f32::INFINITY),
+    );
+    let needle = view.query.to_lowercase();
+    let found = cached_hits(ui, &view.slot, &view.tree, &needle);
+    let mut walk = Walk {
+        searching: !needle.is_empty(),
+        edits: &mut view.edits,
+    };
+    egui::ScrollArea::vertical()
+        .auto_shrink([false, false])
+        .show(ui, |ui| level(ui, &view.tree, &found, "save", &mut walk));
     actions
+}
+
+/// "Slot 2" or "Autosave 1" for a slot folder name.
+pub fn slot_title(folder: &str) -> String {
+    let number: u32 = folder.trim_start_matches("slot").parse().unwrap_or(0);
+    match number >= 100 {
+        true => format!("Autosave {}", number - 99),
+        false => format!("Slot {number}"),
+    }
 }

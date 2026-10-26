@@ -65,7 +65,7 @@ fn details(confirm: &Confirm) -> (String, String, Action) {
         ),
         Confirm::EditSave(count) => (
             format!("Write {count} change(s) to this save?"),
-            "All save games are backed up first (Settings › Backups lists them), so this can be \
+            "All save games are backed up first (the Saves tab lists the backups), so this can be \
              undone. Close the game before saving. If Steam later reports a cloud conflict, keep \
              the local files."
                 .into(),

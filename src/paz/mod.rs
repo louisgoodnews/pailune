@@ -12,6 +12,7 @@ pub mod encode;
 pub mod extract;
 pub mod hash;
 pub mod pamt;
+pub mod pamt_check;
 pub mod papgt;
 pub mod pathc;
 pub mod paver;
@@ -26,6 +27,8 @@ mod machine;
 mod machine_overlay;
 #[cfg(test)]
 mod machine_tables;
+#[cfg(test)]
+mod machine_validate;
 
 /// Compression of an archive entry (flags bits 0–3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

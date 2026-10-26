@@ -48,7 +48,12 @@ impl PyluneApp {
             Action::ModList(action) => self.modlist_action(action),
             Action::SwitchTab(tab) => {
                 self.tab = tab;
-                self.refresh_log().map(|()| None)
+                // The game writes saves while Pylune runs: read them fresh.
+                let fresh = match tab {
+                    super::Tab::Saves => self.reload(),
+                    _ => Ok(()),
+                };
+                fresh.and_then(|()| self.refresh_log()).map(|()| None)
             }
             Action::BrowseGameDir => Ok(Some(self.browse_game_dir())),
             Action::SaveSettings => self.save_settings().map(Some),

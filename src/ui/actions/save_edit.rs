@@ -54,6 +54,7 @@ impl PyluneApp {
             tree,
             ..SaveView::default()
         });
+        self.tab = crate::ui::Tab::Saves;
         Ok(None)
     }
 

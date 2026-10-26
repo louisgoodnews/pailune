@@ -178,6 +178,14 @@ pub fn build_from(
         let dir = out_dir.join(&name);
         write_file(&dir.join("0.paz"), &group.paz)?;
         write_file(&dir.join("0.pamt"), &group.pamt)?;
+        // The game's own indexes keep these invariants; never deploy one that doesn't.
+        let problems = crate::paz::pamt_check::problems(&group.pamt, &dir)?;
+        if !problems.is_empty() {
+            return Err(PyluneError::Archive(format!(
+                "the built archive index failed its check: {}",
+                problems.join("; ")
+            )));
+        }
         fs::write(dir.join(".pylune_owned"), b"").at(&dir)?;
         groups.push((name, group.pamt_crc, dir));
     }

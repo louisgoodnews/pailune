@@ -79,6 +79,7 @@
 - AppImage build script and release CI job; `nxm://` links point at the AppImage file.
 
 ### Save games
+- New **Saves** tab next to Mods: slots and save backups on the left, the open save on the right.
 - Save editing: change any number or flag of a save in the inspector (copper coins have a
   shortcut); written after a confirmation, with every save backed up first.
 - Pylune reads the game's save files: slot list with level and time, a searchable read-only

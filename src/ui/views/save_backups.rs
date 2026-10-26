@@ -35,7 +35,7 @@ fn row(ui: &mut egui::Ui, b: &SaveBackup) -> Vec<Action> {
     actions
 }
 
-/// The player's save slots with a read-only inspector.
+/// The player's save slots; clicking one opens it in the editor.
 fn slots(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
     if app.save_slots.is_empty() {
         return Vec::new();
@@ -44,18 +44,22 @@ fn slots(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
     let mut actions = Vec::new();
     egui::Grid::new("save_slots")
         .striped(true)
-        .num_columns(4)
+        .num_columns(2)
         .show(ui, |ui| {
             app.save_slots.iter().for_each(|s| {
-                let number: u32 = s.name.trim_start_matches("slot").parse().unwrap_or(0);
-                let label = match number >= 100 {
-                    true => format!("Autosave {}", number - 99),
-                    false => format!("Slot {number}"),
-                };
-                ui.label(label);
+                let open = app.save_view.as_ref().is_some_and(|v| v.dir == s.dir);
+                let title = super::save_view::slot_title(&s.name);
+                let clicked = ui
+                    .add(egui::Button::selectable(open, title))
+                    .on_hover_text("Open this save on the right")
+                    .clicked();
+                if clicked {
+                    actions.push(Action::Backup(BackupAction::InspectSave(s.dir.clone())));
+                }
                 ui.label(match (&s.error, &s.level) {
-                    (Some(err), _) => RichText::new(format!("unreadable: {err}"))
-                        .color(crate::ui::theme::danger()),
+                    // The summary is a separate file; the save itself may still open.
+                    (Some(err), _) => RichText::new(format!("no summary: {err}"))
+                        .color(crate::ui::theme::warning()),
                     (None, level) => RichText::new(format!(
                         "level {} · {} · {:.1} MB",
                         level.as_deref().unwrap_or("?"),
@@ -64,14 +68,6 @@ fn slots(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
                     ))
                     .color(muted()),
                 });
-                if s.error.is_none()
-                    && ui
-                        .small_button("Inspect…")
-                        .on_hover_text("Show everything the save contains (read-only)")
-                        .clicked()
-                {
-                    actions.push(Action::Backup(BackupAction::InspectSave(s.dir.clone())));
-                }
                 ui.end_row();
             });
         });
@@ -81,8 +77,9 @@ fn slots(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
 
 /// Renders the section and returns triggered actions.
 pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
-    ui.heading("Save games");
     let slot_actions = slots(ui, app);
+    ui.separator();
+    ui.label(RichText::new("Save backups").strong());
     ui.label(
         RichText::new(
             "Copies of the game's save files from the Proton prefix. Restoring backs up the \

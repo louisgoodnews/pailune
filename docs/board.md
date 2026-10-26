@@ -39,6 +39,8 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] Saves tab (slots, save backups, embedded editor); strict archive-index check on every Apply
+  (`paz::pamt_check`, passes all vanilla groups); JMM compared (`research/jmm-comparison.md`).
 - [x] B-07 (step 3) Save editing (approved 2026-10-26): fixed-size values edited in the viewer,
   checked against the current bytes, re-encoded (fresh nonce, HMAC), read back before an atomic
   replace; exclusive job, refused while the game runs, all saves backed up first. Verified in

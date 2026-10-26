@@ -163,15 +163,19 @@ deleting a mod*.
 - **Pylune backups** (*Settings → Backups*): settings, mod list, order, options, profiles and
   collections; a *Full backup* also contains the mod files. One is taken automatically each day.
   Restoring needs all mods unlinked and takes a safety backup first.
-- **Save games:** copied before every Play and on request (*Back up saves now*). *Restore…* puts
-  an older copy back after backing up the current saves. If Steam then reports a cloud conflict,
-  keep the local files.
-- **Your saves** (same page) lists every slot with level and save time; *Inspect…* shows
-  everything a save contains (character, inventory, quests, …), searchable.
+- **Save games** (*Saves* tab): copied before every Play and on request (*Back up saves now*).
+  *Restore…* puts an older copy back after backing up the current saves. If Steam then reports a
+  cloud conflict, keep the local files.
+
+## Saves
+
+The **Saves** tab lists every slot with level and save time, and the save backups below. Click a
+slot to open it on the right: everything the save contains (character, inventory, quests, …),
+searchable.
 
 ### Editing a save
 
-In *Inspect…*, every number, flag and other fixed-size value is a text field. Type a new value
+In an open save, every number, flag and other fixed-size value is a text field. Type a new value
 (it turns orange; red means it is not valid for that field, e.g. a negative number where only
 positive ones fit), then **Save changes…**. The changes are listed above the button. Copper
 coins in your pouch have their own field at the top.

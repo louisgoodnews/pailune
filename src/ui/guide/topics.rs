@@ -137,10 +137,11 @@ pub const TOPICS: &[Topic] = &[
     },
     Topic {
         title: "Protect my save games",
-        keywords: "save savegame slot progress backup restore cloud",
+        keywords: "save savegame slot progress backup restore cloud edit money coins",
         body: &[
-            "Pylune copies the game's save files every time you press Play (Settings › Backups).",
-            "Settings › Backups › Save games: Back up saves now, or Restore… an older copy. The current saves are backed up first.",
+            "Pylune copies the game's save files every time you press Play (switch it off in Settings › Backups).",
+            "Saves tab: Back up saves now, or Restore… an older copy. The current saves are backed up first.",
+            "Saves tab: click a slot to see everything it contains and change numbers, e.g. the copper coins in your pouch; Save changes backs up all saves first.",
             "If Steam reports a cloud conflict after a restore, keep the local files.",
         ],
     },

@@ -19,6 +19,11 @@ impl<'a> Reader<'a> {
         Self { data, pos }
     }
 
+    /// Bytes not read yet.
+    pub fn remaining(&self) -> usize {
+        self.data.len().saturating_sub(self.pos)
+    }
+
     /// The next `n` bytes.
     pub fn bytes(&mut self, n: usize) -> Result<&'a [u8]> {
         let end = self

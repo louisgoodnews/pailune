@@ -126,8 +126,11 @@ pub fn backups(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         |ui| drop(ui.add(egui::DragValue::new(&mut prefs.keep_saves).range(1..=100))),
     );
     ui.add_space(12.0);
-    let mut actions = crate::ui::views::backups::show(ui, app);
+    let actions = crate::ui::views::backups::show(ui, app);
     ui.add_space(12.0);
-    actions.extend(crate::ui::views::save_backups::show(ui, app));
+    ui.label(
+        egui::RichText::new("Save games, their backups and the save editor are on the Saves tab.")
+            .color(crate::ui::theme::muted()),
+    );
     actions
 }

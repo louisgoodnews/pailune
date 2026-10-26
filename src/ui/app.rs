@@ -196,6 +196,7 @@ impl eframe::App for PyluneApp {
         let page = egui::CentralPanel::default()
             .show(ui, |ui| match self.tab {
                 Tab::Mods => views::mod_list::show(ui, self),
+                Tab::Saves => views::saves::show(ui, self),
                 Tab::Profiles => views::profiles::show(ui, self),
                 Tab::Nexus => views::nexus::show(ui, self),
                 Tab::Log => views::log::show(ui, self),
@@ -218,7 +219,6 @@ impl eframe::App for PyluneApp {
         ));
         actions.extend(views::guide::show(ui.ctx(), self));
         actions.extend(views::missing::show(ui.ctx(), self));
-        actions.extend(views::save_view::show(ui.ctx(), self));
         actions.extend(views::notifications::toasts(ui.ctx(), self));
         actions.extend(views::notifications::center(ui.ctx(), self));
         if self.setup_open {

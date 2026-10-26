@@ -8,6 +8,8 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tab {
     Mods,
+    /// Save slots, save backups and the save editor.
+    Saves,
     Profiles,
     Nexus,
     Log,

@@ -136,6 +136,7 @@ fn screens() {
             std::fs::create_dir_all(&slot).unwrap();
             let save = crate::savefile::edit::tests::pouch_save();
             std::fs::write(slot.join("save.save"), save).unwrap();
+            app.dispatch(Action::SwitchTab(Tab::Saves));
             app.dispatch(Action::Backup(crate::ui::BackupAction::InspectSave(slot)));
             let at = app.save_view.as_ref().unwrap().tree[0].children[0]
                 .edit

@@ -36,7 +36,7 @@ pub struct Pamt {
 }
 
 /// Resolves a node of a name trie by concatenating its ancestors.
-fn full_name(block: &[u8], offset: u32, depth: usize) -> Result<String> {
+pub(crate) fn full_name(block: &[u8], offset: u32, depth: usize) -> Result<String> {
     if offset == NONE {
         return Ok(String::new());
     }
