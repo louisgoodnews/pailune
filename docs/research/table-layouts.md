@@ -67,6 +67,28 @@ game reveals and the method. Everything below was measured read-only on build 2.
   including `iteminfo` (the inference reaches field 47 of 113), `dropsetinfo`, `skill`,
   `storeinfo`, `buffinfo`, `characterinfo`.
 
+## Phase 2 notes: `ItemInfo` (in progress)
+
+Decoded consistently on items of very different kinds (arrow, book, recipe):
+
+| Field | Encoding |
+|-------|----------|
+| `_isBlocked` | u8 |
+| `_maxStackCount` | u64 |
+| `_itemName` | localised string: `u32 table (0x7007), u8, u32 owner key (= record key), u32 len, text` |
+| `_brokenItemPrefixString` | localised string; empty = 13 zero bytes |
+| `_useMapIconAlert` | u8 |
+| `_itemType` | u16 |
+| `_materialKey`, `_materialMatchInfo` | u32 |
+| `_consumableTypeList`, `_itemUseInfoList` | `u32 count` + u32 keys |
+
+After these the message order no longer predicts the bytes: a run of 4-byte hashes follows
+(`0xEAC5E173` recurs and is probably the hash of an empty string), then the description
+(`loc 0x7107…`, `_itemDesc`, which sits much later in the message list). Nested classes are named
+in the executable as well (`ItemIconData`, `DropDefaultData`, `EnchantData`, `DockingChildData`,
+`ItemInfo_SharpnessData`, …), so nested layouts can be derived the same way once the order rules
+are understood.
+
 ## Order of work
 
 Fixed-size tables first (done: phase 1), then the tables mods target most — `iteminfo`,
