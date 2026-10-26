@@ -98,3 +98,37 @@ fn print_tree() {
         show(&crate::savefile::view::tree(&body, &object), 1, &mut 40);
     });
 }
+
+#[test]
+fn hostile_nesting_is_an_error_not_a_crash() {
+    let body = Body {
+        types: vec![TypeDef {
+            name: "T".into(),
+            fields: vec![FieldDef {
+                name: "_c".into(),
+                type_name: "T".into(),
+                kind: 4,
+                size: 8,
+                aux: 0,
+            }],
+        }],
+        toc: Vec::new(),
+    };
+    // Top-level header, then 1000 embedded objects each containing the next.
+    let mut data = vec![1, 0, 1, 0, 0, 0, 0];
+    (0..1000).for_each(|_| {
+        data.extend_from_slice(&[1, 0, 1, 0, 0]);
+        data.extend_from_slice(&[0; 13]);
+        data.extend_from_slice(&[0; 4]);
+    });
+    let body = Body {
+        toc: vec![TocEntry {
+            class: 0,
+            offset: 0,
+            size: data.len() as u32,
+        }],
+        ..body
+    };
+    let err = object(&body, &data, 0).unwrap_err().to_string();
+    assert!(err.contains("nested too deeply"), "{err}");
+}

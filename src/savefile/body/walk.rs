@@ -16,6 +16,9 @@
 use super::{Body, Cursor, TypeDef};
 use crate::error::{PyluneError, Result};
 
+/// Deepest nesting of embedded objects accepted.
+const MAX_DEPTH: usize = 64;
+
 /// A decoded field value.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -46,7 +49,13 @@ fn present(mask: &[u8], i: usize) -> bool {
 }
 
 /// Reads the fields of `class` at the cursor.
-fn fields(body: &Body, c: &mut Cursor, class: u32, mask: &[u8]) -> Result<Vec<(usize, Value)>> {
+fn fields(
+    body: &Body,
+    c: &mut Cursor,
+    class: u32,
+    mask: &[u8],
+    depth: usize,
+) -> Result<Vec<(usize, Value)>> {
     let def: &TypeDef = body
         .types
         .get(class as usize)
@@ -79,7 +88,7 @@ fn fields(body: &Body, c: &mut Cursor, class: u32, mask: &[u8]) -> Result<Vec<(u
                     data: c.take(count as usize * size)?.to_vec(),
                 }
             }
-            4 | 5 => Value::Object(Box::new(embedded(body, c, f.kind == 5)?)),
+            4 | 5 => Value::Object(Box::new(embedded(body, c, f.kind == 5, depth + 1)?)),
             6 | 7 => {
                 if c.take(1)? != [0] {
                     return Err(bad("list tag"));
@@ -88,7 +97,7 @@ fn fields(body: &Body, c: &mut Cursor, class: u32, mask: &[u8]) -> Result<Vec<(u
                 c.take(13)?;
                 Value::List(
                     (0..count)
-                        .map(|_| embedded(body, c, false))
+                        .map(|_| embedded(body, c, false, depth + 1))
                         .collect::<Result<_>>()?,
                 )
             }
@@ -100,7 +109,11 @@ fn fields(body: &Body, c: &mut Cursor, class: u32, mask: &[u8]) -> Result<Vec<(u
 }
 
 /// An embedded object (field of kind 4/5, or list element).
-fn embedded(body: &Body, c: &mut Cursor, probe: bool) -> Result<Object> {
+fn embedded(body: &Body, c: &mut Cursor, probe: bool, depth: usize) -> Result<Object> {
+    // Real saves nest a few levels; a hostile file must not overflow the stack.
+    if depth > MAX_DEPTH {
+        return Err(bad("objects nested too deeply"));
+    }
     if probe {
         // Kind 5: up to 8 bytes may precede the header; take the first
         // position with a plausible mask length.
@@ -123,7 +136,7 @@ fn embedded(body: &Body, c: &mut Cursor, probe: bool) -> Result<Object> {
     c.take(1 + 4 + 4 + 4)?;
     let start = c.pos;
     c.u32()?;
-    let fields = fields(body, c, class, &mask)?;
+    let fields = fields(body, c, class, &mask, depth)?;
     let size = c.u32()? as usize;
     match size == c.pos - 4 - start {
         true => Ok(Object { class, fields }),
@@ -148,7 +161,7 @@ pub fn object(body: &Body, data: &[u8], index: usize) -> Result<Object> {
     let mask_len = c.u16()? as usize;
     let mask = c.take(mask_len)?.to_vec();
     c.u32()?;
-    let fields = fields(body, &mut c, entry.class, &mask)?;
+    let fields = fields(body, &mut c, entry.class, &mask, 0)?;
     match c.pos == end {
         true => Ok(Object {
             class: entry.class,

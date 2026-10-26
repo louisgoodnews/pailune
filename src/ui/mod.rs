@@ -9,6 +9,7 @@ pub mod guide;
 pub mod icon;
 mod intent;
 mod shortcuts;
+mod startup;
 mod state;
 mod theme;
 mod views;
@@ -111,6 +112,11 @@ pub struct PyluneApp {
     pub backups: Vec<crate::app_backup::BackupInfo>,
     /// Backups of the game's save files, newest first.
     pub save_backups: Vec<crate::save_backup::SaveBackup>,
+    /// Running without a window (command line, MCP): requests from other
+    /// instances are left in the spool for the window.
+    pub headless: bool,
+    /// Failure messages of jobs, in order (read by the headless engine).
+    pub job_failures: Vec<String>,
     /// ASI plugins in the game folder.
     pub plugins: Vec<crate::mod_engine::plugins::Plugin>,
     /// The game's save slots (summaries).

@@ -16,6 +16,7 @@
 //! | `local_app_data` | The game's `AppData/Local` (saves), inside the Proton prefix on Linux. |
 //! | `attach_console` | Give command-line runs a console (Windows GUI builds). |
 //! | `USES_PROTON` | Whether the game runs through Proton/Wine. |
+//! | [`background`] | A helper program that opens no console window. |
 
 #[cfg(target_os = "linux")]
 mod linux;
@@ -33,6 +34,21 @@ mod macos;
 pub use macos::*;
 
 use std::path::PathBuf;
+
+/// A command for a helper program (`tasklist`, `reg`): on Windows it runs
+/// without flashing a console window over Pylune.
+pub fn background(program: &str) -> std::process::Command {
+    #[allow(unused_mut)]
+    let mut command = std::process::Command::new(program);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        /// `CREATE_NO_WINDOW` from the Win32 process creation flags.
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+    command
+}
 
 /// How a mod file was put into the game folder.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

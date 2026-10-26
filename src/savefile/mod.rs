@@ -13,6 +13,9 @@ pub mod view;
 
 use crate::error::{PyluneError, Result};
 
+/// Largest unpacked body accepted (real saves are about 3 MB).
+const MAX_BODY: usize = 256 << 20;
+
 /// Size of the header in front of the payload.
 pub const HEADER: usize = 0x80;
 
@@ -78,8 +81,14 @@ pub fn compressed(bytes: &[u8]) -> Result<(Header, Vec<u8>)> {
 /// Decodes a save file completely.
 pub fn decode(bytes: &[u8]) -> Result<SaveFile> {
     let (header, data) = compressed(bytes)?;
-    let body = lz4_flex::block::decompress(&data, header.uncompressed as usize)
-        .map_err(|e| invalid(&format!("LZ4: {e}")))?;
+    // The size is outside the checksum: never trust it for an allocation
+    // beyond what LZ4 can produce or a sane save needs.
+    let size = header.uncompressed as usize;
+    if size > data.len().saturating_mul(255) || size > MAX_BODY {
+        return Err(invalid("implausible unpacked size"));
+    }
+    let body =
+        lz4_flex::block::decompress(&data, size).map_err(|e| invalid(&format!("LZ4: {e}")))?;
     Ok(SaveFile { header, body })
 }
 

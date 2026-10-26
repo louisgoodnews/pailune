@@ -28,10 +28,11 @@ pub fn link_file(source: &Path, target: &Path) -> io::Result<super::LinkKind> {
         .or_else(|_| fs::copy(source, target).map(|_| LinkKind::Copy))
 }
 
-/// `cmd /C start "" <target>`.
+/// `explorer.exe <target>`: opens folders, files and URLs with their default
+/// app. Unlike `cmd /C start`, nothing in the target is parsed by a shell.
 pub fn open_command(target: &OsStr) -> Command {
-    let mut command = Command::new("cmd");
-    command.args(["/C", "start", ""]).arg(target);
+    let mut command = Command::new("explorer.exe");
+    command.arg(target);
     command
 }
 
@@ -47,7 +48,7 @@ pub fn steam_command() -> Command {
 
 /// `tasklist` filtered by image name.
 pub fn game_running(exe: &str) -> bool {
-    Command::new("tasklist")
+    super::background("tasklist")
         .args(["/FI", &format!("IMAGENAME eq {exe}"), "/NH"])
         .output()
         .is_ok_and(|out| {

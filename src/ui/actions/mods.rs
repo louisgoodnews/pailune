@@ -67,6 +67,7 @@ impl PyluneApp {
                 }
                 std::fs::write(&path, text)
                     .map_err(|e| PyluneError::Invalid(format!("{}: {e}", path.display())))?;
+                crate::db::links::restamp_shared(&self.conn, &path)?;
                 let name = path
                     .file_name()
                     .unwrap_or_default()

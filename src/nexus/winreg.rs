@@ -57,7 +57,7 @@ pub fn expand(command: &str, url: &str) -> Vec<String> {
 
 /// Runs `reg.exe` and fails with its output when it does.
 fn reg(args: &[&str]) -> Result<String> {
-    let out = Command::new("reg")
+    let out = crate::platform::background("reg")
         .args(args)
         .output()
         .map_err(|e| PyluneError::Invalid(format!("reg.exe failed: {e}")))?;

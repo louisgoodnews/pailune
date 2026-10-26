@@ -143,7 +143,13 @@ impl PyluneApp {
         self.backups = crate::app_backup::create::list(&self.paths.backups);
         self.save_backups = crate::save_backup::list(&self.paths.save_backups);
         self.save_slots = crate::save_backup::save_dir(self.info.prefix_dir.as_deref())
-            .map(|dir| crate::savefile::slots::slots(&dir))
+            .map(|dir| {
+                // Finish an interrupted save restore before reading the slots.
+                if let Err(err) = crate::save_backup::recover(&dir) {
+                    tracing::warn!(%err, "could not recover an interrupted save restore");
+                }
+                crate::savefile::slots::slots(&dir)
+            })
             .unwrap_or_default();
         let selected_gone = self
             .mods

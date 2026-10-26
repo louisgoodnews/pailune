@@ -51,3 +51,41 @@ fn plugins_are_listed_and_their_settings_edited() {
         "paths outside staging are refused"
     );
 }
+
+#[test]
+fn saving_settings_keeps_hard_links_recognised() {
+    use crate::symlink::{journal::Journal, stamp};
+    let fx = fixture();
+    let mut app = app(&fx);
+    let source = fx.sources.join("Skipper");
+    fs::create_dir_all(&source).unwrap();
+    fs::write(source.join("skipper.asi"), "asi").unwrap();
+    fs::write(source.join("skipper.ini"), "[Main]\nSpeed=1\n").unwrap();
+    app.dispatch(Action::Mod(ModAction::ImportPaths(vec![source])));
+    settle(&mut app);
+    app.dispatch(Action::Mod(ModAction::SetEnabled("Skipper".into(), true)));
+    app.dispatch(Action::Deploy(DeployAction::Apply));
+    settle(&mut app);
+    // Turn the deployed symlink into a hard link, as on Windows (D-11).
+    let staged = app.paths.staging.join("Skipper/skipper.ini");
+    let deployed = app.info.bin64_dir.join("skipper.ini");
+    fs::remove_file(&deployed).unwrap();
+    fs::hard_link(&staged, &deployed).unwrap();
+    let mut journal = crate::db::links::DbJournal { conn: &app.conn };
+    journal
+        .link_stamped(&deployed, &stamp(&deployed).unwrap())
+        .unwrap();
+
+    std::thread::sleep(std::time::Duration::from_millis(20));
+    app.dispatch(Action::Mod(ModAction::SaveSettingsFile(
+        staged,
+        "[Main]\nSpeed=42\n".into(),
+    )));
+    let record = crate::db::links::load(&app.conn)
+        .unwrap()
+        .links
+        .into_iter()
+        .find(|r| r.target == deployed)
+        .expect("journaled");
+    assert_eq!(record.stamp, stamp(&deployed), "stamp follows the rewrite");
+}

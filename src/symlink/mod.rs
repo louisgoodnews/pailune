@@ -52,8 +52,29 @@ pub fn stamp(path: &Path) -> Option<FileStamp> {
 
 /// Byte-for-byte comparison of two regular files.
 pub fn same_contents(a: &Path, b: &Path) -> bool {
+    use std::io::Read;
     let size = |p: &Path| std::fs::metadata(p).map(|m| m.len()).ok();
-    size(a) == size(b) && size(a).is_some() && std::fs::read(a).ok() == std::fs::read(b).ok()
+    let open = |p: &Path| std::fs::File::open(p).map(std::io::BufReader::new);
+    let (Ok(mut fa), Ok(mut fb)) = (open(a), open(b)) else {
+        return false;
+    };
+    if size(a).is_none() || size(a) != size(b) {
+        return false;
+    }
+    // Compared in chunks: game files can be gigabytes.
+    let (mut ba, mut bb) = (vec![0u8; 1 << 16], vec![0u8; 1 << 16]);
+    loop {
+        let n = match fa.read(&mut ba) {
+            Ok(n) => n,
+            Err(_) => return false,
+        };
+        if n == 0 {
+            return fb.read(&mut bb[..1]).is_ok_and(|m| m == 0);
+        }
+        if fb.read_exact(&mut bb[..n]).is_err() || ba[..n] != bb[..n] {
+            return false;
+        }
+    }
 }
 
 /// Everything Pylune currently has deployed into the game directory.

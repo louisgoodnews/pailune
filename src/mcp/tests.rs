@@ -65,3 +65,14 @@ fn speaks_mcp_and_manages_mods() {
     let missing = call(&mut server, "enable_mods", json!({"names": ["Nope"]}));
     assert_eq!(missing["isError"], true);
 }
+
+#[test]
+fn failed_jobs_are_errors_and_the_lock_is_released() {
+    let fx = fixture();
+    let mut server = server(&fx);
+    let missing = json!([fx.sources.join("No Such Mod")]);
+    let failed = call(&mut server, "install_mods", json!({ "paths": missing }));
+    assert_eq!(failed["isError"], true, "{failed}");
+    let lock = crate::instance::try_lock(&server.paths).unwrap();
+    assert!(lock.is_some(), "the window can start between calls");
+}

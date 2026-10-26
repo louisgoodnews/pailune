@@ -39,3 +39,31 @@ fn backs_up_restores_and_prunes() {
     assert_eq!(labels, [AUTO_LABEL, AUTO_LABEL, "before restore", "manual"]);
     assert!(restore(&root.path().join("nope.zip"), &saves, &dest, 1).is_err());
 }
+
+#[test]
+fn interrupted_restores_are_recovered_and_empty_folders_do_not_block() {
+    let root = tempfile::tempdir().unwrap();
+    let saves = save_dir(Some(&root.path().join("pfx"))).unwrap();
+    let dest = root.path().join("backups");
+    write(&saves.join("42/slot1/save.save"), "mine");
+    let backup = create(&saves, &dest, "manual", 1).unwrap();
+    // A crash between the two renames left the saves set aside.
+    let parent = saves.parent().unwrap();
+    fs::rename(&saves, parent.join(".pylune-old-saves-7")).unwrap();
+    fs::create_dir_all(parent.join(".pylune-restore-7")).unwrap();
+    recover(&saves).unwrap();
+    assert_eq!(
+        fs::read_to_string(saves.join("42/slot1/save.save")).unwrap(),
+        "mine"
+    );
+    assert_eq!(
+        fs::read_dir(parent).unwrap().count(),
+        1,
+        "work folder removed"
+    );
+    // Only empty folders: restoring still works (nothing to back up first).
+    fs::remove_dir_all(&saves).unwrap();
+    fs::create_dir_all(saves.join("42")).unwrap();
+    assert!(restore(&backup.path, &saves, &dest, 2).unwrap().is_none());
+    assert!(saves.join("42/slot1/save.save").is_file());
+}

@@ -33,6 +33,23 @@ pub fn load(conn: &Connection) -> Result<Manifest> {
     })
 }
 
+/// Re-stamps the hard links of `source` after Pylune itself rewrote it: a
+/// hard link shares the new contents, so its old stamp would make the next
+/// undeploy treat the file as the user's own. Copies keep their stamp.
+pub fn restamp_shared(conn: &Connection, source: &std::path::Path) -> Result<()> {
+    use crate::symlink::journal::Journal;
+    let fresh = crate::symlink::stamp(source);
+    load(conn)?
+        .links
+        .iter()
+        .filter(|r| r.stamp.is_some() && r.source == source)
+        .filter(|r| fresh.is_some() && crate::symlink::stamp(&r.target) == fresh)
+        .try_for_each(|r| {
+            let stamp = fresh.expect("checked above");
+            DbJournal { conn }.link_stamped(&r.target, &stamp)
+        })
+}
+
 /// Replaces the stored manifest (tests; jobs use [`DbJournal`]).
 #[cfg(test)]
 pub fn save(conn: &mut Connection, manifest: &Manifest) -> Result<()> {

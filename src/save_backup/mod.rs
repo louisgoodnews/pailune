@@ -7,7 +7,7 @@
 
 mod restore;
 
-pub use restore::restore;
+pub use restore::{recover, restore};
 
 use crate::app_backup::create::add_file;
 use crate::error::{IoContext, PyluneError, Result};
@@ -45,7 +45,7 @@ pub fn save_dir(prefix: Option<&Path>) -> Option<PathBuf> {
 }
 
 /// Files below the save folder, relative to it.
-fn save_files(dir: &Path) -> Vec<PathBuf> {
+pub(crate) fn save_files(dir: &Path) -> Vec<PathBuf> {
     WalkDir::new(dir)
         .min_depth(1)
         .into_iter()

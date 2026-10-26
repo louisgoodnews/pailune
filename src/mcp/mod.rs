@@ -23,21 +23,18 @@ use std::process::ExitCode;
 /// Protocol revision this server implements.
 pub const PROTOCOL: &str = "2025-06-18";
 
-/// Session state: configuration and the engine once a changing tool ran.
+/// Session state: where the data lives and the settings. Each changing tool
+/// opens the engine (and the instance lock) only for its own run, so the
+/// window can be used between calls.
 pub struct Server {
     paths: DataPaths,
     config: Config,
-    engine: Option<Engine>,
 }
 
 impl Server {
     /// A server for these paths and settings.
     pub fn new(paths: DataPaths, config: Config) -> Self {
-        Self {
-            paths,
-            config,
-            engine: None,
-        }
+        Self { paths, config }
     }
 
     /// Answers one message; `None` for notifications.
@@ -73,7 +70,8 @@ impl Server {
         let outcome = tools::op(name, &args).and_then(|op| {
             let run = match op.read_only() {
                 true => read::run(&op, &self.paths, &self.config),
-                false => self.engine().and_then(|engine| engine.run(&op)),
+                false => Engine::open(self.paths.clone(), self.config.clone())
+                    .and_then(|mut engine| engine.run(&op)),
             };
             run.map_err(|e| e.to_string())
         });
@@ -87,14 +85,6 @@ impl Server {
                 json!({"content": [{"type": "text", "text": message}], "isError": true})
             }
         }
-    }
-
-    /// The headless engine, opened on first use.
-    fn engine(&mut self) -> crate::error::Result<&mut Engine> {
-        if self.engine.is_none() {
-            self.engine = Some(Engine::open(self.paths.clone(), self.config.clone())?);
-        }
-        Ok(self.engine.as_mut().expect("engine just opened"))
     }
 }
 

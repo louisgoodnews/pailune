@@ -24,7 +24,10 @@ impl PyluneApp {
         self.last_poll = Instant::now();
         self.close_refused &= self.game_job_active();
         self.process = run::game_process();
-        let requests = instance::drain(&self.paths.spool);
+        let requests = match self.headless {
+            true => Vec::new(),
+            false => instance::drain(&self.paths.spool),
+        };
         requests.iter().for_each(|request| match request.as_str() {
             instance::FOCUS_REQUEST => self.focus_requested = true,
             url => self.status = self.handle_nxm(url),
@@ -68,6 +71,7 @@ impl PyluneApp {
                 if let JobKind::DescribeFile { mod_id, file_id } = kind {
                     self.lookup_failed(mod_id, file_id, &message);
                 }
+                self.job_failures.push(message.clone());
                 self.status = StatusLine::new(Level::Error, message);
             }
         }

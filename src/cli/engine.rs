@@ -9,6 +9,7 @@ use crate::error::{PyluneError, Result};
 use crate::instance::{self, InstanceLock};
 use crate::mod_engine::model::MoveTo;
 use crate::modlist;
+use crate::ui::StatusLine;
 use crate::ui::{Action, BackupAction, DeployAction, JobState, Level, ModAction, NexusAction};
 use crate::ui::{ProfileAction, PyluneApp};
 use std::time::{Duration, Instant};
@@ -34,6 +35,7 @@ impl Engine {
         let ctx = eframe::egui::Context::default();
         let mut app = PyluneApp::build(ctx, paths, config, conn, None);
         app.guide.open = false;
+        app.headless = true;
         settle(&mut app);
         Ok(Self { app, _lock: lock })
     }
@@ -57,10 +59,20 @@ impl Engine {
             Op::ImportList { path } => return import(app, path),
             _ => {}
         }
+        app.process = crate::launch::run::game_process();
+        app.status = StatusLine::new(Level::Info, "");
+        app.job_failures.clear();
         actions(op).into_iter().for_each(|a| app.dispatch(a));
         settle(app);
-        match app.status.level {
-            Level::Error => Err(PyluneError::Invalid(app.status.text.clone())),
+        let failures = std::mem::take(&mut app.job_failures);
+        match (
+            app.status.level,
+            failures.is_empty(),
+            app.status.text.is_empty(),
+        ) {
+            (Level::Error, _, _) => Err(PyluneError::Invalid(app.status.text.clone())),
+            (_, false, _) => Err(PyluneError::Invalid(failures.join("; "))),
+            (_, true, true) => Ok(Report::text("nothing to do")),
             _ => Ok(Report::text(app.status.text.clone())),
         }
     }

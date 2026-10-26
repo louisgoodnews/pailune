@@ -15,10 +15,10 @@ use crate::jobs::{JobKind, pool::JobPool, tasks};
 use crate::launch::run;
 use crate::mod_engine::registry;
 use crate::nexus::{handler, key};
-use crate::steam::{GameStatus, SteamInfo, locate};
+use crate::steam::locate;
 use eframe::egui;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 impl PyluneApp {
     /// Opens the database, starts the job pool and takes the first backup.
@@ -30,7 +30,7 @@ impl PyluneApp {
         notice: Option<String>,
     ) -> Self {
         theme::apply(&cc.egui_ctx, &config.ui);
-        spawn_ticker(cc.egui_ctx.clone());
+        super::startup::spawn_ticker(cc.egui_ctx.clone());
         Self::build(cc.egui_ctx.clone(), paths, config, conn, notice)
     }
 
@@ -77,7 +77,7 @@ impl PyluneApp {
             game: locate::game_status(&info),
             loader: locate::detect_loader(&info),
             backup: snapshot::status(&info, &Default::default()),
-            status: notice.unwrap_or_else(|| initial_status(&info, &discovery)),
+            status: notice.unwrap_or_else(|| super::startup::initial_status(&info, &discovery)),
             deployed_links: 0,
             confirm: None,
             dirty: false,
@@ -109,6 +109,8 @@ impl PyluneApp {
             save_backups: Vec::new(),
             save_slots: Vec::new(),
             plugins: Vec::new(),
+            headless: false,
+            job_failures: Vec::new(),
             save_view: None,
             pool,
             paths,
@@ -148,36 +150,6 @@ impl PyluneApp {
             self.applied_ui = wanted;
         }
         theme::sync(ctx);
-    }
-}
-
-/// Wakes the app once per second, even while its window is hidden or
-/// occluded, so the game process and the nxm queue keep being polled.
-fn spawn_ticker(ctx: egui::Context) {
-    std::thread::spawn(move || {
-        std::iter::repeat_with(|| std::thread::sleep(Duration::from_secs(1)))
-            .for_each(|()| ctx.request_repaint());
-    });
-}
-
-/// Takes the first-run `.bak` snapshot when the game is present.
-fn initial_status(info: &SteamInfo, discovery: &Discovery) -> StatusLine {
-    let ready = locate::game_status(info) == GameStatus::Ready;
-    match (ready.then(|| snapshot::ensure_meta_backup(info)), discovery) {
-        (None, _) => StatusLine::new(
-            Level::Warning,
-            "Choose the Crimson Desert folder to get started",
-        ),
-        (Some(Ok(_)), Discovery::Detected(dir)) => StatusLine::new(
-            Level::Success,
-            format!("Found Crimson Desert via Steam: {}", dir.display()),
-        ),
-        (Some(Ok(0)), _) => StatusLine::new(Level::Info, "Ready"),
-        (Some(Ok(n)), _) => StatusLine::new(
-            Level::Success,
-            format!("Backed up {n} metadata file(s) to .bak"),
-        ),
-        (Some(Err(err)), _) => StatusLine::new(Level::Error, format!("Backup failed: {err}")),
     }
 }
 
