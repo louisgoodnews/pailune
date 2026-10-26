@@ -13,6 +13,7 @@ pub mod key;
 pub mod limits;
 pub mod nxm;
 pub mod updates;
+pub mod winreg;
 
 use serde::Deserialize;
 

@@ -43,7 +43,7 @@ Move a line between columns when its status changes.
 ## Backlog (large)
 
 - [ ] B-07 (step 2) Save viewer, then editing — *L*
-- [ ] B-08 (step 2) Windows support: `nxm://` registration via the registry, packaging, test on a real install — *L*
+- [ ] B-08 (step 2) Windows/macOS: test on real installs; Windows console window (needs a GUI subsystem build that still serves the CLI); macOS app bundle with `nxm://` URL type — *L*
 - [ ] B-13 (step 2) Script bridge installation — *L*
 - [ ] A-01 (rest) XML/HTML patches, new texture ids, table inserts, field-name JSON — *L*
 - [ ] A-28 (rest) FOMOD-style installer scripts — *L*
@@ -57,6 +57,10 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-08 Windows `nxm://` registration (`nexus/winreg.rs`): per-user protocol key via
+  `reg.exe`, detection, forwarding links for other games to the previous handler (e.g. Vortex);
+  parsing of localised `reg query` output and command templating unit-tested on Linux. CI uploads
+  Windows/macOS release binaries for tags.
 - [x] D-11 deployment without symlinks: platform reports symlink / hard link / copy; non-symlinks
   get a size+mtime stamp journaled after placing (schema v5); unlink removes only matching files;
   interrupted runs fall back to content equality unless the `.bak` rename was still pending.

@@ -1,8 +1,10 @@
 //! Registering Pylune as the desktop handler for `nxm://` links, and
 //! forwarding links for other games to the handler it replaced.
 //!
-//! Uses freedesktop `.desktop` files and `xdg-mime`, so it works on Linux
-//! only; elsewhere registration reports that it is not supported yet (B-08).
+//! Linux uses freedesktop `.desktop` files and `xdg-mime`; Windows the
+//! registry ([`super::winreg`]). macOS needs an app bundle and reports that
+//! registration is not supported yet. The "previous handler" is a desktop
+//! file name on Linux and a command line on Windows.
 
 use crate::error::{IoContext, PyluneError, Result};
 use std::fs;
@@ -70,12 +72,18 @@ fn current_default() -> Option<String> {
 
 /// Whether Pylune is the current default `nxm://` handler.
 pub fn is_registered() -> bool {
+    if cfg!(windows) {
+        return own_executable().is_ok_and(|exe| super::winreg::is_registered(&exe));
+    }
     cfg!(target_os = "linux") && current_default().as_deref() == Some(DESKTOP_FILE)
 }
 
 /// Makes Pylune the default `nxm://` handler. Returns the handler it
 /// replaced, so links for other games can be forwarded to it.
 pub fn register(exe: &Path) -> Result<Option<String>> {
+    if cfg!(windows) {
+        return super::winreg::register(exe);
+    }
     if !cfg!(target_os = "linux") {
         return Err(PyluneError::Invalid(
             "registering for nxm:// links is not supported on this platform yet".into(),
@@ -162,6 +170,9 @@ fn expand_exec(args: Vec<String>, url: &str) -> Vec<String> {
 
 /// Passes `url` to the desktop handler `desktop_file` (e.g. MO2 or Vortex).
 pub fn forward(desktop_file: &str, url: &str) -> Result<()> {
+    if cfg!(windows) {
+        return super::winreg::forward(desktop_file, url);
+    }
     let text = desktop_dirs()
         .iter()
         .find_map(|dir| fs::read_to_string(dir.join(desktop_file)).ok())
