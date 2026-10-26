@@ -87,14 +87,18 @@ break with patches ([research/script-bridge.md](research/script-bridge.md)).
 **Proposal.** Pylune does not embed a script runtime; it manages ASI loader and plugins well
 (install, status, update warnings, INI settings) and extends data patching instead.
 
-## D-11 Deployment per platform (open)
+## D-11 Deployment per platform
 
 **Context.** Windows and macOS became goals (2026-10-26). D-01 relies on Unix symlinks; on
 Windows they need Developer Mode or administrator rights.
-**Direction.** Keep one journaled deployment model with a per-platform method: symlinks on Linux
-and macOS; on Windows symlinks when permitted, otherwise hard links (same volume) or verified
-copies. All platform specifics sit in `src/platform/` (B-08 step 1, done 2026-10-26: one module per OS
-with the same functions, chosen at compile time — simpler than a trait object, since only one
-platform exists per build). Open: `symlink/` identifies its links with `read_link`; hard links
-and copies need another proof of ownership (e.g. recorded size + hash in the links journal).
-To be finalised with the Windows port.
+**Decision (2026-10-26).** One journaled deployment model; the platform layer places each file
+as a symlink where possible, else (Windows) a hard link, else a copy, and reports which.
+Symlinks prove ownership by their target. Hard links and copies get a **stamp** (size and
+modification time) journaled right after placing; unlink removes them only while the stamp
+still matches, so files changed by the game or the user are never deleted. If a run stopped
+between placing and stamping, identical content to the staged file counts as ours — except
+when the planned `.bak` rename had not happened yet, since the file is then the original.
+**Verified.** Forced copies and hard links on Linux: exact revert, changed copies left alone,
+and the crash test interrupts at every journal write for symlinks and copies.
+**Trade-off.** Copies use disk space and do not follow later staging changes until the next
+Apply (which redeploys anyway).

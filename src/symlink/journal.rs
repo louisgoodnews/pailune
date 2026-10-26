@@ -13,6 +13,8 @@ use std::path::Path;
 pub trait Journal {
     /// A link is about to be created (its original may be moved to `.bak`).
     fn link_planned(&mut self, record: &LinkRecord) -> Result<()>;
+    /// A hard link or copy was placed; its stamp proves ownership later.
+    fn link_stamped(&mut self, target: &Path, stamp: &super::FileStamp) -> Result<()>;
     /// A link was reverted and no longer needs tracking.
     fn link_reverted(&mut self, target: &Path) -> Result<()>;
     /// A directory is about to be created to host links.
@@ -29,6 +31,9 @@ pub struct NullJournal;
 #[cfg(test)]
 impl Journal for NullJournal {
     fn link_planned(&mut self, _: &LinkRecord) -> Result<()> {
+        Ok(())
+    }
+    fn link_stamped(&mut self, _: &Path, _: &super::FileStamp) -> Result<()> {
         Ok(())
     }
     fn link_reverted(&mut self, _: &Path) -> Result<()> {

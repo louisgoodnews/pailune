@@ -43,7 +43,7 @@ Move a line between columns when its status changes.
 ## Backlog (large)
 
 - [ ] B-07 (step 2) Save viewer, then editing — *L*
-- [ ] B-08 (step 2) Windows support — *L*
+- [ ] B-08 (step 2) Windows support: `nxm://` registration via the registry, packaging, test on a real install — *L*
 - [ ] B-13 (step 2) Script bridge installation — *L*
 - [ ] A-01 (rest) XML/HTML patches, new texture ids, table inserts, field-name JSON — *L*
 - [ ] A-28 (rest) FOMOD-style installer scripts — *L*
@@ -57,6 +57,10 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] D-11 deployment without symlinks: platform reports symlink / hard link / copy; non-symlinks
+  get a size+mtime stamp journaled after placing (schema v5); unlink removes only matching files;
+  interrupted runs fall back to content equality unless the `.bak` rename was still pending.
+  Tested with forced copies and hard links, crash test extended to copies.
 - [x] B-07 research: save container documented (`docs/save-format.md`) — header verified on real
   saves, payload is LZ4 + ChaCha20 with HMAC-SHA256 (archive key scheme ruled out by experiment;
   community library `crimson-rs` documents the key scheme).

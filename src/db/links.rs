@@ -1,19 +1,25 @@
 //! The deployment manifest (`links`, `created_dirs`).
 
 use crate::error::Result;
-use crate::symlink::{LinkRecord, Manifest};
+use crate::symlink::{FileStamp, LinkRecord, Manifest};
 use rusqlite::{Connection, params};
 use std::path::PathBuf;
 
 /// Loads the manifest of currently deployed links.
 pub fn load(conn: &Connection) -> Result<Manifest> {
     let links = conn
-        .prepare("SELECT target, source, backup FROM links ORDER BY seq")?
+        .prepare("SELECT target, source, backup, stamp_size, stamp_mtime FROM links ORDER BY seq")?
         .query_map([], |row| {
+            let size = row.get::<_, Option<i64>>(3)?;
+            let mtime = row.get::<_, Option<i64>>(4)?;
             Ok(LinkRecord {
                 target: PathBuf::from(row.get::<_, String>(0)?),
                 source: PathBuf::from(row.get::<_, String>(1)?),
                 backup: row.get::<_, Option<String>>(2)?.map(PathBuf::from),
+                stamp: size.zip(mtime).map(|(size, modified_ns)| FileStamp {
+                    size: size as u64,
+                    modified_ns,
+                }),
             })
         })?
         .collect::<rusqlite::Result<_>>()?;
@@ -36,11 +42,14 @@ pub fn save(conn: &mut Connection, manifest: &Manifest) -> Result<()> {
     tx.execute("DELETE FROM created_dirs", [])?;
     manifest.links.iter().try_for_each(|r| {
         tx.execute(
-            "INSERT INTO links (target, source, backup) VALUES (?1, ?2, ?3)",
+            "INSERT INTO links (target, source, backup, stamp_size, stamp_mtime)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
             params![
                 lossy(&r.target),
                 lossy(&r.source),
-                r.backup.as_ref().map(lossy)
+                r.backup.as_ref().map(lossy),
+                r.stamp.map(|s| s.size as i64),
+                r.stamp.map(|s| s.modified_ns)
             ],
         )
         .map(|_| ())
@@ -63,11 +72,24 @@ impl crate::symlink::journal::Journal for DbJournal<'_> {
         let lossy = |p: &PathBuf| p.to_string_lossy().into_owned();
         self.conn.execute(
             "INSERT INTO links (target, source, backup) VALUES (?1, ?2, ?3)
-             ON CONFLICT(target) DO UPDATE SET source = excluded.source, backup = excluded.backup",
+             ON CONFLICT(target) DO UPDATE SET source = excluded.source, backup = excluded.backup,
+             stamp_size = NULL, stamp_mtime = NULL",
             params![
                 lossy(&record.target),
                 lossy(&record.source),
                 record.backup.as_ref().map(lossy)
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn link_stamped(&mut self, target: &std::path::Path, stamp: &FileStamp) -> Result<()> {
+        self.conn.execute(
+            "UPDATE links SET stamp_size = ?2, stamp_mtime = ?3 WHERE target = ?1",
+            params![
+                target.to_string_lossy(),
+                stamp.size as i64,
+                stamp.modified_ns
             ],
         )?;
         Ok(())

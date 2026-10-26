@@ -33,6 +33,18 @@ pub use macos::*;
 
 use std::path::PathBuf;
 
+/// How a mod file was put into the game folder.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// Linux and macOS only ever create symlinks.
+#[cfg_attr(not(windows), allow(dead_code))]
+pub enum LinkKind {
+    Symlink,
+    /// Same file, second name (same volume only).
+    HardLink,
+    /// An independent copy.
+    Copy,
+}
+
 /// The user's home folder (empty if unknown).
 pub fn home() -> PathBuf {
     directories::BaseDirs::new()

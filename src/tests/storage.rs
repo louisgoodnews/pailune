@@ -36,6 +36,10 @@ fn database_round_trips_state() {
             target: "/g/a".into(),
             source: "/s/a".into(),
             backup: Some("/g/a.bak".into()),
+            stamp: Some(crate::symlink::FileStamp {
+                size: 3,
+                modified_ns: 7,
+            }),
         }],
         created_dirs: vec!["/g/d".into()],
     };

@@ -46,6 +46,7 @@
 - `pylune <command>` for every main task, with `--json`; `pylune mcp` for AI agents (MCP).
 
 ### Platforms
+- Files can be deployed as hard links or copies where symlinks are not allowed (Windows), with the same exact revert.
 - Operating-system specifics moved into one platform layer; Windows and macOS builds in CI.
 
 ### Packaging

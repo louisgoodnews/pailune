@@ -20,10 +20,12 @@ pub fn steam_roots(_home: &Path) -> Vec<PathBuf> {
 
 /// A file symlink when Windows allows it (Developer Mode or administrator),
 /// else a hard link (same volume), else a copy — decision D-11.
-pub fn link_file(source: &Path, target: &Path) -> io::Result<()> {
+pub fn link_file(source: &Path, target: &Path) -> io::Result<super::LinkKind> {
+    use super::LinkKind;
     std::os::windows::fs::symlink_file(source, target)
-        .or_else(|_| fs::hard_link(source, target))
-        .or_else(|_| fs::copy(source, target).map(drop))
+        .map(|()| LinkKind::Symlink)
+        .or_else(|_| fs::hard_link(source, target).map(|()| LinkKind::HardLink))
+        .or_else(|_| fs::copy(source, target).map(|_| LinkKind::Copy))
 }
 
 /// `cmd /C start "" <target>`.

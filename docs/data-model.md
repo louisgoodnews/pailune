@@ -55,12 +55,12 @@ Missing keys take their defaults, so older files keep working.
 
 ## SQLite schema
 
-Migrations live in `db/schema.rs` and are tracked with `PRAGMA user_version` (currently 4).
+Migrations live in `db/schema.rs` and are tracked with `PRAGMA user_version` (currently 5).
 
 | Table | Columns | Meaning |
 |-------|---------|---------|
 | `mods` | `name` (PK), `position`, `enabled`, `kind`, `file_count`, `paz_files`, `installed_at`, `source`, `nexus_mod_id`, `nexus_file_id`, `nexus_version`, `variant` | The mod list in load order (`position`; later wins). `kind` is the detected category; `paz_files` counts files that need archive handling; `variant` the chosen option folder. |
-| `links` | `seq` (PK), `target` (unique), `source`, `backup` | Write-ahead journal of every symlink in the game folder, in creation order, with the `.bak` path of a displaced original. |
+| `links` | `seq` (PK), `target` (unique), `source`, `backup`, `stamp_size`, `stamp_mtime` | Write-ahead journal of every link in the game folder, in creation order, with the `.bak` path of a displaced original; hard links and copies (Windows fallback, D-11) carry a size/mtime stamp. |
 | `created_dirs` | `seq`, `path` | Folders Pylune created in the game folder, removed again on unlink. |
 | `profiles` | `name` (PK), `launch_options` | Saved setups. |
 | `profile_slots` | `profile`, `position`, `mod_name`, `enabled` | A profile's mod order and enabled flags. |

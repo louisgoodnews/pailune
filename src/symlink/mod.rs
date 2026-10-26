@@ -22,6 +22,38 @@ pub struct LinkRecord {
     pub source: PathBuf,
     /// Where the shadowed original was moved, if there was one.
     pub backup: Option<PathBuf>,
+    /// For hard links and copies (no symlinks): the placed file's stamp,
+    /// proving later that it is still ours (decision D-11).
+    #[serde(default)]
+    pub stamp: Option<FileStamp>,
+}
+
+/// Size and modification time of a placed file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FileStamp {
+    pub size: u64,
+    /// Nanoseconds since the Unix epoch.
+    pub modified_ns: i64,
+}
+
+/// The stamp of a regular file (not following symlinks).
+pub fn stamp(path: &Path) -> Option<FileStamp> {
+    let meta = std::fs::symlink_metadata(path).ok()?;
+    let modified = meta.modified().ok()?;
+    let ns = modified
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()?
+        .as_nanos();
+    Some(FileStamp {
+        size: meta.len(),
+        modified_ns: i64::try_from(ns).ok()?,
+    })
+}
+
+/// Byte-for-byte comparison of two regular files.
+pub fn same_contents(a: &Path, b: &Path) -> bool {
+    let size = |p: &Path| std::fs::metadata(p).map(|m| m.len()).ok();
+    size(a) == size(b) && size(a).is_some() && std::fs::read(a).ok() == std::fs::read(b).ok()
 }
 
 /// Everything Pylune currently has deployed into the game directory.

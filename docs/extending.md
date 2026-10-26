@@ -94,9 +94,9 @@ a response type in `nexus/mod.rs`, a job that calls it, and a case for the mock 
 ## Port to another platform
 
 All OS differences live in `src/platform/` (one file per OS, same function set, chosen with
-`cfg(target_os)`). Fill in or fix that file rather than adding `cfg` elsewhere. The open
-question for Windows is deployment without symlinks (decision D-11): `symlink/` currently
-recognises its own links by reading them, which hard links and copies cannot satisfy.
+`cfg(target_os)`). Fill in or fix that file rather than adding `cfg` elsewhere. Deployment
+without symlinks is solved (decision D-11: stamped hard links or copies); what remains for
+Windows is the `nxm://` registration (registry keys) and packaging.
 
 ## Interface changes
 

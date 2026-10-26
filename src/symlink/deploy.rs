@@ -1,9 +1,10 @@
 //! Creating symlinks for a [`LinkPlan`].
 
 use super::journal::Journal;
-use super::{LinkRecord, Manifest, PathState, Report, bak_path, path_state};
+use super::{LinkRecord, Manifest, PathState, Report, bak_path, path_state, same_contents, stamp};
 use crate::error::{IoContext, Result};
 use crate::mod_engine::plan::{LinkOp, LinkPlan};
+use crate::platform::LinkKind;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -21,12 +22,6 @@ enum Displace {
     ReplaceOrphan(Option<PathBuf>),
     /// Cannot proceed without risking data loss.
     Refuse(String),
-}
-
-/// Byte-for-byte comparison of two regular files.
-fn same_contents(a: &Path, b: &Path) -> bool {
-    let size = |p: &Path| fs::metadata(p).map(|m| m.len()).ok();
-    size(a) == size(b) && size(a).is_some() && fs::read(a).ok() == fs::read(b).ok()
 }
 
 /// Decides how to free `target` for a new link.
@@ -69,6 +64,7 @@ fn apply_op(
     owned: &[&Path],
     manifest: &mut Manifest,
     journal: &mut dyn Journal,
+    link: Linker,
 ) -> Result<Option<String>> {
     let displace = displacement(&op.target, owned);
     let backup = match &displace {
@@ -81,6 +77,7 @@ fn apply_op(
         target: op.target.clone(),
         source: op.source.clone(),
         backup,
+        stamp: None,
     };
     journal.link_planned(&record)?;
     manifest.links.push(record);
@@ -96,9 +93,20 @@ fn apply_op(
         manifest.created_dirs.push(dir.clone());
         fs::create_dir(dir).at(dir)
     })?;
-    crate::platform::link_file(&op.source, &op.target).at(&op.target)?;
+    let kind = link(&op.source, &op.target).at(&op.target)?;
+    if kind != LinkKind::Symlink {
+        // Not self-describing like a symlink: remember what we placed.
+        let placed = stamp(&op.target);
+        if let (Some(placed), Some(record)) = (placed, manifest.links.last_mut()) {
+            journal.link_stamped(&op.target, &placed)?;
+            record.stamp = Some(placed);
+        }
+    }
     Ok(None)
 }
+
+/// Places one file; the platform's [`crate::platform::link_file`] in production.
+pub type Linker = fn(&Path, &Path) -> std::io::Result<LinkKind>;
 
 /// Deploys every operation in `plan`, extending `manifest` as it goes.
 ///
@@ -112,11 +120,22 @@ pub fn deploy(
     manifest: &mut Manifest,
     journal: &mut dyn Journal,
 ) -> Result<Report> {
+    deploy_with(plan, owned, manifest, journal, crate::platform::link_file)
+}
+
+/// [`deploy`] with a chosen way of placing files (tests force copies).
+pub fn deploy_with(
+    plan: &LinkPlan,
+    owned: &[&Path],
+    manifest: &mut Manifest,
+    journal: &mut dyn Journal,
+    link: Linker,
+) -> Result<Report> {
     let before = manifest.links.len();
     let warnings = plan
         .ops
         .iter()
-        .map(|op| apply_op(op, owned, manifest, journal))
+        .map(|op| apply_op(op, owned, manifest, journal, link))
         .collect::<Result<Vec<_>>>()?
         .into_iter()
         .flatten()

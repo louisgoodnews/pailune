@@ -18,8 +18,8 @@ pub fn steam_roots(home: &Path) -> Vec<PathBuf> {
 }
 
 /// Symlinks `target` → `source`, as on Linux.
-pub fn link_file(source: &Path, target: &Path) -> io::Result<()> {
-    std::os::unix::fs::symlink(source, target)
+pub fn link_file(source: &Path, target: &Path) -> io::Result<super::LinkKind> {
+    std::os::unix::fs::symlink(source, target).map(|()| super::LinkKind::Symlink)
 }
 
 /// `open <target>`.

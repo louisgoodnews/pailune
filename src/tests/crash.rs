@@ -41,6 +41,13 @@ impl Journal for Dying<'_> {
         self.spend()?;
         self.inner.link_planned(record)
     }
+    fn link_stamped(&mut self, target: &Path, stamp: &crate::symlink::FileStamp) -> Result<()> {
+        if self.after_write && self.budget == 0 {
+            self.inner.link_stamped(target, stamp)?;
+        }
+        self.spend()?;
+        self.inner.link_stamped(target, stamp)
+    }
     fn link_reverted(&mut self, target: &Path) -> Result<()> {
         self.inner.link_reverted(target)
     }
@@ -73,10 +80,24 @@ fn snapshot(root: &Path) -> BTreeMap<String, String> {
         .collect()
 }
 
+/// Places a copy instead of a symlink (the Windows fallback, D-11).
+fn copy(source: &Path, target: &Path) -> std::io::Result<crate::platform::LinkKind> {
+    fs::copy(source, target).map(|_| crate::platform::LinkKind::Copy)
+}
+
 #[test]
 fn interrupted_deploys_are_fully_revertible() {
-    let cases = (0..8).flat_map(|budget| [(budget, false), (budget, true)]);
-    cases.for_each(|(budget, after_write)| {
+    // 3 links + 1 created directory are journaled; copies add 3 stamps.
+    let linkers: [(deploy::Linker, usize); 2] = [(crate::platform::link_file, 4), (copy, 7)];
+    let cases = linkers.into_iter().flat_map(|(linker, writes)| {
+        (0..writes + 3).flat_map(move |budget| {
+            [
+                (linker, writes, budget, false),
+                (linker, writes, budget, true),
+            ]
+        })
+    });
+    cases.for_each(|(linker, writes, budget, after_write)| {
         let fx = fixture();
         install::import(&fx.sources.join("Cool Mod"), &fx.staging).unwrap();
         install::import(&fx.sources.join("Overlay"), &fx.staging).unwrap();
@@ -89,18 +110,18 @@ fn interrupted_deploys_are_fully_revertible() {
             budget,
             after_write,
         };
-        let outcome = deploy::deploy(
+        let outcome = deploy::deploy_with(
             &link_plan,
             &[fx.staging.as_path()],
             &mut Manifest::default(),
             &mut journal,
+            linker,
         );
         // "Restart": only the persisted manifest survives.
         let mut manifest = db::links::load(&conn).unwrap();
         assert_eq!(
             outcome.is_err(),
-            // 3 links + 1 created directory (bin64/plugins) are journaled.
-            budget < 4,
+            budget < writes,
             "budget {budget} after_write {after_write}"
         );
         let report = undeploy::undeploy(&mut manifest, &mut DbJournal { conn: &conn }).unwrap();

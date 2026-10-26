@@ -1,7 +1,7 @@
 //! Removing deployed symlinks and restoring their `.bak` originals.
 
 use super::journal::Journal;
-use super::{LinkRecord, Manifest, PathState, Report, path_state};
+use super::{LinkRecord, Manifest, PathState, Report, path_state, same_contents, stamp};
 use crate::error::{IoContext, Result};
 use std::fs;
 
@@ -30,10 +30,25 @@ enum Target {
 }
 
 /// What occupies the record's target now.
+///
+/// A regular file is ours when it still carries the stamp recorded after it
+/// was placed (hard links, copies). Without a stamp (a run interrupted right
+/// after placing it) identical content counts — unless the planned `.bak`
+/// rename never happened, because then the file is the untouched original.
 fn target_of(record: &LinkRecord) -> Target {
-    match path_state(&record.target) {
-        PathState::Symlink(dest) if dest == record.source => Target::Ours,
-        PathState::Missing => Target::Free,
+    let bak_pending = record
+        .backup
+        .as_ref()
+        .is_some_and(|bak| path_state(bak) == PathState::Missing);
+    match (path_state(&record.target), record.stamp) {
+        (PathState::Symlink(dest), _) if dest == record.source => Target::Ours,
+        (PathState::Missing, _) => Target::Free,
+        (PathState::File, Some(placed)) if stamp(&record.target) == Some(placed) => Target::Ours,
+        (PathState::File, None)
+            if !bak_pending && same_contents(&record.target, &record.source) =>
+        {
+            Target::Ours
+        }
         _ => Target::Foreign,
     }
 }
