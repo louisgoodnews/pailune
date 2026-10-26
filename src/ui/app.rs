@@ -110,6 +110,7 @@ impl PyluneApp {
             save_slots: Vec::new(),
             plugins: Vec::new(),
             window: Default::default(),
+            notices: Default::default(),
             headless: false,
             job_failures: Vec::new(),
             save_view: None,
@@ -218,6 +219,8 @@ impl eframe::App for PyluneApp {
         actions.extend(views::guide::show(ui.ctx(), self));
         actions.extend(views::missing::show(ui.ctx(), self));
         actions.extend(views::save_view::show(ui.ctx(), self));
+        actions.extend(views::notifications::toasts(ui.ctx(), self));
+        actions.extend(views::notifications::center(ui.ctx(), self));
         if self.setup_open {
             actions.extend(views::setup::show(ui.ctx(), self));
         }

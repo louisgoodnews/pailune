@@ -41,6 +41,7 @@ impl PyluneApp {
             Action::Setup(action) => self.setup_action(action),
             Action::Backup(action) => self.backup_action(action),
             Action::Guide(action) => self.guide_action(action),
+            Action::Notice(action) => self.notice_action(action),
             Action::ModList(action) => self.modlist_action(action),
             Action::SwitchTab(tab) => {
                 self.tab = tab;

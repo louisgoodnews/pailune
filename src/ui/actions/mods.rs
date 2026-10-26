@@ -118,11 +118,21 @@ impl PyluneApp {
                 let now = crate::db::now();
                 let staging = self.paths.staging.clone();
                 let scan = registry::scan(&staging)?;
+                let before: Vec<String> =
+                    self.registry.mods.iter().map(|m| m.name.clone()).collect();
                 self.update_registry(|r| Ok(registry::merge(r, &scan, now)))?;
-                Ok(Some(StatusLine::new(
-                    Level::Info,
-                    format!("{} mod(s) in staging", self.registry.mods.len()),
-                )))
+                let mods = &self.registry.mods;
+                let added = mods.iter().filter(|m| !before.contains(&m.name)).count();
+                let gone = before
+                    .iter()
+                    .filter(|b| !mods.iter().any(|m| &m.name == *b))
+                    .count();
+                let text = format!(
+                    "{} mod(s) in staging — {added} new, {gone} gone",
+                    mods.len()
+                );
+                self.notices.push(Level::Info, "Scan complete", &text);
+                Ok(Some(StatusLine::new(Level::Info, text)))
             }
         }
     }

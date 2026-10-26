@@ -71,6 +71,12 @@ pub fn behavior(ui: &mut egui::Ui, draft: &mut SettingsDraft) -> Vec<Action> {
         "Opens the guide on the next start. It is always available from the ❓ button.",
         |ui| drop(ui.checkbox(&mut prefs.show_guide, "")),
     );
+    setting(
+        ui,
+        "Show pop-up notifications",
+        "Briefly shows when mods are installed, applied or something failed. The 🔔 list in the header keeps them either way.",
+        |ui| drop(ui.checkbox(&mut prefs.toasts, "")),
+    );
     Vec::new()
 }
 

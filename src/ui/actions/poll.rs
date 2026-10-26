@@ -57,6 +57,7 @@ impl PyluneApp {
         };
         view.finished_at = Some(Instant::now());
         let kind = view.kind.clone();
+        let (noted, ok) = (kind.clone(), result.is_ok());
         if matches!(kind, JobKind::AnalyzeConflicts(_))
             && std::mem::take(&mut self.mods.conflicts_rerun)
         {
@@ -75,6 +76,7 @@ impl PyluneApp {
                 self.status = StatusLine::new(Level::Error, message);
             }
         }
+        self.notify_job(&noted, ok);
         if let Err(err) = self.reload() {
             self.status = StatusLine::new(Level::Error, err.to_string());
         }

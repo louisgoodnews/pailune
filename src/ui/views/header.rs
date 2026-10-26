@@ -62,7 +62,18 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             let guide = ui
                 .button("❓ Guide")
                 .on_hover_text("Getting started and how-to topics (F1)");
+            let bell = match app.notices.unread() {
+                0 => "🔔".to_string(),
+                n => format!("🔔 {n}"),
+            };
+            let notices = ui
+                .selectable_label(app.notices.open, bell)
+                .on_hover_text("Notifications: installs, applies, errors");
             actions.extend(clicked([
+                (
+                    notices.clicked(),
+                    Action::Notice(crate::ui::notify::NoticeAction::ToggleCenter),
+                ),
                 (play.clicked(), Action::Deploy(DeployAction::Launch)),
                 (
                     guide.clicked(),

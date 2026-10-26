@@ -94,6 +94,13 @@ defined them, with descriptions, recommended choices and pages that appear depen
 answers. Until you change anything, the installer's recommended choices are used. Your choices
 are kept with the mod (also in mod lists and backups); press *Apply* after changing them.
 
+### Notifications
+
+When something finishes in the background — a mod installed, changes applied, a backup made, a
+scan done — or fails, a short note pops up at the top right (errors stay until clicked). The
+🔔 button in the header lists all notes of this session; opening it marks them read. Pop-ups can
+be switched off under *Settings → Behavior*; the list keeps collecting.
+
 ### Conflicts
 
 A ⚔ badge shows how many files a mod wins and loses against others. The details panel lists them;

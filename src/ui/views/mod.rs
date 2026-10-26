@@ -20,6 +20,7 @@ pub mod mod_details;
 pub mod mod_files;
 pub mod mod_list;
 pub mod nexus;
+pub mod notifications;
 pub mod plugin_settings;
 pub mod profiles;
 pub mod readme;

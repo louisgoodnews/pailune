@@ -62,6 +62,9 @@ pub struct BehaviorConfig {
     pub check_updates_on_start: bool,
     /// Show the getting-started guide on the next start.
     pub show_guide: bool,
+    /// Pop up notifications (toasts); the notification center always
+    /// collects them.
+    pub toasts: bool,
 }
 
 impl Default for BehaviorConfig {
@@ -70,6 +73,7 @@ impl Default for BehaviorConfig {
             confirm_deletes: false,
             check_updates_on_start: false,
             show_guide: true,
+            toasts: true,
         }
     }
 }

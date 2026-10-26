@@ -117,6 +117,13 @@ fn screens() {
             app.poll();
             app.dispatch(Action::Mod(ModAction::Select("Fat Stacks".into())));
             shoot(&mut h, &format!("{tag}-json-options"));
+            h.state_mut().dispatch(Action::Notice(
+                crate::ui::notify::NoticeAction::ToggleCenter,
+            ));
+            shoot(&mut h, &format!("{tag}-notifications"));
+            h.state_mut().dispatch(Action::Notice(
+                crate::ui::notify::NoticeAction::ToggleCenter,
+            ));
             h.state_mut()
                 .dispatch(Action::Mod(ModAction::Select("Arrow Stacks".into())));
             // Tall enough to show the editor under the details.

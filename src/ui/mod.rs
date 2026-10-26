@@ -8,6 +8,7 @@ pub mod fatal;
 pub mod guide;
 pub mod icon;
 mod intent;
+pub mod notify;
 mod shortcuts;
 mod startup;
 mod state;
@@ -95,6 +96,8 @@ pub struct PyluneApp {
     pub profiles: ProfilesState,
     pub nexus: NexusState,
     pub log: LogState,
+    /// Toasts and the notification center.
+    pub notices: notify::Notifications,
     /// Window commands requested by this frame's actions.
     pub window: state::WindowRequests,
     pub pool: JobPool,

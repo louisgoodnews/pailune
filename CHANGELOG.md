@@ -58,6 +58,10 @@
 - User guide, vision, architecture, data model, extension guide and decision records in `docs/`.
 
 ### Interface
+- Notifications: pop-ups (top right) when mods are installed, applied, deleted or restored,
+  backups made, scans finished or something failed; the 🔔 button keeps them for the session.
+  Pop-ups can be switched off in *Settings → Behavior*.
+- The mod table fills the window width; the background jobs panel is resizable and scrolls.
 - *More → Quit Pylune* (Ctrl+Q) closes Pylune; the menu stays usable while the game runs.
 - *Log → Copy log* copies the shown entries as text, e.g. for bug reports.
 - Reworked against documented UX principles: Clean slate in a *More* menu, dialogs name their

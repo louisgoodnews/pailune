@@ -143,6 +143,7 @@ pub enum Action {
     CopyLog,
     /// Close Pylune.
     Quit,
+    Notice(super::notify::NoticeAction),
     Ask(Confirm),
     Dismiss,
 }
