@@ -108,6 +108,8 @@ fn overlay_overrides_game_files_and_reverts_exactly() {
     let icon_path = fx.sources.join("Radial/Radial/files/0000/ui/icon.dds");
     fs::create_dir_all(icon_path.parent().unwrap()).unwrap();
     fs::write(&icon_path, dds(0x55)).unwrap();
+    // A texture the game does not have yet: needs its own PATHC entry.
+    fs::write(icon_path.with_file_name("brandnew.dds"), dds(0x77)).unwrap();
     write(
         &fx.sources.join("Radial/Radial/files/0000/ui/broken.dds"),
         "not a texture",
@@ -170,6 +172,13 @@ fn overlay_overrides_game_files_and_reverts_exactly() {
     assert_eq!(
         live_pathc.lookup("ui/icon.dds").map(|(_, m)| m),
         Some([128, 32, 16, 0])
+    );
+    let fresh = game_lookup(&game, "ui/brandnew.dds").expect("new texture packed");
+    assert!(fresh.as_bytes()[128..].iter().all(|b| *b == 0x77));
+    assert_eq!(
+        live_pathc.lookup("ui/brandnew.dds").map(|(_, m)| m),
+        Some([128, 32, 16, 0]),
+        "new texture registered in PATHC"
     );
     assert_eq!(
         game_lookup(&game, "ui/broken.dds"),

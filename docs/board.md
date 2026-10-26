@@ -30,7 +30,7 @@ Move a line between columns when its status changes.
     or unique file name; patched files packed with vanilla flags; results journaled per
     mod. Dry run on the real item table changes exactly the targeted byte.
   - not yet: field-name JSON (format 3, needs per-table schemas — reported as
-    unsupported), inserts into tables, XML/HTML patch files, new texture ids.
+    unsupported), inserts into tables, HTML patch files.
   - done: CSS patch/merge files (`*.css.patch`, `*.css.merge`: @merge/@replace/@add/@remove),
     applied in load order on top of shipped or vanilla stylesheets; untouched rules stay
     byte-identical (checked on the real title stylesheet).
@@ -45,7 +45,7 @@ Move a line between columns when its status changes.
 - [ ] B-07 (step 2) Save viewer, then editing — *L*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs; Windows console window (needs a GUI subsystem build that still serves the CLI); macOS app bundle with `nxm://` URL type — *L*
 - [ ] B-13 (step 2) Script bridge installation — *L*
-- [ ] A-01 (rest) HTML patches, new texture ids, table inserts, field-name JSON (format 3) — *L*
+- [ ] A-01 (rest) HTML patches, table inserts, field-name JSON (format 3) — *L*
 
 ## Owner
 
@@ -56,6 +56,9 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-01 new textures: a `.dds` the game does not have gets its own PATHC entry (default format
+  class) and is packed like a replacement; covered by the overlay test. With XML patches, mods can
+  reference new textures from the game's UI XML.
 - [x] A-01 XML patch/merge files (`src/patch/xml/`): lenient span-keeping reader for the game's
   XML (BOM, multi-root fragments, comments, `</>` shorthand — surveyed on 1 084 real files),
   XPath subset plus `#id`/`.class`/`find`+`key`, JSON and `<xml-patch>` operations, identity-based
