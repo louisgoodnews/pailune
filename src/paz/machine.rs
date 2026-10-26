@@ -229,3 +229,37 @@ fn raw_field_change_on_the_real_item_table() {
     );
     assert_eq!(patched.len(), body.len());
 }
+
+/// Dry run of JSON test mods in `PYLUNE_TEST_MODS=<dir>` against the
+/// installed game's tables, in memory: every change must resolve and match.
+#[test]
+#[ignore = "reads the local game installation"]
+fn test_mods_apply_to_the_real_tables() {
+    let Ok(dir) = std::env::var("PYLUNE_TEST_MODS") else {
+        return;
+    };
+    let group = game_dir().join("0008");
+    let index = pamt::parse(&fs::read(group.join("0.pamt")).unwrap()).unwrap();
+    let read = |p: &str| extract::extract(&group, p, &index.files[p]).unwrap();
+    let files = walkdir::WalkDir::new(dir)
+        .into_iter()
+        .filter_map(|e| e.ok());
+    files
+        .filter(|e| e.path().extension().is_some_and(|x| x == "json"))
+        .for_each(|e| {
+            let parsed =
+                crate::patch::parse::parse(&fs::read_to_string(e.path()).unwrap()).unwrap();
+            parsed.patches.iter().for_each(|p| {
+                let mut body = read(&p.game_file);
+                let head = read(&p.game_file.replace("staticinfobody", "staticinfoheader"));
+                let report = crate::patch::apply::apply(&mut body, p, Some(&head), true, false);
+                println!(
+                    "{}: {} applied, failed {:?}",
+                    e.path().display(),
+                    report.applied,
+                    report.failed
+                );
+                assert!(report.failed.is_empty() && report.applied == p.changes.len());
+            });
+        });
+}

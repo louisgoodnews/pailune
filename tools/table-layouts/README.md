@@ -20,6 +20,8 @@ cargo test shipped_table_layouts -- --ignored     # verify in Pylune itself
   margins; a field's offset is *proven* when all exact layouts agree on it.
 * `engine.py` — recursive version for nested classes (lists of structures, inline structures);
   solves element layouts where the parent search reaches the field.
+* `testmods.py` — writes the in-game test mods that confirm field names (batch definitions
+  in the file; output stays outside the repository).
 * `export.py` — writes layouts that decode **every** record exactly, with evidence
   thresholds (≥ 10 records, no opaque blocks) and name certainty (unique shape in its class).
 

@@ -119,6 +119,13 @@ field name stays limited to verified layouts.
 2. **Semantic evidence** from values (e.g. arrows stack to 100), marked as inferred and never
    editable by name without (1).
 
+### `DropSetInfo` (shapes from data, names pending batch 1)
+
+Header: `u8 _isBlocked, u8, u32, u32, hash, u32 count`, then `count` drop entries of 64 bytes
+(on the animal drop sets): `+0 u8 01, +1 u32 item key, +26 u32 rate (1 000 000 = 100 %),
++42 u64 amount, +50 u64 amount, +58 ffff, +60 u32 item key`. Friendship drops use the same
+amounts for friendship points (Donate +50, Talk +5, Threat −200).
+
 ## Order of work
 
 Fixed-size tables first (done: phase 1), then the tables mods target most — `iteminfo`,
