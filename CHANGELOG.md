@@ -42,6 +42,9 @@
 - Reworked against documented UX principles: Clean slate in a *More* menu, dialogs name their
   action, larger text and checkboxes, consistent wording, contrast-checked colours.
 
+### Command line and agents
+- `pylune <command>` for every main task, with `--json`; `pylune mcp` for AI agents (MCP).
+
 ### Platforms
 - Operating-system specifics moved into one platform layer; Windows and macOS builds in CI.
 

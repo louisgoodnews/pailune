@@ -42,6 +42,22 @@ fn spool(dir: &Path, request: &str) -> Result<()> {
     fs::rename(&tmp, &done).at(&done)
 }
 
+/// Takes the instance lock without starting a window (command line, MCP);
+/// `None` when another instance holds it.
+pub fn try_lock(paths: &DataPaths) -> Result<Option<InstanceLock>> {
+    let file = OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .write(true)
+        .open(&paths.lock)
+        .at(&paths.lock)?;
+    match file.try_lock() {
+        Ok(()) => Ok(Some(InstanceLock { _file: file })),
+        Err(TryLockError::WouldBlock) => Ok(None),
+        Err(TryLockError::Error(err)) => Err(err).at(&paths.lock),
+    }
+}
+
 /// Spools `nxm://` arguments and decides whether to show the GUI.
 pub fn bootstrap(paths: &DataPaths, args: &[String]) -> Result<Startup> {
     fs::create_dir_all(&paths.spool).at(&paths.spool)?;

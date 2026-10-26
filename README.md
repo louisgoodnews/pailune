@@ -7,6 +7,10 @@ Native Linux mod manager for **Crimson Desert** (Steam / Proton), written in Rus
 [extending Pylune](docs/extending.md) · [decisions](docs/decisions.md) ·
 [UX principles](docs/ux-principles.md) · [all documents](docs/README.md)
 
+**Command line & AI agents:** `pylune --help` lists commands (`status`, `list`, `install`,
+`enable`, `move`, `apply`, …, with `--json`); `pylune mcp` serves them over the Model Context
+Protocol. See the [user guide](docs/user-guide.md#command-line-and-ai-agents).
+
 **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## First start

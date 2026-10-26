@@ -7,6 +7,7 @@ description = "Linux mod manager for Crimson Desert (Steam / Proton)"
 
 [dependencies]
 chacha20 = "0.10"
+clap = { version = "4", features = ["derive"] }
 directories = "6.0.0"
 eframe = "0.37.0"
 egui = { version = "0.37.0", default-features = false, features = ["monochrome_emoji_fonts"] }

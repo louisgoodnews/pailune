@@ -152,6 +152,36 @@ mods stay in Pylune.
 
 Press **Save** to keep changes or **Discard** to drop them; each page can be reset to defaults.
 
+## Command line and AI agents
+
+Everything important also works without the window. Read-only commands work while the window is
+open; commands that change something need the window closed (they use the same safety rules).
+
+```sh
+pylune status                    # game, mods, links, pending changes
+pylune list                      # load order
+pylune install ~/Downloads/SomeMod.zip
+pylune enable "Some Mod"         # or: pylune enable --all
+pylune move "Some Mod" 3         # load-order number
+pylune apply                     # link into the game
+pylune unlink
+pylune profile save Vanilla+     # / pylune profile load Vanilla+
+pylune export setup.json         # / pylune import setup.json
+pylune backup --full             # / pylune backups, pylune restore <file> --yes
+pylune clean-slate --yes
+pylune launch
+pylune log --mod "Some Mod" --limit 20
+```
+
+Add `--json` for machine-readable output (`{"ok", "message", "data"}`); the exit code is 0 on
+success, 1 on failure. Operations that cannot be undone need `--yes`.
+
+**AI agents (MCP).** `pylune mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io)
+server on standard input/output with the same operations as tools (`status`, `list_mods`,
+`install_mods`, `enable_mods`, `move_mod`, `apply`, `launch_game`, …). Register it with your
+agent, for example in Claude Code: `claude mcp add pylune -- pylune mcp`. `clean_slate` and
+`restore_backup` require `confirm: true`.
+
 ## Keyboard shortcuts
 
 | Keys | Action |

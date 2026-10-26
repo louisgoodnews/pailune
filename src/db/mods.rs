@@ -5,7 +5,7 @@ use crate::mod_engine::model::{ModEntry, ModKind, NexusRef, Registry};
 use rusqlite::{Connection, Row, TransactionBehavior, params};
 
 /// Name of a mod kind in the database.
-fn kind_to_str(kind: ModKind) -> &'static str {
+pub(crate) fn kind_to_str(kind: ModKind) -> &'static str {
     match kind {
         ModKind::Json => "json",
         ModKind::Raw => "raw",

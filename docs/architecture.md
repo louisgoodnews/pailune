@@ -41,6 +41,8 @@ a plan is computed, then executed), which keeps them testable without a window o
 | `steam/` | Steam library discovery, VDF parser, game/prefix/loader detection. |
 | `profiles/` | Saved mod setups (enabled set, order, launch options), JSON export/import. |
 | `platform/` | Operating-system differences behind one set of functions (Steam roots, linking, opening, Steam client, process check, private files, `AppData/Local`, Proton or not); `linux.rs` is the reference, `windows.rs`/`macos.rs` are built by CI. |
+| `cli/` | Command line: `ops.rs` (the `Op` set shared with MCP), `read.rs` (read-only, straight from the database), `engine.rs` (changing operations through a headless `PyluneApp` holding the instance lock), clap front-end. |
+| `mcp/` | Model Context Protocol server over stdio (JSON-RPC 2.0); `tools/table.rs` lists the tools, `tools/mod.rs` maps calls to `Op`s. |
 | `instance.rs` | `flock` single-instance lock and the spool directory through which a second start hands over `nxm://` links or a focus request. |
 | `logging/` | Daily log files (`tracing`), the per-mod event journal and per-mod log files. |
 | `jobs/` | Job kinds, the pool, the job context (config snapshot, DB connection, progress, game lock), and `tasks/` implementing each job. |

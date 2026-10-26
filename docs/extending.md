@@ -76,6 +76,15 @@ Topics are data in `src/ui/guide/topics.rs` (`title`, search `keywords`, short `
 paragraphs that name real buttons). Steps live in `src/ui/guide/steps.rs` with a `Facts` check.
 Keep answers task-oriented and short (R-20).
 
+## Add a command-line command and MCP tool
+
+1. Add a variant to `Op` (`src/cli/ops.rs`); mark it in `read_only()` or `destructive()` if so.
+2. Read-only: implement it in `cli/read.rs`. Changing: map it to UI actions in `actions()` in
+   `cli/engine.rs` (or a dedicated function, like `export`/`import`) — never reimplement logic.
+3. Add the clap subcommand and its mapping in `cli/mod.rs`.
+4. Add the tool to `mcp/tools/table.rs` (name, description, parameters, hints) and its mapping in
+   `mcp/tools/mod.rs::op`; extend `mcp/tests.rs`.
+
 ## Add a Nexus API call
 
 Add a method to `nexus::api::Client` (it applies rate-limit bookkeeping and redacts the key),

@@ -6,6 +6,7 @@
 
 mod app_backup;
 mod backup;
+mod cli;
 mod config;
 mod db;
 mod error;
@@ -13,6 +14,7 @@ mod instance;
 mod jobs;
 mod launch;
 mod logging;
+mod mcp;
 mod mod_engine;
 mod modlist;
 mod nexus;
@@ -28,8 +30,10 @@ mod symlink;
 mod tests;
 mod ui;
 
-/// Hands `nxm://` links to a running instance, or starts the GUI.
-fn main() -> eframe::Result<()> {
+/// Runs a command-line command, hands `nxm://` links to a running
+/// instance, or starts the GUI.
+fn main() -> std::process::ExitCode {
+    let command = cli::parse();
     let args: Vec<String> = std::env::args().skip(1).collect();
     let paths = match config::paths::data_paths() {
         Ok(paths) => paths,
@@ -41,8 +45,27 @@ fn main() -> eframe::Result<()> {
     let (config, notice) = config::file::load_or_recover(&paths.config_file);
     let _log_guard =
         logging::init::init(&paths.logs, &config.logging.level, config.logging.keep_days);
+    if let Some(command) = command {
+        return cli::run(command, paths, config);
+    }
+    match gui(paths, config, notice, &args) {
+        Ok(()) => std::process::ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("pylune: {err}");
+            std::process::ExitCode::FAILURE
+        }
+    }
+}
+
+/// Starts the window (or hands the request to the one already open).
+fn gui(
+    paths: config::paths::DataPaths,
+    config: config::Config,
+    notice: Option<String>,
+    args: &[String],
+) -> eframe::Result<()> {
     // The lock must live until the window closes.
-    let _instance = match instance::bootstrap(&paths, &args) {
+    let _instance = match instance::bootstrap(&paths, args) {
         Ok(instance::Startup::HandedOff) => {
             eprintln!("pylune: already running — request handed to the open window");
             return Ok(());

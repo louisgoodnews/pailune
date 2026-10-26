@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] B-14 Headless core + CLI, then MCP server — *M–L*
 - [ ] B-07 (research) Save format: read-only decoding, `docs/save-format.md` — *L*
 - [ ] B-13 (research) Script bridge report + decision record
 
@@ -57,6 +56,13 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-14 command line and MCP (`src/cli/`, `src/mcp/`): 25 commands with `--json` and exit
+  codes, `--yes` for irreversible ones; read-only commands read the database (work with the
+  window open), changing ones drive a headless `PyluneApp` under the instance lock (same rules as
+  the buttons); `pylune mcp` serves 24 tools over stdio (MCP 2025-06-18, tool annotations,
+  `confirm: true` for destructive tools, errors as `isError` results). Tested: CLI parsing,
+  an MCP session installing/ordering/applying mods, and a smoke test of the binary in isolated
+  folders (which caught `--json status` opening the window — fixed).
 - [x] B-08 step 1 platform layer (`src/platform/{linux,windows,macos}.rs`): Steam roots,
   linking (Windows: symlink → hard link → copy), opening paths/URLs, Steam client, process check,
   private files, `AppData/Local` for saves, Proton or native launch (new `Direct` launch on
