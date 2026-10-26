@@ -79,6 +79,23 @@ game's first write.
 **Why.** The Rust ecosystem's convention: compatible with almost every downstream use, and the
 Apache option adds an explicit patent grant.
 
+## D-14 Mods may be written into the game's archives, with backups (accepted 2026-10-26)
+
+**Context.** Mods packed into Pylune's own archive group had no effect in game for data tables
+(and the control test is still open), while save editing (writing the game's files) and DMM's
+in-place route (*Fat Stacks*) work. The owner prefers not to change the game's files but decided
+to do it, provided Pylune keeps a **base backup** of the vanilla state and a **version backup**
+on every change, so any state — and vanilla — can be restored easily.
+**Decision.** Add an in-place deployment route for archived game files (design in
+[design/in-place.md](design/in-place.md)): the game's large `.paz` archives are never rewritten;
+Pylune's patched entries live in an additional archive file of the affected group (deployed as a
+symlink, like every other Pylune file), and only the group's index (`0.pamt`) and `meta/0.papgt`
+are rewritten. The vanilla index files are backed up once (base), every Apply that changes them
+stores a version, and *Revert to vanilla* / *Roll back to version N* restore them. The overlay
+route stays for content that works through it; which route a file takes is decided per file type
+after the in-game control test and the JMM/DMM analysis.
+**Supersedes** the "the game's own archives are never edited" goal for this route only.
+
 ## D-13 Pylune also creates mods (accepted 2026-10-26)
 
 **Context.** The vision listed "editing mods" as a non-goal. Pylune since gained what mod
