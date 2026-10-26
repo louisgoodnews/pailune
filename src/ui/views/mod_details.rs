@@ -149,7 +149,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             info_grid(ui, entry, details);
             actions.extend(super::variant::show(ui, entry, details));
             actions.extend(super::installer::show(ui, entry, details));
-            actions.extend(super::plugin_settings::show(ui, entry, app));
+            actions.extend(super::plugin_settings::show(ui, entry, details, app));
             ui.separator();
             conflicts(
                 ui,

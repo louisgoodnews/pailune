@@ -2,29 +2,45 @@
 //! Unsaved text lives in egui's memory per file, so the panel stays a
 //! read-only view of the app state.
 
-use crate::mod_engine::model::ModEntry;
-use crate::mod_engine::plugins::mod_settings;
-use crate::ui::theme::muted;
+use crate::mod_engine::model::{ModDetails, ModEntry};
+use crate::ui::theme::{danger, muted};
 use crate::ui::{Action, ModAction, PyluneApp};
 use eframe::egui::{self, RichText};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-/// One file: a text editor with Save and Revert.
+/// An edit in progress: the file text it started from, and the text now.
+#[derive(Clone)]
+struct Draft {
+    base: String,
+    text: String,
+}
+
+/// One file: a text editor with Save and Revert. The file is read only
+/// while its section is open; a draft is kept only while it differs.
 fn editor(ui: &mut egui::Ui, path: &Path, rel: &Path) -> Option<Action> {
     let id = egui::Id::unique(("pylune_ini", path));
-    let saved = std::fs::read_to_string(path).unwrap_or_default();
-    let mut text: String = ui.data(|d| d.get_temp(id)).unwrap_or_else(|| saved.clone());
     let mut action = None;
     egui::CollapsingHeader::new(rel.display().to_string())
         .id_salt(id)
         .show(ui, |ui| {
+            let saved = std::fs::read_to_string(path).unwrap_or_default();
+            let mut draft: Draft = ui.data(|d| d.get_temp(id)).unwrap_or_else(|| Draft {
+                base: saved.clone(),
+                text: saved.clone(),
+            });
             ui.add(
-                egui::TextEdit::multiline(&mut text)
+                egui::TextEdit::multiline(&mut draft.text)
                     .code_editor()
                     .desired_rows(8)
                     .desired_width(f32::INFINITY),
             );
-            let changed = text != saved;
+            if draft.base != saved {
+                ui.label(
+                    RichText::new("The file changed since you started editing — Revert loads it.")
+                        .color(danger()),
+                );
+            }
+            let changed = draft.text != saved;
             ui.horizontal(|ui| {
                 if ui
                     .add_enabled(changed, egui::Button::new("💾 Save"))
@@ -32,25 +48,50 @@ fn editor(ui: &mut egui::Ui, path: &Path, rel: &Path) -> Option<Action> {
                 {
                     action = Some(Action::Mod(ModAction::SaveSettingsFile(
                         path.to_path_buf(),
-                        text.clone(),
+                        draft.text.clone(),
                     )));
+                    draft.base = draft.text.clone();
                 }
                 if ui
                     .add_enabled(changed, egui::Button::new("Revert"))
                     .clicked()
                 {
-                    text = saved.clone();
+                    draft.text = saved.clone();
+                    draft.base = saved.clone();
                 }
             });
+            match draft.text == draft.base {
+                true => ui.data_mut(|d| d.remove::<Draft>(id)),
+                false => ui.data_mut(|d| {
+                    d.insert_temp(id, draft);
+                }),
+            }
         });
-    ui.data_mut(|d| d.insert_temp(id, text));
     action
 }
 
+/// The settings files among the mod's (already listed) files.
+fn settings_files(details: &ModDetails) -> Vec<PathBuf> {
+    details
+        .files
+        .iter()
+        .map(|f| f.rel.clone())
+        .filter(|rel| {
+            rel.extension()
+                .is_some_and(|x| x.eq_ignore_ascii_case("ini"))
+        })
+        .collect()
+}
+
 /// The settings section of a mod; empty when it ships no `.ini`.
-pub fn show(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) -> Vec<Action> {
+pub fn show(
+    ui: &mut egui::Ui,
+    entry: &ModEntry,
+    details: &ModDetails,
+    app: &PyluneApp,
+) -> Vec<Action> {
     let root = app.paths.staging.join(&entry.name);
-    let files = mod_settings(&root);
+    let files = settings_files(details);
     if files.is_empty() {
         return Vec::new();
     }

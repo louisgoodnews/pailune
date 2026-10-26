@@ -61,16 +61,30 @@ fn files(node: Option<Node>) -> Vec<FileInstall> {
         .collect()
 }
 
+/// Deepest nesting of `<dependencies>` followed; real installers use two or
+/// three levels, a hostile one could exhaust the stack.
+const MAX_DEPTH: usize = 32;
+
 /// A dependency element or a `<dependencies>`/`<visible>` container.
 fn condition(node: Node) -> Condition {
+    nested(node, 0)
+}
+
+/// [`condition`] at nesting `depth`; anything deeper than [`MAX_DEPTH`]
+/// counts as met, like other conditions Pylune cannot judge.
+fn nested(node: Node, depth: usize) -> Condition {
     match node.tag_name().name().to_lowercase().as_str() {
         "flagdependency" => Condition::Flag(attr(node, "flag"), attr(node, "value")),
         "filedependency" => Condition::File(attr(node, "file"), attr(node, "state")),
+        "dependencies" | "visible" | "moduledependencies" if depth >= MAX_DEPTH => {
+            tracing::warn!("FOMOD conditions nested too deeply; treating them as met");
+            Condition::Always
+        }
         "dependencies" | "visible" | "moduledependencies" => {
             let items: Vec<Condition> = node
                 .children()
                 .filter(|c| c.is_element())
-                .map(condition)
+                .map(|c| nested(c, depth + 1))
                 .collect();
             match attr(node, "operator").as_str() {
                 "Or" => Condition::Any(items),

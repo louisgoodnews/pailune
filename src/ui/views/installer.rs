@@ -79,6 +79,14 @@ fn group_ui(
 
 /// Renders the installer options of a FOMOD mod; empty for other mods.
 pub fn show(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) -> Vec<Action> {
+    if let Some(err) = &details.installer_error {
+        ui.separator();
+        ui.horizontal(|ui| {
+            theme::badge(ui, "INSTALLER", theme::danger());
+            ui.label(RichText::new("Broken installer — this mod is not deployed").strong());
+        });
+        ui.label(RichText::new(err).color(muted()));
+    }
     let Some(config) = &details.installer else {
         return Vec::new();
     };

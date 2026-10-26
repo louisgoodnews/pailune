@@ -129,7 +129,9 @@ fn mod_lists_rebuild_a_setup_and_place_mods_installed_later() {
     assert_eq!(line.level, Level::Warning, "{line:?}");
     assert!(!app.registry.mods[0].enabled, "Cool Mod disabled as listed");
     assert_eq!(app.mods.list_import.as_ref().unwrap().missing.len(), 1);
-    // Installing the missing mod puts it where the list wants it.
+    // A change made after the import survives; installing the missing mod
+    // puts only that mod where the list wants it.
+    app.dispatch(Action::Mod(ModAction::SetEnabled("Cool Mod".into(), true)));
     app.dispatch(Action::Mod(ModAction::ImportPaths(vec![
         fx.sources.join("Overlay"),
     ])));
@@ -140,7 +142,7 @@ fn mod_lists_rebuild_a_setup_and_place_mods_installed_later() {
         .iter()
         .map(|m| (m.name.as_str(), m.enabled))
         .collect();
-    assert_eq!(order, [("Overlay", true), ("Cool Mod", false)]);
+    assert_eq!(order, [("Overlay", true), ("Cool Mod", true)]);
     assert!(app.mods.list_import.is_none(), "nothing missing any more");
 }
 
@@ -183,6 +185,7 @@ fn fomod_installers_follow_the_chosen_options() {
             ("Textures".into(), "Resolution".into(), "4K".into()),
             ("Textures".into(), "Extras".into(), "Patch".into()),
         ],
+        at: Vec::new(),
     };
     app.dispatch(Action::Mod(ModAction::SetVariant(
         "Better Things".into(),

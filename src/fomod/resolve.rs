@@ -91,8 +91,8 @@ pub fn walk(config: &Config, selection: Option<&Selection>) -> Walk {
         for (gi, group) in step.groups.iter().enumerate() {
             let chosen_by_user: Vec<usize> = (0..group.plugins.len())
                 .filter(|pi| {
-                    selection
-                        .is_some_and(|s| s.has(&step.name, &group.name, &group.plugins[*pi].name))
+                    let names = (&*step.name, &*group.name, &*group.plugins[*pi].name);
+                    selection.is_some_and(|s| s.has((si, gi, *pi), names))
                 })
                 .collect();
             let mut chosen = match (selection, chosen_by_user.is_empty(), group.kind) {
@@ -143,6 +143,7 @@ pub fn selection_of(config: &Config, picks: &[(usize, usize, usize)]) -> Selecti
                 )
             })
             .collect(),
+        at: picks.to_vec(),
     }
 }
 

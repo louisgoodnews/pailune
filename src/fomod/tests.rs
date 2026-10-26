@@ -115,6 +115,7 @@ fn defaults_choices_flags_and_visibility() {
             .iter()
             .map(|(s, g, p)| (s.to_string(), g.to_string(), p.to_string()))
             .collect(),
+        at: Vec::new(),
     };
     let chosen = picks(&[
         ("Textures", "Resolution", "2K"),
@@ -175,4 +176,43 @@ fn paths_leaving_the_mod_or_game_folder_are_ignored() {
         .map(|(_, d)| d.display().to_string())
         .collect();
     assert_eq!(files, ["bin64/ok.asi"]);
+}
+
+#[test]
+fn plugins_sharing_a_name_are_told_apart_and_deep_conditions_are_bounded() {
+    let twins = XML.replacen(r#"<plugin name="2K">"#, r#"<plugin name="4K">"#, 1);
+    let config = parse(&twins).unwrap();
+    let first = resolve::selection_of(&config, &[(0, 0, 0)]);
+    let stored = Selection::decode(Some(&first.encode())).unwrap();
+    let picks = resolve::walk(&config, Some(&stored)).picks;
+    assert!(
+        picks.contains(&(0, 0, 0)) && !picks.contains(&(0, 0, 1)),
+        "{picks:?}"
+    );
+
+    let deep = format!(
+        "{}<flagDependency flag=\"x\" value=\"y\"/>{}",
+        "<dependencies>".repeat(5000),
+        "</dependencies>".repeat(5000)
+    );
+    let hostile = XML.replacen(
+        r#"<installStep name="Textures">"#,
+        &format!(r#"<installStep name="Textures"><visible>{deep}</visible>"#),
+        1,
+    );
+    // Parsing either refuses the document or bounds the nesting; neither crashes.
+    if let Ok(config) = parse(&hostile) {
+        assert!(!resolve::walk(&config, None).visible.is_empty());
+    }
+}
+
+#[test]
+fn a_broken_installer_deploys_nothing_and_says_why() {
+    let dir = tempfile::tempdir().unwrap();
+    write_mod(dir.path());
+    fs::write(dir.path().join("FOMOD/ModuleConfig.xml"), "<config><oops").unwrap();
+    let files = crate::mod_engine::plan::deployable_files(dir.path(), None).unwrap();
+    assert!(files.is_empty(), "{files:?}");
+    let details = crate::mod_engine::info::details(dir.path(), None).unwrap();
+    assert!(details.installer_error.is_some() && details.variants.is_empty());
 }

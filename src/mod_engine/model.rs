@@ -100,4 +100,6 @@ pub struct ModDetails {
     pub variants: Vec<String>,
     /// The mod's FOMOD installer, if it has one (then `variants` is empty).
     pub installer: Option<crate::fomod::Config>,
+    /// Why the mod's FOMOD installer could not be read (nothing deploys).
+    pub installer_error: Option<String>,
 }

@@ -27,6 +27,13 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] Code review of the recent features (27 findings, three passes, all fixed with tests):
+  FOMOD and mod paths cannot leave their folders; XML/HTML patch engine edge cases; overlapping
+  or length-changing table patches refused; interrupted save restores recovered; hostile saves
+  and installers bounded; CLI/MCP report failed jobs and release the lock between calls; hard
+  links re-stamped after settings edits; Windows helpers without console windows; mod lists
+  match several files of one Nexus mod one-to-one and keep later changes; plugins sharing a
+  name in a FOMOD stay apart; a broken FOMOD deploys nothing and says why.
 - [x] A-01 archive pipeline (phase 3 of the original plan): read-only PAZ reader, overlay group
   verified in game, textures with rebuilt PATHC, byte-patch JSON, CSS/XML/HTML patches, archive
   conflicts — details in `paz-format.md` and the entries below.

@@ -3,7 +3,7 @@
 use crate::error::{PyluneError, Result};
 use crate::jobs::JobKind;
 use crate::logging::{Event, EventKind, Severity};
-use crate::modlist::{self, apply::apply};
+use crate::modlist::{self, apply::apply, apply::place_new};
 use crate::nexus::download::DownloadJob;
 use crate::ui::state::ListImport;
 use crate::ui::{Level, ModListAction, PyluneApp, StatusLine};
@@ -86,14 +86,38 @@ impl PyluneApp {
         })
     }
 
-    /// After an install: re-apply the pending list so new mods take their place.
+    /// After an install: newly installed mods of the pending list take their
+    /// place; changes made since the import are kept.
     pub(super) fn reapply_pending_list(&mut self) {
         let Some(pending) = self.mods.list_import.take() else {
             return;
         };
-        if let Err(err) = self.apply_list(pending.list) {
-            self.status = StatusLine::new(Level::Error, err.to_string());
+        let mut outcome = None;
+        let updated = self.update_registry(|r| {
+            let placed = place_new(&pending.list, r, &pending.missing);
+            let next = placed.registry.clone();
+            outcome = Some(placed);
+            Ok(next)
+        });
+        let outcome = match (updated, outcome) {
+            (Ok(_), Some(outcome)) => outcome,
+            (Err(err), _) => {
+                self.status = StatusLine::new(Level::Error, err.to_string());
+                self.mods.list_import = Some(pending);
+                return;
+            }
+            (Ok(_), None) => return,
+        };
+        if outcome.matched > 0 {
+            self.status = StatusLine::new(
+                Level::Success,
+                format!("Placed {} mod(s) from the mod list", outcome.matched),
+            );
         }
+        self.mods.list_import = (!outcome.missing.is_empty()).then_some(ListImport {
+            list: pending.list,
+            missing: outcome.missing,
+        });
     }
 
     fn download_missing(&mut self) -> Result<StatusLine> {

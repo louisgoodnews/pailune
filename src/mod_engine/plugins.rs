@@ -55,23 +55,6 @@ pub fn scan(bin64: &Path, links: &[LinkRecord], staging: &Path) -> Vec<Plugin> {
     found
 }
 
-/// The settings files a staged mod ships (`*.ini`), relative to its root.
-pub fn mod_settings(mod_root: &Path) -> Vec<PathBuf> {
-    let mut found: Vec<PathBuf> = walkdir::WalkDir::new(mod_root)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_file())
-        .filter(|e| {
-            e.path()
-                .extension()
-                .is_some_and(|x| x.eq_ignore_ascii_case("ini"))
-        })
-        .filter_map(|e| e.path().strip_prefix(mod_root).ok().map(Path::to_path_buf))
-        .collect();
-    found.sort();
-    found
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -105,10 +88,6 @@ mod tests {
                 ("scripts/Other.ASI", None, false),
                 ("skip.asi", Some("Skip"), true)
             ]
-        );
-        assert_eq!(
-            mod_settings(&staging.join("Skip")),
-            [PathBuf::from("bin64/skip.ini")]
         );
     }
 }

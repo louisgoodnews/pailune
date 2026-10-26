@@ -68,6 +68,22 @@
   ❓ Guide button and F1; the empty mod list explains what to do next.
 - Icons render everywhere (emoji font bundled).
 
+### Fixes from code review
+- Paths in FOMOD installers and mods can no longer point outside the mod or game folder.
+- XML/HTML patches: quoted `>` in attributes, self-closing elements gaining children, unknown
+  predicates and per-parent positions handled; table patches that overlap or change a record's
+  length are refused; ambiguous record names need a key.
+- An interrupted save restore is undone at the next start; corrupt or hostile save files and
+  installers fail cleanly instead of crashing.
+- Command line and MCP: failed downloads/installs are reported as errors; MCP no longer keeps
+  the window locked out between calls.
+- Mod lists: several files of the same Nexus mod are matched one-to-one; installing missing mods
+  later keeps changes made since the import; loading a profile drops the pending list.
+- FOMOD: options sharing a name are remembered correctly; a broken installer deploys nothing and
+  is shown in the details panel.
+- Plugin settings editor notices files changed on disk; the save inspector's search is faster.
+- Windows: no console windows flash up; links open without going through `cmd`.
+
 ### Storage
 - SQLite application state (`~/.local/share/pylune/pylune.sqlite3`), TOML settings
   (`~/.config/pylune/config.toml`).

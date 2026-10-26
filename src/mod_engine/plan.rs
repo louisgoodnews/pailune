@@ -74,13 +74,9 @@ pub fn resolve_case(base: &Path, rel: &Path) -> PathBuf {
     })
 }
 
-/// The mod's FOMOD installer. A broken one is logged and ignored, so the
-/// mod still deploys like an ordinary folder instead of blocking every Apply.
-pub fn installer(mod_root: &Path) -> Option<crate::fomod::Config> {
-    crate::fomod::load(mod_root).unwrap_or_else(|err| {
-        tracing::warn!(mod_root = %mod_root.display(), %err, "ignoring a broken FOMOD installer");
-        None
-    })
+/// The mod's FOMOD installer; `Err` with the reason when it is broken.
+pub fn installer(mod_root: &Path) -> std::result::Result<Option<crate::fomod::Config>, String> {
+    crate::fomod::load(mod_root).map_err(|err| err.to_string())
 }
 
 /// A deployable file of a staged mod.
@@ -97,8 +93,18 @@ pub struct ModFile {
 /// Every deployable file of a mod. FOMOD mods deploy what their installer
 /// resolves to for the stored choices; for multi-variant mods only the
 /// chosen variant (default: the first) and the shared root files are included.
+/// A mod with a broken installer deploys nothing: its folders hold every
+/// option at once, so deploying them as they are would mix alternatives. It
+/// is logged and shown in the details panel instead of blocking every Apply.
 pub fn deployable_files(mod_root: &Path, variant: Option<&str>) -> Result<Vec<ModFile>> {
-    if let Some(installer) = installer(mod_root) {
+    let installer = match installer(mod_root) {
+        Ok(installer) => installer,
+        Err(err) => {
+            tracing::warn!(mod_root = %mod_root.display(), %err, "not deploying a mod with a broken FOMOD installer");
+            return Ok(Vec::new());
+        }
+    };
+    if let Some(installer) = installer {
         let selection = crate::fomod::Selection::decode(variant);
         return Ok(
             crate::fomod::resolve(mod_root, &installer, selection.as_ref())

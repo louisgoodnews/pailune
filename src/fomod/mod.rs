@@ -117,18 +117,31 @@ pub enum Condition {
     Always,
 }
 
-/// The user's choices: `(step, group, plugin)` names.
+/// The user's choices: `(step, group, plugin)` names, and their indices.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Selection {
     pub picks: Vec<(String, String, String)>,
+    /// Indices of `picks`, so plugins sharing a name stay apart. Empty in
+    /// selections stored by older versions.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub at: Vec<(usize, usize, usize)>,
 }
 
 impl Selection {
-    /// Whether this plugin is chosen.
-    pub fn has(&self, step: &str, group: &str, plugin: &str) -> bool {
-        self.picks
-            .iter()
-            .any(|(s, g, p)| s == step && g == group && p == plugin)
+    /// Whether the plugin at `index` with these names is chosen. Stored
+    /// indices count only while the names there still match (the installer
+    /// may have changed with an update); otherwise names decide.
+    pub fn has(&self, index: (usize, usize, usize), names: (&str, &str, &str)) -> bool {
+        let same =
+            |(s, g, p): &(String, String, String)| (s.as_str(), g.as_str(), p.as_str()) == names;
+        match self.at.len() == self.picks.len() && !self.at.is_empty() {
+            true => self
+                .at
+                .iter()
+                .zip(&self.picks)
+                .any(|(i, n)| *i == index && same(n)),
+            false => self.picks.iter().any(same),
+        }
     }
 
     /// The variant-field form: `fomod:<json>`.

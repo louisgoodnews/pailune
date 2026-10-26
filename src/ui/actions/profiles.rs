@@ -79,6 +79,8 @@ impl PyluneApp {
         let (_, outcome) = ops::apply(&profile, &self.registry);
         self.update_registry(|r| Ok(ops::apply(&profile, r).0))?;
         db::profiles::set_active(&self.conn, Some(name))?;
+        // A pending mod list belonged to the setup that was just replaced.
+        self.mods.list_import = None;
         self.log_profile(&format!("loaded profile '{name}'"));
         Ok(match outcome.missing.as_slice() {
             [] => StatusLine::new(

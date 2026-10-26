@@ -67,3 +67,38 @@ fn round_trips_and_applies_by_nexus_id_then_name() {
     fs::write(&path, "{\"kind\":\"other\"}").unwrap();
     assert!(read(&path, "crimsondesert").is_err());
 }
+
+#[test]
+fn several_files_of_one_nexus_mod_match_one_to_one() {
+    let listed = |name: &str, file_id| ListedMod {
+        name: name.into(),
+        enabled: true,
+        variant: None,
+        source: String::new(),
+        nexus: Some(ListedNexus {
+            mod_id: 5,
+            file_id,
+            version: String::new(),
+        }),
+        collections: Vec::new(),
+    };
+    // The optional file comes first in the list but second when installed;
+    // the main file was updated (new file id, same name).
+    let list = ModList {
+        mods: vec![listed("Optional", 51), listed("Main", 50)],
+        ..capture(&Registry::default(), &[], "crimsondesert", 0)
+    };
+    let here = Registry {
+        mods: vec![
+            entry("Main", Some((5, 52))),
+            entry("Optional", Some((5, 51))),
+        ],
+    };
+    let names: Vec<_> = apply(&list, &here)
+        .registry
+        .mods
+        .into_iter()
+        .map(|m| m.name)
+        .collect();
+    assert_eq!(names, ["Optional", "Main"]);
+}
