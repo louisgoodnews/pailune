@@ -40,3 +40,29 @@ at all. The control test (title-screen CSS, which worked through Pylune's overla
 2026-10-25) separates "overlay not active" from "tables not taken from overlays". If only the
 tables are the problem, the alternative is an in-place route like DMM's/JMM's, which needs an
 owner decision because Pylune so far never changes the game's archives.
+
+## Decompilation (2026-10-26, authorised by the owner)
+
+The bundle was unpacked and decompiled in a scratch folder (nothing committed, nothing run):
+the C# assembly does all archive work; an embedded `CrimsonCLI.exe` (PyInstaller, Python 3.14,
+with the Rust extension `crimson_rs`) handles Field JSON v3.
+
+* **No game 2.x support.** Neither part knows `binarystaticinfo__`, `staticinfobody`,
+  `0.paver` or `0.papk`. Table lookups use `gamedata/<name>.pabgb` /
+  `gamedata/binary__/client/bin/…`; the CLI hard-codes group `0008` and `iteminfo.pabgb`.
+  JMM therefore cannot change data tables of the current game build.
+* **"PAZ replacement" is whole-file replacement**, not patching: a mod that ships a group's
+  `0.paz` (and optionally `0.pamt`) has those files copied over the vanilla ones (originals
+  backed up once to `_jmm_backups/paz_originals/`, never refreshed after game updates); the
+  group's `pamt_crc` in `0.papgt` is updated. Byte-patch JSON always goes through an overlay.
+* **Overlay:** groups `0036+` (it treats every group ≥ 36 as its own and deletes it — this
+  would remove the game's optional voice-pack groups 0036–0040), inserted at index 0 with
+  language mask `0x3FFF`; PAMT unknown `0x610E0232`; one trie node per path segment, flat file
+  names; entries LZ4 + ChaCha20 when the vanilla entry is encrypted (Pylune: the vanilla flags).
+  The companion table index is added only after size-changing inserts.
+* **Checksums** as Pylune (`pa_hash`: `init = len + 0xDEBA1DCD`); a wrong PAMT checksum crashes
+  the game according to JMM's own validator.
+
+**Consequence:** JMM offers no route that is known to work for current data tables, and its
+in-place route is a whole-group replacement unsuited to patches. The DMM analysis (its in-place
+route made *Fat Stacks* work) decides the design of D-14.
