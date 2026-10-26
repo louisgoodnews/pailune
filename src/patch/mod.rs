@@ -12,6 +12,8 @@ pub mod text;
 pub mod xml;
 
 #[cfg(test)]
+mod apply_safety;
+#[cfg(test)]
 mod machine;
 
 /// Where a change applies.
