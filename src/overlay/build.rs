@@ -4,7 +4,7 @@ use super::{OverlayInput, OverlayPlan};
 use crate::error::{IoContext, PyluneError, Result};
 use crate::mod_engine::plan::LinkOp;
 use crate::paz::pathc::{self, Pathc};
-use crate::paz::write::{self, Packed};
+use crate::paz::write::Packed;
 use crate::paz::{encode, pamt, papgt, vanilla};
 use crate::steam::SteamInfo;
 use crate::symlink::bak_path;
@@ -152,11 +152,6 @@ pub fn build_from(
         &mut patch_notes,
     );
     let own = !input.packs.is_empty() || !patched.is_empty();
-    let names = free_names(
-        &info.game_dir,
-        &base.group_names(),
-        usize::from(own) + input.prebuilt.len(),
-    );
     let mut textures = match vanilla_pathc {
         Some(bytes) => pathc::parse(bytes)?,
         None => Pathc::empty(),
@@ -168,26 +163,21 @@ pub fn build_from(
     let texture_count = packed.iter().filter(|p| is_texture(&p.vpath)).count();
     let replaced = packed.iter().filter(|p| base.replaces(&p.vpath)).count();
     let packed_count = packed.len();
-    // (name, crc, folder to link) — own group first, then prebuilt groups,
-    // later mods before earlier ones (higher priority).
+    // Own groups (main, then one per data table) first, then prebuilt
+    // groups, later mods before earlier ones (higher priority).
+    let sets = super::groups::split(packed);
+    let names = free_names(
+        &info.game_dir,
+        &base.group_names(),
+        sets.len() + input.prebuilt.len(),
+    );
     let mut groups: Vec<(String, u32, PathBuf)> = Vec::new();
     let mut names = names.into_iter();
-    if own {
-        let group = write::build(packed);
+    for set in sets {
         let name = names.next().unwrap_or_default();
         let dir = out_dir.join(&name);
-        write_file(&dir.join("0.paz"), &group.paz)?;
-        write_file(&dir.join("0.pamt"), &group.pamt)?;
-        // The game's own indexes keep these invariants; never deploy one that doesn't.
-        let problems = crate::paz::pamt_check::problems(&group.pamt, &dir)?;
-        if !problems.is_empty() {
-            return Err(PyluneError::Archive(format!(
-                "the built archive index failed its check: {}",
-                problems.join("; ")
-            )));
-        }
-        fs::write(dir.join(".pylune_owned"), b"").at(&dir)?;
-        groups.push((name, group.pamt_crc, dir));
+        let crc = super::groups::write_group(set, &dir)?;
+        groups.push((name, crc, dir));
     }
     input
         .prebuilt

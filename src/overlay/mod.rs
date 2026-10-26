@@ -9,6 +9,7 @@
 
 pub mod build;
 pub mod collect;
+mod groups;
 pub mod patches;
 mod storage;
 mod table_paths;

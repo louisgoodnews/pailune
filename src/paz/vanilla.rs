@@ -165,14 +165,15 @@ impl Vanilla {
     }
 }
 
+/// Language mask of added groups: what DMM and JMM register their groups
+/// with (`docs/research/dmm-analysis.md`), not the vanilla groups' `0x7FFF`.
+pub const OVERLAY_LANG: u16 = 0x3FFF;
+
 /// The vanilla table with `overlays` registered in front (highest priority
-/// first). New entries copy the language mask of the "all languages" group.
+/// first), as DMM does: index 0 onwards, so their names also come first in
+/// the string table.
 pub fn register(vanilla: &Papgt, overlays: &[(String, u32)]) -> Papgt {
-    let lang_mask = vanilla
-        .groups
-        .iter()
-        .find(|g| g.name == "0000")
-        .map_or(0x7FFF, |g| g.lang_mask);
+    let lang_mask = OVERLAY_LANG;
     let added = overlays.iter().map(|(name, crc)| GroupEntry {
         is_optional: false,
         lang_mask,
