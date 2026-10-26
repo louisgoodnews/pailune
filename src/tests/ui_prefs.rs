@@ -143,3 +143,55 @@ fn mod_lists_rebuild_a_setup_and_place_mods_installed_later() {
     assert_eq!(order, [("Overlay", true), ("Cool Mod", false)]);
     assert!(app.mods.list_import.is_none(), "nothing missing any more");
 }
+
+#[test]
+fn fomod_installers_follow_the_chosen_options() {
+    use crate::fomod::Selection;
+    let fx = fixture();
+    let mut app = app(&fx);
+    let source = fx.sources.join("Better Things");
+    crate::fomod::tests::write_mod(&source);
+    app.dispatch(Action::Mod(ModAction::ImportPaths(vec![source])));
+    settle(&mut app);
+    app.dispatch(Action::Mod(ModAction::Select("Better Things".into())));
+    let installer = app.mods.details.as_ref().unwrap().1.installer.clone();
+    assert!(installer.is_some(), "installer detected");
+    let links = |app: &crate::ui::PyluneApp| {
+        let entry = app
+            .registry
+            .mods
+            .iter()
+            .find(|m| m.name == "Better Things")
+            .unwrap();
+        let ops = crate::mod_engine::plan::mod_ops(
+            &app.config,
+            &app.paths.staging,
+            &entry.name,
+            entry.variant.as_deref(),
+        )
+        .unwrap();
+        let mut names: Vec<String> = ops
+            .iter()
+            .map(|o| o.target.file_name().unwrap().to_string_lossy().into_owned())
+            .collect();
+        names.sort();
+        names
+    };
+    assert_eq!(links(&app), ["core.asi"], "defaults: no patch");
+    let chosen = Selection {
+        picks: vec![
+            ("Textures".into(), "Resolution".into(), "4K".into()),
+            ("Textures".into(), "Extras".into(), "Patch".into()),
+        ],
+    };
+    app.dispatch(Action::Mod(ModAction::SetVariant(
+        "Better Things".into(),
+        chosen.encode(),
+    )));
+    assert!(
+        app.status.text.contains("installer options"),
+        "{:?}",
+        app.status
+    );
+    assert_eq!(links(&app), ["core.asi", "patch.asi", "patch.ini"]);
+}

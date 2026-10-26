@@ -63,6 +63,7 @@ pub const TOPICS: &[Topic] = &[
         body: &[
             "Some mods ship several versions in separate folders. Select the mod; the details panel offers a choice.",
             "Only the chosen option is deployed. Press Apply after changing it.",
+            "Mods with a FOMOD installer show its pages in the details panel; the recommended choices are used until you change them.",
         ],
     },
     Topic {

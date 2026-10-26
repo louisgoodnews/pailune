@@ -3252,6 +3252,7 @@ dependencies = [
  "lz4_flex",
  "md-5",
  "rfd",
+ "roxmltree",
  "rusqlite",
  "serde",
  "serde_json",

@@ -71,6 +71,12 @@ mods* is on).
 Some mods ship several versions in separate folders. The details panel then offers a choice;
 only the chosen option is deployed. Press *Apply* after changing it.
 
+Mods with a **FOMOD installer** (`fomod/ModuleConfig.xml`, common on Nexus Mods) show the
+installer's pages in the details panel instead: radio buttons and checkboxes as the author
+defined them, with descriptions, recommended choices and pages that appear depending on earlier
+answers. Until you change anything, the installer's recommended choices are used. Your choices
+are kept with the mod (also in mod lists and backups); press *Apply* after changing them.
+
 ### Conflicts
 
 A ⚔ badge shows how many files a mod wins and loses against others. The details panel lists them;

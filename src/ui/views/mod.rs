@@ -10,6 +10,7 @@ pub mod confirm;
 pub mod guide;
 pub mod header;
 pub mod incoming;
+pub mod installer;
 pub mod jobs;
 pub mod log;
 pub mod missing;

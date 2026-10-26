@@ -98,4 +98,6 @@ pub struct ModDetails {
     pub readmes: Vec<PathBuf>,
     /// Option folders of a multi-variant mod (empty otherwise).
     pub variants: Vec<String>,
+    /// The mod's FOMOD installer, if it has one (then `variants` is empty).
+    pub installer: Option<crate::fomod::Config>,
 }

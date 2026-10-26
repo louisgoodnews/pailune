@@ -69,9 +69,13 @@ impl PyluneApp {
                     Ok(registry::with_variant(r, &name, Some(variant.clone())))
                 })?;
                 self.select(name.clone())?;
+                let what = match variant.starts_with(crate::fomod::PREFIX) {
+                    true => "installer options changed".to_string(),
+                    false => format!("option \"{variant}\""),
+                };
                 Ok(Some(StatusLine::new(
                     Level::Info,
-                    format!("{name}: variant \"{variant}\" — press Apply"),
+                    format!("{name}: {what} — press Apply"),
                 )))
             }
             ModAction::Rescan => {

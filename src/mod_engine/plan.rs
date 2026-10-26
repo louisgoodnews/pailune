@@ -65,6 +65,15 @@ pub fn resolve_case(base: &Path, rel: &Path) -> PathBuf {
     })
 }
 
+/// The mod's FOMOD installer. A broken one is logged and ignored, so the
+/// mod still deploys like an ordinary folder instead of blocking every Apply.
+pub fn installer(mod_root: &Path) -> Option<crate::fomod::Config> {
+    crate::fomod::load(mod_root).unwrap_or_else(|err| {
+        tracing::warn!(mod_root = %mod_root.display(), %err, "ignoring a broken FOMOD installer");
+        None
+    })
+}
+
 /// A deployable file of a staged mod.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ModFile {
@@ -76,9 +85,24 @@ pub struct ModFile {
     pub place: Placement,
 }
 
-/// Every deployable file of a mod. For multi-variant mods only the chosen
-/// variant (default: the first) and the shared root files are included.
+/// Every deployable file of a mod. FOMOD mods deploy what their installer
+/// resolves to for the stored choices; for multi-variant mods only the
+/// chosen variant (default: the first) and the shared root files are included.
 pub fn deployable_files(mod_root: &Path, variant: Option<&str>) -> Result<Vec<ModFile>> {
+    if let Some(installer) = installer(mod_root) {
+        let selection = crate::fomod::Selection::decode(variant);
+        return Ok(
+            crate::fomod::resolve(mod_root, &installer, selection.as_ref())
+                .into_iter()
+                .map(|(source, rel)| ModFile {
+                    place: placement(&rel),
+                    source,
+                    rel,
+                })
+                .filter(|f| f.place != Placement::Skip)
+                .collect(),
+        );
+    }
     let options = super::variants::variants(mod_root);
     let chosen = super::variants::effective(&options, variant).cloned();
     WalkDir::new(mod_root)

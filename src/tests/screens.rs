@@ -76,6 +76,15 @@ fn screens() {
                 app.dispatch(Action::Mod(ModAction::Select("Cool Mod".into())));
                 shoot(&mut h, &format!("{tag}-{name}"));
             });
+            let fomod = fx.sources.join("Better Things");
+            crate::fomod::tests::write_mod(&fomod);
+            let app = h.state_mut();
+            app.dispatch(Action::SwitchTab(Tab::Mods));
+            app.dispatch(Action::Mod(ModAction::ImportPaths(vec![fomod])));
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            app.poll();
+            app.dispatch(Action::Mod(ModAction::Select("Better Things".into())));
+            shoot(&mut h, &format!("{tag}-installer"));
             h.state_mut()
                 .dispatch(Action::Ask(crate::ui::Confirm::CleanSlate));
             shoot(&mut h, &format!("{tag}-confirm"));

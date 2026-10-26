@@ -33,6 +33,7 @@ fn is_readme(rel: &Path) -> bool {
 /// For multi-variant mods, files of the other variants are listed as not
 /// deployed.
 pub fn details(mod_root: &Path, variant: Option<&str>) -> Result<ModDetails> {
+    let installer = super::plan::installer(mod_root);
     let deployed: HashMap<PathBuf, Placement> = deployable_files(mod_root, variant)?
         .into_iter()
         .map(|f| (f.source, f.place))
@@ -68,7 +69,11 @@ pub fn details(mod_root: &Path, variant: Option<&str>) -> Result<ModDetails> {
             .map(|f| f.rel.clone())
             .collect(),
         files,
-        variants: super::variants::variants(mod_root),
+        variants: match installer {
+            Some(_) => Vec::new(),
+            None => super::variants::variants(mod_root),
+        },
+        installer,
     })
 }
 

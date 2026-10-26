@@ -46,7 +46,6 @@ Move a line between columns when its status changes.
 - [ ] B-08 (step 2) Windows/macOS: test on real installs; Windows console window (needs a GUI subsystem build that still serves the CLI); macOS app bundle with `nxm://` URL type — *L*
 - [ ] B-13 (step 2) Script bridge installation — *L*
 - [ ] A-01 (rest) XML/HTML patches, new texture ids, table inserts, field-name JSON — *L*
-- [ ] A-28 (rest) FOMOD-style installer scripts — *L*
 
 ## Owner
 
@@ -57,6 +56,12 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-28 FOMOD installers (`src/fomod/`, `ui/views/installer.rs`): `ModuleConfig.xml` in any
+  case and UTF-8/UTF-16; required files, steps with visibility conditions, all group types,
+  plugin types incl. dependency types, condition flags, file/folder installs with priorities,
+  conditional installs, schema ordering. Choices are stored in the mod's variant field
+  (`fomod:<json>`), so planning, conflicts, overlay, mod lists, trash and backups use them; until
+  the user chooses, the installer's defaults apply. A broken installer is logged and ignored.
 - [x] B-08 Windows `nxm://` registration (`nexus/winreg.rs`): per-user protocol key via
   `reg.exe`, detection, forwarding links for other games to the previous handler (e.g. Vortex);
   parsing of localised `reg query` output and command templating unit-tested on Linux. CI uploads

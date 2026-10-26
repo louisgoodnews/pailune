@@ -10,6 +10,7 @@ mod cli;
 mod config;
 mod db;
 mod error;
+mod fomod;
 mod instance;
 mod jobs;
 mod launch;
