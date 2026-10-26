@@ -58,6 +58,27 @@ pub const TOOLS: &[Tool] = &[
         destructive: false,
     },
     Tool {
+        name: "list_saves",
+        description: "The game's save slots with character level, save time and mission key (read-only).",
+        params: &[],
+        read_only: true,
+        destructive: false,
+    },
+    Tool {
+        name: "read_save",
+        description: "Everything one save slot contains (character, inventory, quests, knowledge, …) as a tree, read-only. Use `find` to keep only matching branches; full saves are large.",
+        params: &[
+            ("slot", "string", "Slot name or number, e.g. slot1 or 1"),
+            (
+                "find",
+                "string",
+                "Optional: text to search for, e.g. _level or ItemSaveData",
+            ),
+        ],
+        read_only: true,
+        destructive: false,
+    },
+    Tool {
         name: "enable_mods",
         description: "Enable mods. Nothing reaches the game until apply.",
         params: &[("names", "array", "Mod names")],

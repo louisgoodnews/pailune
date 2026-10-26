@@ -17,6 +17,8 @@ pub fn run(op: &Op, paths: &DataPaths, config: &Config) -> Result<Report> {
         Op::List => list(&conn),
         Op::Profiles => profiles(&conn),
         Op::Log { mod_name, limit } => log(&conn, mod_name.as_deref(), *limit),
+        Op::Saves => super::saves::list(config),
+        Op::SaveShow { slot, find } => super::saves::show(config, slot, find.as_deref()),
         _ => Ok(backups(paths)),
     }
 }

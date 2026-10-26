@@ -137,6 +137,9 @@ impl PyluneApp {
         self.mods.trash = crate::mod_engine::trash::list(&self.paths.trash);
         self.backups = crate::app_backup::create::list(&self.paths.backups);
         self.save_backups = crate::save_backup::list(&self.paths.save_backups);
+        self.save_slots = crate::save_backup::save_dir(self.info.prefix_dir.as_deref())
+            .map(|dir| crate::savefile::slots::slots(&dir))
+            .unwrap_or_default();
         let selected_gone = self
             .mods
             .selected

@@ -111,6 +111,10 @@ pub struct PyluneApp {
     pub backups: Vec<crate::app_backup::BackupInfo>,
     /// Backups of the game's save files, newest first.
     pub save_backups: Vec<crate::save_backup::SaveBackup>,
+    /// The game's save slots (summaries).
+    pub save_slots: Vec<crate::savefile::slots::Slot>,
+    /// An open save viewer: slot name, tree, search text.
+    pub save_view: Option<(String, Vec<crate::savefile::view::Node>, String)>,
     /// Onboarding window.
     pub guide: guide::GuideState,
     /// Version and pack groups of the installed archives.

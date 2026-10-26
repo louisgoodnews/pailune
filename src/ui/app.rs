@@ -107,6 +107,8 @@ impl PyluneApp {
             archives: Default::default(),
             backups: Vec::new(),
             save_backups: Vec::new(),
+            save_slots: Vec::new(),
+            save_view: None,
             pool,
             paths,
             config,
@@ -117,6 +119,9 @@ impl PyluneApp {
         app.refresh_environment();
         app.backups = crate::app_backup::create::list(&app.paths.backups);
         app.save_backups = crate::save_backup::list(&app.paths.save_backups);
+        app.save_slots = crate::save_backup::save_dir(app.info.prefix_dir.as_deref())
+            .map(|dir| crate::savefile::slots::slots(&dir))
+            .unwrap_or_default();
         app.schedule_auto_backup();
         app.request_conflicts();
         if key::load(&app.paths.nexus_key).is_some() {
@@ -234,6 +239,7 @@ impl eframe::App for PyluneApp {
         ));
         actions.extend(views::guide::show(ui.ctx(), self));
         actions.extend(views::missing::show(ui.ctx(), self));
+        actions.extend(views::save_view::show(ui.ctx(), self));
         if self.setup_open {
             actions.extend(views::setup::show(ui.ctx(), self));
         }

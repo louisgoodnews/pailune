@@ -36,6 +36,7 @@ a plan is computed, then executed), which keeps them testable without a window o
 | `patch/` | Byte-patch JSON and CSS patch/merge files applied to archived game files. |
 | `backup/` | Snapshot of the game's `meta/` files to `.bak`; detection of game updates and foreign archive folders. |
 | `app_backup/` | Backups of Pylune itself (settings, database, optionally mod files) and restore. |
+| `savefile/` | Reading the game's save files: container crypto, self-describing body, readable trees, slot summaries (read-only). |
 | `save_backup/` | Backups of the game's save folder in the Proton prefix. |
 | `nexus/` | REST v1 + GraphQL v2 client, downloads (resume, MD5), `nxm://` parsing and handler registration, update chains, collections, rate limits, API key storage. |
 | `launch/` | Launch options parsing, Proton/Steam Linux Runtime discovery, starting and watching the game process. |

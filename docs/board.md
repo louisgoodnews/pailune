@@ -42,9 +42,9 @@ Move a line between columns when its status changes.
 
 ## Backlog (large)
 
-- [ ] B-07 (step 2) Save viewer, then editing — *L*
+- [ ] B-07 (step 3) Save editing: body writer, fresh nonce + HMAC (done), per-version checks — *L*
+- [ ] B-13 ASI plugin management per D-12: plugin list with status, INI settings, update warnings — *M*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
-- [ ] B-13 (step 2) Script bridge installation — *L*
 - [ ] A-01 (rest) table inserts, field-name JSON (format 3) — *L*, waits on the owner decision below
 
 ## Owner
@@ -53,13 +53,17 @@ Move a line between columns when its status changes.
   projects (CDUMM `field_schema/*.json`, `pabgb_complete_schema.json`, licensed MPL-2.0). Choose:
   ship those data files unmodified under MPL-2.0 next to Pylune's MIT/Apache code (allowed:
   MPL is file-level), or derive our own layouts from the game (slow, table by table).
-- [ ] B-07 Choose how saves are decoded (`docs/save-format.md` § Options; recommended: read-only
-  inspector on `crimson-rs`, MIT)
-- [ ] B-13 Accept or reject D-12 (no script runtime; better ASI plugin management instead)
 - [ ] A-21 (rest) Register Pylune with Nexus (AUP) before a public release
 
 ## Done
 
+- [x] B-07 own save decoder (`src/savefile/`): SAVE container (key, ChaCha20, HMAC-SHA256, LZ4),
+  self-describing body (schema, table of contents, exact object walk for every field kind),
+  readable values and trees. Verified on all 10 real saves: HMACs valid, byte-identical
+  re-encryption, 1 881/1 881 objects decoded exactly. Read-only slot list and inspector
+  (Settings › Backups › Save games), `pylune saves` / `pylune save <slot> --find …`, MCP tools
+  `list_saves` / `read_save`. What saves hold is documented in `docs/save-format.md`.
+- [x] D-12 accepted: no script runtime; ASI plugin management instead (added to Backlog).
 - [x] B-08 Windows GUI subsystem (no console window behind the app); command-line runs re-attach
   to the parent terminal (`AttachConsole`). Compiled by CI only; unverified on Windows.
 - [x] A-01 HTML patches (`src/patch/html/`): `<html-patch>` operations (`set` incl.

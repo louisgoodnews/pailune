@@ -79,12 +79,12 @@ game's first write.
 **Why.** The Rust ecosystem's convention: compatible with almost every downstream use, and the
 Apache option adds an explicit patent grant.
 
-## D-12 No script runtime in Pylune (proposed)
+## D-12 No script runtime in Pylune (accepted 2026-10-26)
 
 **Context.** B-13 asked whether scripts can be injected into the running game. The archives
 contain no script files; native mods hook functions by pattern scanning via ASI plugins and
 break with patches ([research/script-bridge.md](research/script-bridge.md)).
-**Proposal.** Pylune does not embed a script runtime; it manages ASI loader and plugins well
+**Decision.** Pylune does not embed a script runtime; it manages ASI loader and plugins well
 (install, status, update warnings, INI settings) and extends data patching instead.
 
 ## D-11 Deployment per platform

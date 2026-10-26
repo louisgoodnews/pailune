@@ -1,7 +1,9 @@
 # Save-game format (B-07)
 
-Status 2026-10-26: **header understood and verified on real saves; payload decoding not
-implemented** (needs an owner decision, see the end). Verified read-only on build 2.3.2.
+Status 2026-10-26: **container and body fully decoded by Pylune's own implementation**
+(`src/savefile/`), verified read-only on all 10 real saves of build 2.3.2: every HMAC checks out,
+re-encrypting the decrypted payload reproduces each file byte for byte, and every top-level
+object (1 881 in total) decodes with no byte left over. Editing is not implemented yet.
 
 ## Files
 
@@ -53,18 +55,61 @@ table of contents; its field names come from the game's data tables (`iteminfo`,
 - Pylune already backs up saves before every launch (A-28); any editor must work on copies
   and keep that backup.
 
-## Options (owner decision needed)
+## Key and checksum
 
-1. **Depend on `crimson-rs`** (MIT, Rust, actively maintained, per-patch tables) for decoding,
-   with attribution; Pylune adds a read-only viewer first, editing later. Fastest, but adds a
-   large dependency and the game's key reaches Pylune through it.
-2. **Implement our own decoder** from the documented format. More work; the key still has to be
-   taken from the game or from community sources.
-3. **Integrate external editors** instead (launch them on a copy of a save, then offer to
-   restore). No crypto in Pylune at all.
+32-byte key = the 31-byte base material `C4 1B 8E 73 0D F2 59 A6 37 CC 04 E9 B1 2F 96 68 DA 10
+7A 85 3E 61 F9 22 4D B8 0A D7 5C 13 EF` XOR the first 31 bytes of (version prefix +
+`PRIVATE_HMAC_SECRET_CHECK`), followed by `00`. Version 2 prefix: `^Pearl--#Abyss__@!!`;
+version 1: ``^Qgbrm/.#@`zsr]\@rvfal#"``. The same key encrypts (ChaCha20, IETF, counter =
+first 4 nonce bytes) and authenticates (HMAC-SHA256 over the LZ4-compressed payload).
 
-Recommendation: start with option 1 as a **read-only inspector** (version, slot summary, play
-time, location, character), keeping editing behind a later decision.
+## Body
+
+The decompressed body (≈3 MB for `save.save`) is self-describing:
+
+1. **Prefix** (14 bytes): `FF FF 04 00` and 10 more bytes.
+2. **Schema** (from 0x0E): `u16 tag, u16 0, u16 type_count`, then the first type's name
+   (`u32` length + text); per type `u16 field_count` and per field name, type name
+   (length-prefixed), `u16 kind, u16 size, u32 aux`; after each type but the last, the next
+   type's name. 80–85 types in our saves.
+3. **Table of contents**: `u32 0, u32 count, u32 stream_size`, then per entry `u32 type,
+   u32, u32, u32 offset, u32 size` (360–408 entries).
+4. **Objects**: `u16 mask_len, mask, u32 reserved`, then the fields in schema order, present
+   ones per the mask. Absent arrays and lists (kinds 3, 6, 7) write one `01` byte. Present:
+   kind 0/2 a scalar of `size` bytes; 1 `u32 count` + items; 3 `00`, `u32 count` + items; 4/5 an
+   embedded object (`u16 mask_len, mask, u16 type, u8, u32, u32, u32 offset`, `u32 reserved`,
+   fields, `u32 size` of the payload; kind 5 may have up to 8 bytes before it); 6/7 a list
+   (`00`, `u32 count`, 13 bytes, then `count` embedded objects).
+
+Times (`Ctc64`, e.g. `_generatedTime`) are Unix seconds. Keys (items, quests, characters,
+factions) refer to the game's data tables; names need its localisation files.
+
+## What a save holds
+
+Top-level objects of a save (slot 2, build 2.3.2), by type:
+
+| Type | Content |
+|------|---------|
+| `CharacterStatusSaveData` | character, faction, level, experience, skill points, HP, MP |
+| `EquipmentSaveData`, `InventorySaveData`, `InventoryItemContentsSaveData` | equipped items, 18 inventories with items (key, stack count, endurance, sockets), bank data |
+| `QuestSaveData`, `QuestDialogSaveData` | stage, mission, quest and gauge states, last completed quest/mission |
+| `KnowledgeSaveData`, `SkillUnlockMarkSaveData`, `PlayGuideSaveData` | learned knowledge and skills, skill points, guide hints |
+| `FactionSaveData`, `FriendlySaveData`, `FieldNPCSaveData` (24) | factions and rewards, NPC friendship/affinity, NPC appearance |
+| `MercenaryClanSaveData` | mercenaries, farm slots, call cooldowns |
+| `TransformSaveData`, `FieldSaveData`, `FogSaveData`, `DiscoveredLevelGimmickSceneObjectSaveData`, `GameData_GimmickPointData` (357) | position per field, field gimmicks, map fog, discoveries |
+| `StoreSaveData`, `RoyalSupplySaveData`, `ContentsMiscSaveData` | stores, royal supply, mini-games, house, misc |
+| `CustomizationSaveData` | character customisation mesh and decorations |
+| `GameEventSaveData`, `GamePlayVariableSaveData`, `SubLevelSaveData`, schedule managers | world events, gameplay variables, sub-levels, NPC schedules |
+
+`lobby.save` holds the slot summary (`LobbySaveData`): character, level, save time, display
+mission and quest. Next to the slots, `initialize_input.save` (input settings, same object
+serialisation without the container) and `user_engine_option_save.xml` (graphics options).
+
+## Decisions
+
+- 2026-10-26: Pylune implements its own decoder (owner). The scheme is credited to `crimson-rs`.
+- Editing will need: re-encoding with a fresh nonce and HMAC (implemented and tested), a body
+  writer (the walk already keeps exact positions), and validation per game version.
 
 ## Sources
 

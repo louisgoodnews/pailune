@@ -75,6 +75,11 @@ pub fn op(name: &str, args: &Value) -> Result<Op, String> {
             limit: number("limit").unwrap_or(50),
         }),
         "list_backups" => Ok(Op::Backups),
+        "list_saves" => Ok(Op::Saves),
+        "read_save" => Ok(Op::SaveShow {
+            slot: text("slot")?,
+            find: text("find").ok(),
+        }),
         "enable_mods" => Ok(Op::SetEnabled {
             names: list("names")?,
             enabled: true,

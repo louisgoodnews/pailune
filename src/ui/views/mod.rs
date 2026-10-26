@@ -22,6 +22,7 @@ pub mod nexus;
 pub mod profiles;
 pub mod readme;
 pub mod save_backups;
+pub mod save_view;
 pub mod settings;
 pub mod setup;
 pub mod status_bar;

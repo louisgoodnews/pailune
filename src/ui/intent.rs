@@ -174,4 +174,7 @@ pub enum BackupAction {
     RestoreSaves(PathBuf),
     /// Open the game's save folder.
     OpenSaveFolder,
+    /// Show the contents of a save slot (read-only).
+    InspectSave(PathBuf),
+    CloseSaveView,
 }

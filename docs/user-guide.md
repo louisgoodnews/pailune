@@ -132,6 +132,8 @@ deleting a mod*.
 - **Save games:** copied before every Play and on request (*Back up saves now*). *Restore…* puts
   an older copy back after backing up the current saves. If Steam then reports a cloud conflict,
   keep the local files.
+- **Your saves** (same page) lists every slot with level and save time; *Inspect…* shows
+  everything a save contains (character, inventory, quests, …), read-only and searchable.
 
 ## After a game update
 
@@ -179,6 +181,8 @@ pylune backup --full             # / pylune backups, pylune restore <file> --yes
 pylune clean-slate --yes
 pylune launch
 pylune log --mod "Some Mod" --limit 20
+pylune saves                     # save slots: level, time
+pylune save 1 --find ItemSaveData  # what a save contains (read-only)
 ```
 
 Add `--json` for machine-readable output (`{"ok", "message", "data"}`); the exit code is 0 on

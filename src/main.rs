@@ -29,6 +29,7 @@ mod paz;
 mod platform;
 mod profiles;
 mod save_backup;
+mod savefile;
 mod steam;
 mod symlink;
 #[cfg(test)]

@@ -59,6 +59,20 @@ impl PyluneApp {
                 self.submit(JobKind::RestoreSaves(path));
                 Ok(None)
             }
+            BackupAction::InspectSave(dir) => {
+                let tree = crate::savefile::slots::inspect(&dir)?;
+                let name = dir
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .into_owned();
+                self.save_view = Some((name, tree, String::new()));
+                Ok(None)
+            }
+            BackupAction::CloseSaveView => {
+                self.save_view = None;
+                Ok(None)
+            }
             BackupAction::OpenSaveFolder => {
                 let folder = self.save_folder()?;
                 self.open_path(&folder).map(|()| None)

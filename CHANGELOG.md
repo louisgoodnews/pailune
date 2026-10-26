@@ -57,6 +57,8 @@
 - AppImage build script and release CI job; `nxm://` links point at the AppImage file.
 
 ### Save games
+- Pylune reads the game's save files: slot list with level and time, a searchable read-only
+  inspector, `pylune saves` / `pylune save`, MCP tools.
 - Save files are backed up before every Play and on request; restore keeps a safety copy.
 
 ### Onboarding

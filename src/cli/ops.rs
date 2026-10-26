@@ -18,6 +18,13 @@ pub enum Op {
     },
     /// Pylune and save-game backups.
     Backups,
+    /// The game's save slots.
+    Saves,
+    /// The contents of one save slot (read-only), optionally filtered.
+    SaveShow {
+        slot: String,
+        find: Option<String>,
+    },
     SetEnabled {
         names: Vec<String>,
         enabled: bool,
@@ -70,7 +77,13 @@ impl Op {
     pub fn read_only(&self) -> bool {
         matches!(
             self,
-            Op::Status | Op::List | Op::Profiles | Op::Log { .. } | Op::Backups
+            Op::Status
+                | Op::List
+                | Op::Profiles
+                | Op::Log { .. }
+                | Op::Backups
+                | Op::Saves
+                | Op::SaveShow { .. }
         )
     }
 

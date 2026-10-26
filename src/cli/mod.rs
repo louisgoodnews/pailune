@@ -5,6 +5,7 @@
 pub mod engine;
 pub mod ops;
 pub mod read;
+mod saves;
 
 use crate::config::Config;
 use crate::config::paths::DataPaths;
@@ -47,6 +48,15 @@ enum Command {
     },
     /// Pylune and save-game backups.
     Backups,
+    /// The game's save slots (level, time).
+    Saves,
+    /// Everything a save slot contains, read-only (`--find` filters).
+    Save {
+        /// Slot name or number, e.g. `slot1` or `1`.
+        slot: String,
+        #[arg(long)]
+        find: Option<String>,
+    },
     /// Enable mods (nothing reaches the game until `apply`).
     Enable {
         names: Vec<String>,
@@ -114,6 +124,8 @@ fn op(command: Command) -> Option<Op> {
         Command::Profiles => Op::Profiles,
         Command::Log { mod_name, limit } => Op::Log { mod_name, limit },
         Command::Backups => Op::Backups,
+        Command::Saves => Op::Saves,
+        Command::Save { slot, find } => Op::SaveShow { slot, find },
         Command::Enable { all: true, .. } => Op::SetAll(true),
         Command::Disable { all: true, .. } => Op::SetAll(false),
         Command::Enable { names, .. } => Op::SetEnabled {
@@ -146,6 +158,12 @@ fn op(command: Command) -> Option<Op> {
         Command::Launch => Op::Launch,
         Command::Mcp => return None,
     })
+}
+
+/// Prints a line; a closed pipe (`pylune list | head`) is not an error.
+fn out(text: &str) {
+    use std::io::Write;
+    let _ = writeln!(std::io::stdout(), "{text}");
 }
 
 /// Runs one operation: read-only ones from the database, others headlessly.
@@ -185,21 +203,21 @@ pub fn run(cli: Cli, paths: DataPaths, config: Config) -> ExitCode {
     };
     match (outcome, json) {
         (Ok(report), true) => {
-            println!(
+            out(&format!(
                 "{}",
                 serde_json::json!({"ok": true, "message": report.text, "data": report.data})
-            );
+            ));
             ExitCode::SUCCESS
         }
         (Ok(report), false) => {
-            println!("{}", report.text);
+            out(&report.text);
             ExitCode::SUCCESS
         }
         (Err(err), true) => {
-            println!(
+            out(&format!(
                 "{}",
                 serde_json::json!({"ok": false, "message": err.to_string()})
-            );
+            ));
             ExitCode::FAILURE
         }
         (Err(err), false) => {
