@@ -89,6 +89,15 @@ in the executable as well (`ItemIconData`, `DropDefaultData`, `EnchantData`, `Do
 `ItemInfo_SharpnessData`, …), so nested layouts can be derived the same way once the order rules
 are understood.
 
+### Outside evidence: *Fat Stacks* (format 3, 2026-08-27, checked 2026-10-26)
+
+A published format-3 mod (`target: iteminfo.pabgb`, 2391 intents `set max_stack_count`, each with
+`entry` and `key`, files for 2x … 100x and 999999). For every intent the record named by `key`
+has the named `entry`, and `new` is exactly the multiple of the u64 at payload offset +1 — in all
+seven multiplier files. This independently confirms `_maxStackCount` = u64 at +1 on 2391 of the
+2412 records where that value is above 1. Pylune does not apply this mod yet: `iteminfo` has no
+complete layout, and `set` by name needs one.
+
 ### Phase 2 results so far
 
 * With a recursive engine (`tools/table-layouts/engine.py`: nested classes from the executable's
