@@ -13,6 +13,8 @@ pub mod extract;
 pub mod hash;
 pub mod pamt;
 pub mod pamt_check;
+#[allow(dead_code)] // used by the in-place route (D-14), not wired yet
+pub mod pamt_edit;
 pub mod papgt;
 pub mod pathc;
 pub mod paver;

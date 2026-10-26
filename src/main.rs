@@ -15,6 +15,9 @@ mod config;
 mod db;
 mod error;
 mod fomod;
+// Wired into Apply once the JMM/DMM analysis settles the game-side details.
+#[allow(dead_code)]
+mod inplace;
 mod instance;
 mod jobs;
 mod launch;
