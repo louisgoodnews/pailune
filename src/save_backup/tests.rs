@@ -8,7 +8,7 @@ fn write(path: &Path, text: &str) {
 #[test]
 fn backs_up_restores_and_prunes() {
     let root = tempfile::tempdir().unwrap();
-    let saves = save_dir(&root.path().join("pfx"));
+    let saves = save_dir(Some(&root.path().join("pfx"))).unwrap();
     let dest = root.path().join("save-backups");
     assert!(
         create(&saves, &dest, "manual", 1).is_err(),

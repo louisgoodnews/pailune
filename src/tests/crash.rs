@@ -125,7 +125,7 @@ fn orphan_links_from_older_runs_are_adopted() {
     let papgt = fx.config.game.dir.join("bin64/winmm.dll");
     // An untracked earlier deploy: original in .bak, our link in place.
     fs::rename(&papgt, papgt.with_file_name("winmm.dll.bak")).unwrap();
-    std::os::unix::fs::symlink(fx.staging.join("Overlay/bin64/winmm.dll"), &papgt).unwrap();
+    crate::platform::link_file(&fx.staging.join("Overlay/bin64/winmm.dll"), &papgt).unwrap();
     write(&fx.sources.join("unused"), "");
     let link_plan = plan::build(&fx.config, &fx.staging, &enabled_registry(&fx)).unwrap();
     let mut manifest = Manifest::default();

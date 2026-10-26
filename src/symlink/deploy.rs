@@ -5,7 +5,6 @@ use super::{LinkRecord, Manifest, PathState, Report, bak_path, path_state};
 use crate::error::{IoContext, Result};
 use crate::mod_engine::plan::{LinkOp, LinkPlan};
 use std::fs;
-use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 
 /// How an occupied target is moved out of the way.
@@ -97,7 +96,7 @@ fn apply_op(
         manifest.created_dirs.push(dir.clone());
         fs::create_dir(dir).at(dir)
     })?;
-    symlink(&op.source, &op.target).at(&op.target)?;
+    crate::platform::link_file(&op.source, &op.target).at(&op.target)?;
     Ok(None)
 }
 

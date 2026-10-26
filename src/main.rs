@@ -19,6 +19,7 @@ mod nexus;
 mod overlay;
 mod patch;
 mod paz;
+mod platform;
 mod profiles;
 mod save_backup;
 mod steam;

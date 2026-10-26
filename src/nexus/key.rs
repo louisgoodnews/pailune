@@ -1,9 +1,8 @@
-//! Storing the Nexus API key in a private (`0600`) file.
+//! Storing the Nexus API key in a file only the user can read (`0600` on Unix).
 
 use crate::error::{IoContext, Result};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
-use std::os::unix::fs::OpenOptionsExt;
 use std::path::Path;
 
 /// Reads the stored API key, if any.
@@ -28,10 +27,10 @@ pub fn save(path: &Path, key: &str) -> Result<()> {
         key => {
             let tmp = path.with_extension("tmp");
             let _ = fs::remove_file(&tmp);
-            OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .mode(0o600)
+            let mut options = OpenOptions::new();
+            options.write(true).create_new(true);
+            crate::platform::make_private(&mut options);
+            options
                 .open(&tmp)
                 .and_then(|mut file| file.write_all(key.as_bytes()))
                 .and_then(|()| fs::rename(&tmp, path))
@@ -43,10 +42,11 @@ pub fn save(path: &Path, key: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::os::unix::fs::PermissionsExt;
 
     #[test]
+    #[cfg(unix)]
     fn key_file_is_private_even_over_a_loose_file() {
+        use std::os::unix::fs::PermissionsExt;
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("nexus_api_key");
         fs::write(&path, "old").unwrap();

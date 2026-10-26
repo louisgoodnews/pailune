@@ -95,7 +95,7 @@ fn save_games_are_backed_up_and_restored_through_the_ui() {
     let fx = super::fixture();
     let mut app = app(&fx);
     settle(&mut app);
-    let saves = crate::save_backup::save_dir(app.info.prefix_dir.as_ref().unwrap());
+    let saves = crate::save_backup::save_dir(app.info.prefix_dir.as_deref()).unwrap();
     std::fs::create_dir_all(saves.join("7/slot1")).unwrap();
     std::fs::write(saves.join("7/slot1/save.save"), "chapter 1").unwrap();
     app.dispatch(Action::Backup(BackupAction::BackUpSaves));

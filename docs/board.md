@@ -40,7 +40,6 @@ Move a line between columns when its status changes.
 ## Next (small first)
 
 - [ ] B-14 Headless core + CLI, then MCP server — *M–L*
-- [ ] B-08 (step 1) `Platform` trait around Linux-specific code — *M*
 - [ ] B-07 (research) Save format: read-only decoding, `docs/save-format.md` — *L*
 - [ ] B-13 (research) Script bridge report + decision record
 
@@ -58,6 +57,12 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-08 step 1 platform layer (`src/platform/{linux,windows,macos}.rs`): Steam roots,
+  linking (Windows: symlink → hard link → copy), opening paths/URLs, Steam client, process check,
+  private files, `AppData/Local` for saves, Proton or native launch (new `Direct` launch on
+  Windows). `nxm://` registration reports "not supported yet" outside Linux. CI builds on
+  Windows and macOS (tests informative). Linux behaviour unchanged (real Steam detection
+  re-checked). Windows/macOS code is unverified until CI runs.
 - [x] B-12 portable mod lists (`src/modlist/`): versioned JSON (order, flags, options, source,
   Nexus origin, collections); import matches by Nexus id then name, reorders and flags, lists
   missing mods (download all for Premium, Nexus pages otherwise) and re-applies the list after

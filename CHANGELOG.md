@@ -42,6 +42,9 @@
 - Reworked against documented UX principles: Clean slate in a *More* menu, dialogs name their
   action, larger text and checkboxes, consistent wording, contrast-checked colours.
 
+### Platforms
+- Operating-system specifics moved into one platform layer; Windows and macOS builds in CI.
+
 ### Packaging
 - AppImage build script and release CI job; `nxm://` links point at the AppImage file.
 

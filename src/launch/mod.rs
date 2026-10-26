@@ -14,10 +14,12 @@ pub mod run;
 pub enum LaunchMethod {
     /// `steam -applaunch <id> [args]`.
     SteamCli,
-    /// `xdg-open steam://rungameid/<id>` (no extra arguments possible).
+    /// The desktop's URL handler with `steam://rungameid/<id>`.
     XdgOpen,
     /// `<proton> waitforexitandrun CrimsonDesert.exe` with custom environment.
     ProtonDirect,
+    /// The game executable itself, where it runs natively (Windows).
+    Direct,
 }
 
 /// Whether the game process is currently alive.

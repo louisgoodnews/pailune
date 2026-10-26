@@ -1,9 +1,8 @@
-//! Spawning the game and probing `/proc` for it.
+//! Spawning the game and checking whether it runs.
 
 use super::{GameProcess, LaunchMethod, LaunchSpec, ProtonSetup};
 use crate::error::{PyluneError, Result};
 use crate::steam::SteamInfo;
-use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
@@ -45,13 +44,12 @@ fn run_url(app_id: u32, args: &[String]) -> String {
 
 /// Through the Steam client: `steam -applaunch`, else the URL handler.
 fn via_steam(info: &SteamInfo, spec: &LaunchSpec) -> Result<LaunchMethod> {
-    let mut steam = Command::new("steam");
+    let mut steam = crate::platform::steam_command();
     steam
         .arg("-applaunch")
         .arg(info.app_id.to_string())
         .args(&spec.args);
-    let mut xdg = Command::new("xdg-open");
-    xdg.arg(run_url(info.app_id, &spec.args));
+    let xdg = crate::platform::open_command(run_url(info.app_id, &spec.args).as_ref());
     spawn(steam)
         .map(|()| LaunchMethod::SteamCli)
         .or_else(|_| spawn(xdg).map(|()| LaunchMethod::XdgOpen))
@@ -61,10 +59,9 @@ fn via_steam(info: &SteamInfo, spec: &LaunchSpec) -> Result<LaunchMethod> {
 /// Asks Steam to verify (repair) the game files (`steam://validate/<id>`).
 pub fn verify_files(app_id: u32) -> Result<()> {
     let url = format!("steam://validate/{app_id}");
-    let mut steam = Command::new("steam");
+    let mut steam = crate::platform::steam_command();
     steam.arg(&url);
-    let mut xdg = Command::new("xdg-open");
-    xdg.arg(&url);
+    let xdg = crate::platform::open_command(url.as_ref());
     spawn(steam)
         .or_else(|_| spawn(xdg))
         .map_err(|e| PyluneError::Invalid(format!("could not start Steam: {e}")))
@@ -111,6 +108,31 @@ fn via_proton(info: &SteamInfo, setup: &ProtonSetup, spec: &LaunchSpec) -> Resul
         .map_err(|e| PyluneError::Invalid(format!("could not start {program}: {e}")))
 }
 
+/// Directly, where the game runs natively (Windows), with the extra
+/// environment and wrapper commands from `spec`.
+fn via_native(info: &SteamInfo, spec: &LaunchSpec) -> Result<LaunchMethod> {
+    let exe = info.bin64_dir.join(GAME_PROCESS).display().to_string();
+    let argv: Vec<String> = spec
+        .wrapper
+        .iter()
+        .cloned()
+        .chain(std::iter::once(exe))
+        .chain(spec.args.iter().cloned())
+        .collect();
+    let Some((program, rest)) = argv.split_first() else {
+        return Err(PyluneError::Invalid("empty launch command".into()));
+    };
+    let mut command = Command::new(program);
+    command
+        .args(rest)
+        .current_dir(&info.bin64_dir)
+        .env("SteamAppId", info.app_id.to_string())
+        .envs(spec.env.iter().map(|(k, v)| (k, v)));
+    spawn(command)
+        .map(|()| LaunchMethod::Direct)
+        .map_err(|e| PyluneError::Invalid(format!("could not start {program}: {e}")))
+}
+
 /// Starts the game, choosing the method the launch options require:
 /// environment variables or wrappers need a direct Proton launch, since
 /// `steam -applaunch` can only pass game arguments.
@@ -122,6 +144,7 @@ pub fn launch(
     let direct = !spec.env.is_empty() || !spec.wrapper.is_empty();
     match (direct, setup) {
         (false, _) => via_steam(info, spec),
+        (true, _) if !crate::platform::USES_PROTON => via_native(info, spec),
         (true, Some(setup)) => via_proton(info, setup, spec),
         (true, None) => Err(PyluneError::Invalid(
             "launch options need a direct Proton launch, but no Proton installation was found \
@@ -131,37 +154,9 @@ pub fn launch(
     }
 }
 
-/// Whether a process command line mentions the game executable.
-///
-/// Only the program itself (argv\[0\]) counts, compared case-insensitively
-/// after the last `/` or `\` — an editor that merely has the file open
-/// does not block deployment.
-fn cmdline_matches(raw: &[u8]) -> bool {
-    let program = raw.split(|b| *b == 0).next().unwrap_or_default();
-    let name = program
-        .rsplit(|b| *b == b'/' || *b == b'\\')
-        .next()
-        .unwrap_or_default();
-    name.eq_ignore_ascii_case(GAME_PROCESS.as_bytes())
-}
-
-/// Scans `/proc` for a running `CrimsonDesert.exe`.
+/// Whether the game is running.
 pub fn game_process() -> GameProcess {
-    let running = fs::read_dir("/proc")
-        .map(|entries| {
-            entries
-                .filter_map(|e| e.ok())
-                .filter(|e| {
-                    e.file_name()
-                        .to_string_lossy()
-                        .bytes()
-                        .all(|b| b.is_ascii_digit())
-                })
-                .filter_map(|e| fs::read(e.path().join("cmdline")).ok())
-                .any(|raw| cmdline_matches(&raw))
-        })
-        .unwrap_or(false);
-    match running {
+    match crate::platform::game_running(GAME_PROCESS) {
         true => GameProcess::Running,
         false => GameProcess::Stopped,
     }
@@ -173,17 +168,14 @@ mod tests {
 
     #[test]
     fn matches_proton_cmdlines() {
-        assert!(cmdline_matches(
-            b"Z:\\games\\Crimson Desert\\bin64\\CrimsonDesert.exe\0-dx12\0"
+        let names = |argv0: &[u8]| crate::platform::names_program(argv0, GAME_PROCESS);
+        assert!(names(
+            b"Z:\\games\\Crimson Desert\\bin64\\CrimsonDesert.exe"
         ));
-        assert!(!cmdline_matches(
-            b"/usr/bin/steam\0steam://rungameid/3321460\0"
-        ));
+        assert!(!names(b"/usr/bin/steam"));
         assert_eq!(launch_url(3_321_460), "steam://rungameid/3321460");
-        assert!(cmdline_matches(b"C:\\Games\\crimsondesert.EXE\0"));
-        assert!(!cmdline_matches(
-            b"/usr/bin/kate\0/games/bin64/CrimsonDesert.exe\0"
-        ));
+        assert!(names(b"C:\\Games\\crimsondesert.EXE"));
+        assert!(!names(b"/usr/bin/kate"));
         assert_eq!(
             run_url(1, &["-dx12".into(), "a b".into()]),
             "steam://run/1//-dx12%20a%20b/"

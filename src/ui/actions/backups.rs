@@ -68,16 +68,11 @@ impl PyluneApp {
 
     /// The game's save folder, if the Proton prefix is known.
     pub(super) fn save_folder(&self) -> Result<std::path::PathBuf> {
-        self.info
-            .prefix_dir
-            .as_ref()
-            .map(|p| save_backup::save_dir(p))
-            .ok_or_else(|| {
-                PyluneError::Invalid(
-                    "the game's Proton prefix was not found — start the game once from Steam"
-                        .into(),
-                )
-            })
+        save_backup::save_dir(self.info.prefix_dir.as_deref()).ok_or_else(|| {
+            PyluneError::Invalid(
+                "the game's Proton prefix was not found — start the game once from Steam".into(),
+            )
+        })
     }
 
     /// Backs up the saves right before Play (synchronously, so the copy

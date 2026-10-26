@@ -78,6 +78,7 @@ impl PyluneApp {
             LaunchMethod::SteamCli => "Steam",
             LaunchMethod::XdgOpen => "the steam:// URL handler",
             LaunchMethod::ProtonDirect => "Proton (direct, Steam must be running)",
+            LaunchMethod::Direct => "the game executable (Steam must be running)",
         };
         let profile = self.profiles.book.active.as_deref().unwrap_or("no profile");
         self.journal(Event::new(

@@ -48,9 +48,7 @@ impl eframe::App for FatalApp {
             ui.add_space(8.0);
             ui.horizontal(|ui| {
                 if ui.button("📂 Open data folder").clicked() {
-                    let _ = std::process::Command::new("xdg-open")
-                        .arg(&self.data_dir)
-                        .spawn();
+                    let _ = crate::platform::open_command(self.data_dir.as_os_str()).spawn();
                 }
                 if ui.button("Quit").clicked() {
                     ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);

@@ -1,5 +1,8 @@
 //! Registering Pylune as the desktop handler for `nxm://` links, and
 //! forwarding links for other games to the handler it replaced.
+//!
+//! Uses freedesktop `.desktop` files and `xdg-mime`, so it works on Linux
+//! only; elsewhere registration reports that it is not supported yet (B-08).
 
 use crate::error::{IoContext, PyluneError, Result};
 use std::fs;
@@ -67,12 +70,17 @@ fn current_default() -> Option<String> {
 
 /// Whether Pylune is the current default `nxm://` handler.
 pub fn is_registered() -> bool {
-    current_default().as_deref() == Some(DESKTOP_FILE)
+    cfg!(target_os = "linux") && current_default().as_deref() == Some(DESKTOP_FILE)
 }
 
 /// Makes Pylune the default `nxm://` handler. Returns the handler it
 /// replaced, so links for other games can be forwarded to it.
 pub fn register(exe: &Path) -> Result<Option<String>> {
+    if !cfg!(target_os = "linux") {
+        return Err(PyluneError::Invalid(
+            "registering for nxm:// links is not supported on this platform yet".into(),
+        ));
+    }
     let previous = current_default().filter(|d| d != DESKTOP_FILE);
     let dir = applications_dir()
         .ok_or_else(|| PyluneError::Invalid("cannot locate ~/.local/share/applications".into()))?;

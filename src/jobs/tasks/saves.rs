@@ -11,14 +11,11 @@ use std::path::{Path, PathBuf};
 
 /// The save folder of the configured game's Proton prefix.
 pub fn save_folder(ctx: &JobContext) -> Result<PathBuf> {
-    locate::resolve(&ctx.config)
-        .prefix_dir
-        .map(|p| save_backup::save_dir(&p))
-        .ok_or_else(|| {
-            PyluneError::Invalid(
-                "the game's Proton prefix was not found — start the game once from Steam".into(),
-            )
-        })
+    save_backup::save_dir(locate::resolve(&ctx.config).prefix_dir.as_deref()).ok_or_else(|| {
+        PyluneError::Invalid(
+            "the game's Proton prefix was not found — start the game once from Steam".into(),
+        )
+    })
 }
 
 /// Records a save-backup event in the journal (best effort).

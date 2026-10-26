@@ -1,7 +1,7 @@
 //! Backups of the game's save files (board item A-28).
 //!
-//! Crimson Desert keeps its saves inside the Proton prefix at
-//! `drive_c/users/steamuser/AppData/Local/Pearl Abyss/CD/save/<Steam id>/slot<N>/`
+//! Crimson Desert keeps its saves in `AppData/Local/Pearl Abyss/CD/save/<Steam id>/slot<N>/`
+//! — on Linux inside the Proton prefix (`drive_c/users/steamuser/…`)
 //! (`save.save`, `lobby.save`; a few MB in total, verified on build 2.3.2).
 //! A backup is one `.zip` with a manifest and the whole `save/` tree.
 
@@ -19,8 +19,8 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
 
-/// Save folder relative to the Proton prefix (`…/pfx`).
-pub const SAVE_SUBDIR: &str = "drive_c/users/steamuser/AppData/Local/Pearl Abyss/CD/save";
+/// Save folder relative to the Windows user's `AppData/Local`.
+pub const SAVE_SUBDIR: &str = "Pearl Abyss/CD/save";
 
 /// Version of the archive layout written into `manifest.json`.
 const FORMAT: u64 = 1;
@@ -38,9 +38,10 @@ pub struct SaveBackup {
     pub size: u64,
 }
 
-/// The game's save folder inside a Proton prefix.
-pub fn save_dir(prefix: &Path) -> PathBuf {
-    prefix.join(SAVE_SUBDIR)
+/// The game's save folder: in `%LOCALAPPDATA%` on Windows, inside the
+/// Proton/Wine prefix elsewhere (`None` while the prefix is unknown).
+pub fn save_dir(prefix: Option<&Path>) -> Option<PathBuf> {
+    crate::platform::local_app_data(prefix).map(|dir| dir.join(SAVE_SUBDIR))
 }
 
 /// Files below the save folder, relative to it.

@@ -82,6 +82,13 @@ Add a method to `nexus::api::Client` (it applies rate-limit bookkeeping and reda
 a response type in `nexus/mod.rs`, a job that calls it, and a case for the mock server in
 `src/tests/nexus_http.rs`.
 
+## Port to another platform
+
+All OS differences live in `src/platform/` (one file per OS, same function set, chosen with
+`cfg(target_os)`). Fill in or fix that file rather than adding `cfg` elsewhere. The open
+question for Windows is deployment without symlinks (decision D-11): `symlink/` currently
+recognises its own links by reading them, which hard links and copies cannot satisfy.
+
 ## Interface changes
 
 Follow [ux-principles.md](ux-principles.md). Use `theme::accent()`, `danger()`, `success()`,

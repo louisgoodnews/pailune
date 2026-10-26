@@ -185,9 +185,9 @@ impl PyluneApp {
 
     /// Opens a file or folder with the desktop's default application.
     pub(super) fn open_path(&self, path: &std::path::Path) -> Result<()> {
-        let mut command = std::process::Command::new("xdg-open");
-        command.arg(path);
-        crate::launch::run::spawn(command)
-            .map_err(|e| crate::error::PyluneError::Invalid(format!("xdg-open failed: {e}")))
+        let command = crate::platform::open_command(path.as_os_str());
+        crate::launch::run::spawn(command).map_err(|e| {
+            crate::error::PyluneError::Invalid(format!("could not open {}: {e}", path.display()))
+        })
     }
 }

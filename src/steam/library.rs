@@ -4,22 +4,15 @@ use super::vdf::{self, Vdf};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Where Steam keeps its data for native, Debian-style and Flatpak installs.
+/// Existing Steam installations of this platform, without duplicates.
 fn steam_roots() -> Vec<PathBuf> {
     let home = std::env::var_os("HOME")
         .map(PathBuf::from)
-        .unwrap_or_default();
-    let mut roots: Vec<PathBuf> = [
-        ".local/share/Steam",
-        ".steam/steam",
-        ".steam/root",
-        ".var/app/com.valvesoftware.Steam/.local/share/Steam",
-        "snap/steam/common/.local/share/Steam",
-    ]
-    .iter()
-    .map(|rel| home.join(rel))
-    .filter_map(|p| fs::canonicalize(p).ok())
-    .collect();
+        .unwrap_or_else(crate::platform::home);
+    let mut roots: Vec<PathBuf> = crate::platform::steam_roots(&home)
+        .into_iter()
+        .filter_map(|p| fs::canonicalize(p).ok())
+        .collect();
     roots.dedup();
     roots
 }

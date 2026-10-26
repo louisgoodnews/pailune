@@ -85,5 +85,8 @@ Apache option adds an explicit patent grant.
 Windows they need Developer Mode or administrator rights.
 **Direction.** Keep one journaled deployment model with a per-platform method: symlinks on Linux
 and macOS; on Windows symlinks when permitted, otherwise hard links (same volume) or verified
-copies. All platform specifics sit behind a `Platform` trait (B-08 step 1). To be finalised with
-the Windows port.
+copies. All platform specifics sit in `src/platform/` (B-08 step 1, done 2026-10-26: one module per OS
+with the same functions, chosen at compile time — simpler than a trait object, since only one
+platform exists per build). Open: `symlink/` identifies its links with `read_link`; hard links
+and copies need another proof of ownership (e.g. recorded size + hash in the links journal).
+To be finalised with the Windows port.
