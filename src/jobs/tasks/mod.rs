@@ -31,6 +31,7 @@ pub fn run(ctx: &JobContext, kind: JobKind) -> Result<JobOutput> {
         JobKind::DeleteBackup(path) => backups::delete(&path),
         JobKind::BackupSaves => saves::backup(ctx),
         JobKind::RestoreSaves(path) => saves::restore(ctx, &path),
+        JobKind::EditSave { slot, edits } => saves::edit(ctx, &slot, &edits),
         JobKind::ValidateKey => nexus::validate(ctx),
         JobKind::FetchMod(id) => nexus::fetch_mod(ctx, id),
         JobKind::DescribeFile { mod_id, file_id } => nexus::describe_file(ctx, mod_id, file_id),

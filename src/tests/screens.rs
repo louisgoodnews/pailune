@@ -130,6 +130,24 @@ fn screens() {
             h.set_size(eframe::egui::vec2(1200.0, 1100.0));
             shoot(&mut h, &format!("{tag}-json-editor"));
             h.set_size(eframe::egui::vec2(1200.0, 760.0));
+            let app = h.state_mut();
+            let saves = crate::save_backup::save_dir(app.info.prefix_dir.as_deref()).unwrap();
+            let slot = saves.join("7/slot1");
+            std::fs::create_dir_all(&slot).unwrap();
+            let save = crate::savefile::edit::tests::pouch_save();
+            std::fs::write(slot.join("save.save"), save).unwrap();
+            app.dispatch(Action::Backup(crate::ui::BackupAction::InspectSave(slot)));
+            let at = app.save_view.as_ref().unwrap().tree[0].children[0]
+                .edit
+                .as_ref()
+                .unwrap()
+                .at;
+            let view = app.save_view.as_mut().unwrap();
+            view.edits.insert(at, "350".into());
+            view.query = "money".into();
+            shoot(&mut h, &format!("{tag}-save-editor"));
+            h.state_mut()
+                .dispatch(Action::Backup(crate::ui::BackupAction::CloseSaveView));
             h.state_mut()
                 .dispatch(Action::Ask(crate::ui::Confirm::CleanSlate));
             shoot(&mut h, &format!("{tag}-confirm"));

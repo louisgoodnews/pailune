@@ -167,7 +167,19 @@ deleting a mod*.
   an older copy back after backing up the current saves. If Steam then reports a cloud conflict,
   keep the local files.
 - **Your saves** (same page) lists every slot with level and save time; *Inspect…* shows
-  everything a save contains (character, inventory, quests, …), read-only and searchable.
+  everything a save contains (character, inventory, quests, …), searchable.
+
+### Editing a save
+
+In *Inspect…*, every number, flag and other fixed-size value is a text field. Type a new value
+(it turns orange; red means it is not valid for that field, e.g. a negative number where only
+positive ones fit), then **Save changes…**. The changes are listed above the button. Copper
+coins in your pouch have their own field at the top.
+
+Saving needs the game closed. All save games are backed up first (listed under *Save games*,
+label `before-edit`), the file is rewritten and read back before it replaces the old one, so a
+failed write changes nothing. Only values change — nothing is added or removed. If Steam
+reports a cloud conflict afterwards, keep the local files.
 
 ## After a game update
 

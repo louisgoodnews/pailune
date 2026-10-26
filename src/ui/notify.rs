@@ -103,6 +103,7 @@ fn job_title(kind: &JobKind, ok: bool) -> Option<&'static str> {
         (JobKind::RestoreBackup(_), true) => "Backup restored",
         (JobKind::BackupSaves, true) => "Saves backed up",
         (JobKind::RestoreSaves(_), true) => "Saves restored",
+        (JobKind::EditSave { .. }, true) => "Save edited",
         (JobKind::CheckUpdates, true) => "Update check finished",
         (JobKind::FetchCollection { .. }, true) => "Collection loaded",
         (JobKind::RefreshBackup, true) => "Metadata backup refreshed",

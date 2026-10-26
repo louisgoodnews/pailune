@@ -11,6 +11,7 @@ mod json_patches;
 mod nexus_http;
 mod overlay;
 mod plugins;
+mod save_edit;
 mod screens;
 mod staging;
 mod storage;

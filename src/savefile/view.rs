@@ -8,6 +8,20 @@ use super::body::walk::{Object, Value};
 pub struct Node {
     pub label: String,
     pub children: Vec<Node>,
+    /// Set for values that can be changed in place.
+    pub edit: Option<Editable>,
+}
+
+/// A fixed-size value of the body that can be changed without moving
+/// anything else (`super::edit`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Editable {
+    /// Offset in the decompressed body.
+    pub at: usize,
+    pub field: String,
+    pub type_name: String,
+    /// The current bytes (checked again when saving).
+    pub bytes: Vec<u8>,
 }
 
 /// A scalar by its declared type name and size.
@@ -55,13 +69,23 @@ pub fn tree(body: &Body, object: &Object) -> Vec<Node> {
             let leaf = |text: String| Node {
                 label: format!("{} = {text}", field.name),
                 children: Vec::new(),
+                edit: None,
             };
             match value {
-                Value::Scalar(bytes) => leaf(scalar(&field.type_name, bytes)),
+                Value::Scalar { at, bytes } => Node {
+                    edit: Some(Editable {
+                        at: *at,
+                        field: field.name.clone(),
+                        type_name: field.type_name.clone(),
+                        bytes: bytes.clone(),
+                    }),
+                    ..leaf(scalar(&field.type_name, bytes))
+                },
                 Value::Items { count, data } => leaf(items(&field.type_name, *count, data)),
                 Value::Object(child) => Node {
                     label: format!("{} ({})", field.name, body.types[child.class as usize].name),
                     children: tree(body, child),
+                    edit: None,
                 },
                 Value::List(list) => Node {
                     label: format!("{} [{}]", field.name, list.len()),
@@ -71,8 +95,10 @@ pub fn tree(body: &Body, object: &Object) -> Vec<Node> {
                         .map(|(n, child)| Node {
                             label: format!("#{n} {}", body.types[child.class as usize].name),
                             children: tree(body, child),
+                            edit: None,
                         })
                         .collect(),
+                    edit: None,
                 },
             }
         })
@@ -83,7 +109,7 @@ pub fn tree(body: &Body, object: &Object) -> Vec<Node> {
 pub fn find(body: &Body, object: &Object, name: &str) -> Option<String> {
     let def = &body.types[object.class as usize];
     object.fields.iter().find_map(|(i, value)| match value {
-        Value::Scalar(bytes) if def.fields[*i].name == name => {
+        Value::Scalar { bytes, .. } if def.fields[*i].name == name => {
             Some(scalar(&def.fields[*i].type_name, bytes))
         }
         Value::Items { count, data } if def.fields[*i].name == name => {
@@ -91,5 +117,22 @@ pub fn find(body: &Body, object: &Object, name: &str) -> Option<String> {
         }
         Value::Object(child) => find(body, child, name),
         _ => None,
+    })
+}
+
+/// The stack count of the inventory item with `item_key` (1 = copper coins,
+/// the pouch): the `_stackCount` next to a matching `_itemKey`.
+pub fn item_count(nodes: &[Node], item_key: u64) -> Option<&Editable> {
+    nodes.iter().find_map(|n| {
+        let field = |name: &str| {
+            n.children
+                .iter()
+                .find_map(|c| c.edit.as_ref().filter(|e| e.field == name))
+        };
+        let key = field("_itemKey").map(|e| scalar(&e.type_name, &e.bytes));
+        match key == Some(item_key.to_string()) {
+            true => field("_stackCount"),
+            false => item_count(&n.children, item_key),
+        }
     })
 }

@@ -9,6 +9,9 @@ mod mods;
 mod nexus;
 mod poll;
 mod profiles;
+mod save_edit;
+
+pub use save_edit::changes as save_changes;
 mod settings;
 
 use super::{Action, Confirm, JobState, JobView, Level, PyluneApp, StatusLine};

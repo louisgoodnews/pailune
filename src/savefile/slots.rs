@@ -95,6 +95,7 @@ pub fn inspect(dir: &Path) -> Result<Vec<Node>> {
             Ok(Node {
                 label: body.types[object.class as usize].name.clone(),
                 children: tree(&body, &object),
+                edit: None,
             })
         })
         .collect()

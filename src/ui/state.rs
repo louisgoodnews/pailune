@@ -102,6 +102,18 @@ pub struct ProfilesState {
     pub option_drafts: BTreeMap<String, String>,
 }
 
+/// An open save in the viewer and the values typed into it.
+#[derive(Debug, Clone, Default)]
+pub struct SaveView {
+    /// Slot folder name, e.g. `slot0`.
+    pub slot: String,
+    pub dir: std::path::PathBuf,
+    pub tree: Vec<crate::savefile::view::Node>,
+    pub query: String,
+    /// Typed text per body offset, while it differs from the save.
+    pub edits: std::collections::BTreeMap<usize, String>,
+}
+
 /// Requests only the window can carry out, collected while dispatching
 /// and executed at the end of the frame.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

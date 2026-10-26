@@ -2,12 +2,13 @@
 //! container of `docs/save-format.md`. The payload is LZ4-compressed, then
 //! ChaCha20-encrypted, with an HMAC-SHA256 over the compressed bytes.
 //!
-//! [`decode`] checks the HMAC before trusting anything; `encode` (tests only, for now) writes a
-//! file the game accepts. Pylune only reads saves so far; writing is used to
-//! prove that the format is fully understood (byte-identical round trips).
+//! [`decode`] checks the HMAC before trusting anything; [`encode`] writes a
+//! file the game accepts (proven by byte-identical round trips of real
+//! saves). [`edit`] changes values in place.
 
 pub mod body;
 pub mod crypto;
+pub mod edit;
 pub mod slots;
 pub mod view;
 
@@ -92,10 +93,8 @@ pub fn decode(bytes: &[u8]) -> Result<SaveFile> {
     Ok(SaveFile { header, body })
 }
 
-/// Writes a save (used by tests to prove the format; editing comes later):
-/// compresses `body`, recomputes sizes and HMAC, encrypts
+/// Writes a save: compresses `body`, recomputes sizes and HMAC, encrypts
 /// with `nonce`; other header bytes are kept from `template`.
-#[cfg(test)]
 pub fn encode(template: &Header, body: &[u8], nonce: [u8; 16]) -> Result<Vec<u8>> {
     let key = crypto::key(template.version).ok_or_else(|| invalid("unknown save version"))?;
     let mut data = lz4_flex::block::compress(body);

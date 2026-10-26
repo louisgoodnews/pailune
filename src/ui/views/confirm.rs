@@ -13,6 +13,7 @@ fn describe(confirm: &Confirm) -> (String, String, Action, &'static str) {
         Confirm::DeleteMod(_) | Confirm::DeleteProfile(_) => "Delete",
         Confirm::UninstallCollection(_) => "Uninstall",
         Confirm::RestoreBackup(_) | Confirm::RestoreSaves(_) => "Restore",
+        Confirm::EditSave(_) => "Write to save",
     };
     (title, body, action, verb)
 }
@@ -61,6 +62,14 @@ fn details(confirm: &Confirm) -> (String, String, Action) {
              cloud conflict, keep the local files."
                 .into(),
             Action::Backup(crate::ui::BackupAction::RestoreSaves(path.clone())),
+        ),
+        Confirm::EditSave(count) => (
+            format!("Write {count} change(s) to this save?"),
+            "All save games are backed up first (Settings › Backups lists them), so this can be \
+             undone. Close the game before saving. If Steam later reports a cloud conflict, keep \
+             the local files."
+                .into(),
+            Action::Backup(crate::ui::BackupAction::WriteSaveEdits),
         ),
         Confirm::DeleteProfile(name) => (
             format!("Delete profile '{name}'?"),

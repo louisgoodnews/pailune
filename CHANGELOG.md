@@ -79,6 +79,8 @@
 - AppImage build script and release CI job; `nxm://` links point at the AppImage file.
 
 ### Save games
+- Save editing: change any number or flag of a save in the inspector (copper coins have a
+  shortcut); written after a confirmation, with every save backed up first.
 - Pylune reads the game's save files: slot list with level and time, a searchable read-only
   inspector, `pylune saves` / `pylune save`, MCP tools.
 - Save files are backed up before every Play and on request; restore keeps a safety copy.

@@ -83,3 +83,56 @@ fn real_saves_verify_and_round_trip() {
         }
     });
 }
+
+/// Editing real saves in memory (nothing is written): one number in each
+/// save changes and the rewritten file reads back with exactly that change.
+#[test]
+#[ignore = "reads the local save files"]
+fn real_saves_edit_in_memory() {
+    let Ok(dir) = std::env::var("PYLUNE_SAVES") else {
+        return;
+    };
+    let slots = walkdir::WalkDir::new(dir)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_name() == "save.save");
+    slots.for_each(|e| {
+        let bytes = std::fs::read(e.path()).unwrap();
+        let tree = slots::inspect(e.path().parent().unwrap()).unwrap();
+        fn first_int(nodes: &[view::Node]) -> Option<view::Editable> {
+            nodes.iter().find_map(|n| {
+                n.edit
+                    .clone()
+                    .filter(|v| {
+                        v.type_name.to_lowercase().starts_with("uint") && v.bytes.len() == 4
+                    })
+                    .or_else(|| first_int(&n.children))
+            })
+        }
+        let coins = view::item_count(&tree, 1).map(|c| view::scalar(&c.type_name, &c.bytes));
+        println!("{}: copper coins {coins:?}", e.path().display());
+        let value = first_int(&tree).expect("an integer");
+        let mut new = value.bytes.clone();
+        new[0] ^= 1;
+        let change = edit::SaveEdit {
+            at: value.at,
+            old: value.bytes.clone(),
+            new: new.clone(),
+            label: value.field.clone(),
+        };
+        let written = edit::apply(&bytes, &[change]).unwrap();
+        let (before, after) = (decode(&bytes).unwrap().body, decode(&written).unwrap().body);
+        let diff: Vec<usize> = (0..before.len())
+            .filter(|i| before[*i] != after[*i])
+            .collect();
+        println!(
+            "{}: {} changed at {:?} ({} -> {} bytes)",
+            e.path().display(),
+            value.field,
+            diff,
+            bytes.len(),
+            written.len()
+        );
+        assert_eq!(diff, [value.at]);
+    });
+}

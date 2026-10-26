@@ -23,6 +23,8 @@ pub enum Confirm {
     UninstallCollection(String),
     RestoreBackup(PathBuf),
     RestoreSaves(PathBuf),
+    /// Write the values typed into the save viewer (`n` changes).
+    EditSave(usize),
 }
 
 /// Mod management intents.
@@ -185,4 +187,9 @@ pub enum BackupAction {
     /// Show the contents of a save slot (read-only).
     InspectSave(PathBuf),
     CloseSaveView,
+    /// Ask before writing the typed values.
+    SaveEdits,
+    /// Write them (confirmed).
+    WriteSaveEdits,
+    DiscardSaveEdits,
 }

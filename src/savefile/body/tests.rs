@@ -38,7 +38,10 @@ fn real_bodies_decode_exactly() {
             body.toc.len(),
             &failed[..failed.len().min(6)]
         );
-        let _ = Value::Scalar(Vec::new());
+        let _ = Value::Scalar {
+            at: 0,
+            bytes: Vec::new(),
+        };
     });
 }
 
@@ -95,7 +98,11 @@ fn print_tree() {
         }
         let object = object(&body, &save.body, i).unwrap();
         println!("== {name}");
-        show(&crate::savefile::view::tree(&body, &object), 1, &mut 40);
+        let mut budget = std::env::var("PYLUNE_LINES")
+            .ok()
+            .and_then(|n| n.parse().ok())
+            .unwrap_or(40);
+        show(&crate::savefile::view::tree(&body, &object), 1, &mut budget);
     });
 }
 

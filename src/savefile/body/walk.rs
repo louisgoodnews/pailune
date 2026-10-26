@@ -22,7 +22,11 @@ const MAX_DEPTH: usize = 64;
 /// A decoded field value.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
-    Scalar(Vec<u8>),
+    /// A fixed-size value and its offset in the body (for editing in place).
+    Scalar {
+        at: usize,
+        bytes: Vec<u8>,
+    },
     /// Counted items (kinds 1 and 3), raw.
     Items {
         count: u32,
@@ -70,7 +74,10 @@ fn fields(
         }
         let size = f.size as usize;
         let value = match f.kind {
-            0 | 2 if size > 0 => Value::Scalar(c.take(size)?.to_vec()),
+            0 | 2 if size > 0 => Value::Scalar {
+                at: c.pos,
+                bytes: c.take(size)?.to_vec(),
+            },
             1 if size > 0 => {
                 let count = c.u32()?;
                 Value::Items {

@@ -158,6 +158,7 @@ impl PyluneApp {
     fn after_done(&mut self, id: u64, kind: &JobKind) {
         match kind {
             JobKind::RestoreBackup(_) => self.reload_config(),
+            JobKind::EditSave { slot, .. } => self.after_save_edit(slot),
             JobKind::Remove(name) => {
                 let trash = crate::mod_engine::trash::list(&self.paths.trash);
                 self.mods.undo = trash.into_iter().find(|i| &i.name == name).map(|i| i.id);

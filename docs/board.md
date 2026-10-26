@@ -22,7 +22,8 @@ Move a line between columns when its status changes.
 - [ ] B-17 ASI mod creation (D-13), after B-16: research + decision record first, then templates,
   build/deploy, debug loop, packaging — *L*
 
-- [ ] B-07 (step 3) Save editing: body writer, fresh nonce + HMAC (done), per-version checks — *L*
+- [ ] B-07 (step 4) Save editing beyond fixed-size values: adding/removing items and list
+  entries (needs a body writer that rebuilds sizes and the table of contents) — *L*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
 - [ ] A-01 format 3, phase 2: names for large tables. Shapes are derivable (ItemInfo prefix done),
   names are not from data alone (message lists are incomplete). Next: in-game confirmation of the
@@ -38,6 +39,10 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-07 (step 3) Save editing (approved 2026-10-26): fixed-size values edited in the viewer,
+  checked against the current bytes, re-encoded (fresh nonce, HMAC), read back before an atomic
+  replace; exclusive job, refused while the game runs, all saves backed up first. Verified in
+  memory on all 5 real saves (exactly the edited byte changes). Copper-coin shortcut.
 - [x] Value-level conflicts between JSON patches (`overlay/value_conflicts.rs`): overlapping byte
   ranges after resolving against vanilla, named by record; later mod overrides earlier (`apply_over`);
   cached vanilla scan (2.3 s → 21 ms on repeat).

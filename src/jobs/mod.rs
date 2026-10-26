@@ -50,6 +50,11 @@ pub enum JobKind {
     BackupSaves,
     /// Replace the game's save files with a backup.
     RestoreSaves(PathBuf),
+    /// Change values of one save slot in place (all saves are backed up first).
+    EditSave {
+        slot: PathBuf,
+        edits: Vec<crate::savefile::edit::SaveEdit>,
+    },
     ValidateKey,
     FetchMod(u64),
     /// Fetch a collection revision (latest when `revision` is `None`).
@@ -121,7 +126,8 @@ impl JobKind {
             | JobKind::RefreshBackup
             | JobKind::Remove(_)
             | JobKind::CreateBackup { .. }
-            | JobKind::RestoreBackup(_) => Access::Exclusive,
+            | JobKind::RestoreBackup(_)
+            | JobKind::EditSave { .. } => Access::Exclusive,
             _ => Access::Shared,
         }
     }
@@ -152,6 +158,7 @@ impl JobKind {
             JobKind::DeleteBackup(_) => "Delete backup".into(),
             JobKind::BackupSaves => "Back up save games".into(),
             JobKind::RestoreSaves(_) => "Restore save games".into(),
+            JobKind::EditSave { slot, .. } => format!("Edit save {}", file_name(slot)),
             JobKind::ValidateKey => "Validate Nexus key".into(),
             JobKind::FetchMod(id) => format!("Fetch Nexus mod {id}"),
             JobKind::DescribeFile { file_id, .. } => format!("Look up Nexus file {file_id}"),
