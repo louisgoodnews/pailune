@@ -63,6 +63,9 @@ pub fn game_running(exe: &str) -> bool {
         .unwrap_or(false)
 }
 
+/// Terminal programs already have their console.
+pub fn attach_console() {}
+
 /// New files readable only by the owner (`0600`).
 pub fn make_private(options: &mut OpenOptions) {
     options.mode(0o600);

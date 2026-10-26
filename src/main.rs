@@ -4,6 +4,10 @@
 //! game directory exclusively through symbolic links. Original files that a
 //! mod would shadow are renamed to `.bak` and restored on revert.
 
+// No console window behind the GUI on Windows; the command line re-attaches
+// to the terminal it was started from (see `platform::attach_console`).
+#![cfg_attr(windows, windows_subsystem = "windows")]
+
 mod app_backup;
 mod backup;
 mod cli;
@@ -47,6 +51,7 @@ fn main() -> std::process::ExitCode {
     let _log_guard =
         logging::init::init(&paths.logs, &config.logging.level, config.logging.keep_days);
     if let Some(command) = command {
+        platform::attach_console();
         return cli::run(command, paths, config);
     }
     match gui(paths, config, notice, &args) {

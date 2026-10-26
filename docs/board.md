@@ -43,7 +43,7 @@ Move a line between columns when its status changes.
 ## Backlog (large)
 
 - [ ] B-07 (step 2) Save viewer, then editing — *L*
-- [ ] B-08 (step 2) Windows/macOS: test on real installs; Windows console window (needs a GUI subsystem build that still serves the CLI); macOS app bundle with `nxm://` URL type — *L*
+- [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
 - [ ] B-13 (step 2) Script bridge installation — *L*
 - [ ] A-01 (rest) table inserts, field-name JSON (format 3) — *L*, waits on the owner decision below
 
@@ -60,6 +60,8 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-08 Windows GUI subsystem (no console window behind the app); command-line runs re-attach
+  to the parent terminal (`AttachConsole`). Compiled by CI only; unverified on Windows.
 - [x] A-01 HTML patches (`src/patch/html/`): `<html-patch>` operations (`set` incl.
   `class="+a -b"`, `remove`, `replace`, `inner`, `append`, `prepend`, `before`, `after`) and
   comment directives (`@replace … @end`, `@set-attr`, `@add-class`) with CSS-lite selectors;

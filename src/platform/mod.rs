@@ -14,6 +14,7 @@
 //! | `game_running` | Whether the game executable is running. |
 //! | `make_private` | Restrict a new file to the current user. |
 //! | `local_app_data` | The game's `AppData/Local` (saves), inside the Proton prefix on Linux. |
+//! | `attach_console` | Give command-line runs a console (Windows GUI builds). |
 //! | `USES_PROTON` | Whether the game runs through Proton/Wine. |
 
 #[cfg(target_os = "linux")]

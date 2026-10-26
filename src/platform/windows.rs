@@ -60,6 +60,17 @@ pub fn game_running(exe: &str) -> bool {
 /// Files in the user profile are private by default.
 pub fn make_private(_options: &mut OpenOptions) {}
 
+/// A GUI-subsystem program has no console; for command-line use, write to
+/// the terminal that started Pylune (if any).
+pub fn attach_console() {
+    use windows_sys::Win32::System::Console::{ATTACH_PARENT_PROCESS, AttachConsole};
+    // SAFETY: plain Win32 call without pointers; failure (no parent console,
+    // e.g. started by an MCP client with pipes) is harmless.
+    unsafe {
+        AttachConsole(ATTACH_PARENT_PROCESS);
+    }
+}
+
 /// `%LOCALAPPDATA%`.
 pub fn local_app_data(_prefix: Option<&Path>) -> Option<PathBuf> {
     std::env::var_os("LOCALAPPDATA").map(PathBuf::from)
