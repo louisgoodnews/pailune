@@ -192,3 +192,21 @@ fn app_spool(fx: &Fixture) -> std::path::PathBuf {
     fs::create_dir_all(&spool).unwrap();
     spool
 }
+
+#[test]
+fn mods_move_to_a_load_order_number() {
+    use crate::mod_engine::model::MoveTo;
+    let fx = fixture();
+    let mut app = app(&fx);
+    app.dispatch(Action::Mod(ModAction::ImportPaths(vec![
+        fx.sources.join("Cool Mod"),
+        fx.sources.join("Overlay"),
+    ])));
+    settle(&mut app);
+    let first = app.registry.mods[0].name.clone();
+    app.dispatch(Action::Mod(ModAction::Move(
+        first.clone(),
+        MoveTo::Position(2),
+    )));
+    assert_eq!(app.registry.mods[1].name, first);
+}

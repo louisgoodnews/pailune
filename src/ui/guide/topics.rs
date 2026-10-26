@@ -45,7 +45,7 @@ pub const TOPICS: &[Topic] = &[
         keywords: "load order priority checkbox move up down enable disable win",
         body: &[
             "Tick a mod's checkbox to enable it; untick to disable. Nothing reaches the game until Apply.",
-            "Mods lower in the list win when two change the same file. Use the arrows in the details panel to move a mod.",
+            "Mods lower in the list win when two change the same file. Use the arrows in the details panel to move a mod, or type its new number into \"Move to number\".",
         ],
     },
     Topic {

@@ -76,6 +76,8 @@ pub enum MoveTo {
     Up,
     Down,
     Bottom,
+    /// To this 1-based load-order number.
+    Position(usize),
 }
 
 /// A staged file and its size, as shown in the mod details.

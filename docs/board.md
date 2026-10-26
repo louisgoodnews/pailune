@@ -39,7 +39,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] B-15 Move a mod to a load-order number — *S*
 - [ ] B-12 Portable mod lists (export/import with variants, Nexus origins, collections) — *S–M*
 - [ ] B-14 Headless core + CLI, then MCP server — *M–L*
 - [ ] B-08 (step 1) `Platform` trait around Linux-specific code — *M*
@@ -60,6 +59,8 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-15 *Move to number* in the details panel (`MoveTo::Position`, 1-based, clamped), Enter or
+  *Move*; guide topic and user guide updated.
 - [x] B-09/B-10/B-11 `CONTRIBUTING.md` (setup, conventions, checks, commits, game-data rules,
   license), `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1, contact louisgoodnews95@gmail.com),
   GitHub issue forms (bug report, feature request; blank issues off) and a PR template.

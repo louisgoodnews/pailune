@@ -1,74 +1,10 @@
 //! Right-hand panel for the selected mod: actions, info, conflicts, files.
 
-use super::clicked;
 use crate::mod_engine::conflicts::{Contest, ModConflicts};
-use crate::mod_engine::model::{ModDetails, ModEntry, MoveTo};
-use crate::ui::theme::{self, accent, danger, muted, success, warning};
-use crate::ui::{Action, Confirm, ModAction, PyluneApp};
+use crate::mod_engine::model::{ModDetails, ModEntry};
+use crate::ui::theme::{self, accent, muted, success, warning};
+use crate::ui::{Action, PyluneApp};
 use eframe::egui::{self, RichText};
-
-/// Enable, order, update, open and delete buttons.
-fn actions_row(ui: &mut egui::Ui, entry: &ModEntry) -> Vec<Action> {
-    let name = entry.name.clone();
-    let mod_action = |a: ModAction| Action::Mod(a);
-    let mut out = ui
-        .horizontal_wrapped(|ui| {
-            let toggle_text = if entry.enabled { "Disable" } else { "Enable" };
-            clicked([
-                (
-                    ui.button(toggle_text).clicked(),
-                    mod_action(ModAction::SetEnabled(name.clone(), !entry.enabled)),
-                ),
-                (
-                    ui.button("⏫ Top").clicked(),
-                    mod_action(ModAction::Move(name.clone(), MoveTo::Top)),
-                ),
-                (
-                    ui.button("⏶").clicked(),
-                    mod_action(ModAction::Move(name.clone(), MoveTo::Up)),
-                ),
-                (
-                    ui.button("⏷").clicked(),
-                    mod_action(ModAction::Move(name.clone(), MoveTo::Down)),
-                ),
-                (
-                    ui.button("⏬ Bottom").clicked(),
-                    mod_action(ModAction::Move(name.clone(), MoveTo::Bottom)),
-                ),
-            ])
-        })
-        .inner;
-    out.extend(
-        ui.horizontal_wrapped(|ui| {
-            let update_hint = match entry.nexus {
-                Some(_) => "Pick a newer file on Nexus",
-                None => "Replace with another archive or file",
-            };
-            clicked([
-                (
-                    ui.button("⬆ Update…").on_hover_text(update_hint).clicked(),
-                    mod_action(ModAction::Update(name.clone())),
-                ),
-                (
-                    ui.button("📂 Open folder").clicked(),
-                    mod_action(ModAction::OpenFolder(name.clone())),
-                ),
-                // Undoable, so a plain button, set apart from the others (R-04, R-06).
-                (
-                    {
-                        ui.add_space(12.0);
-                        ui.button(RichText::new("🗑 Delete").color(danger()))
-                            .on_hover_text("Moves the mod to Recently deleted; Undo brings it back")
-                            .clicked()
-                    },
-                    Action::Ask(Confirm::DeleteMod(name.clone())),
-                ),
-            ])
-        })
-        .inner,
-    );
-    out
-}
 
 /// State, file counts, size and source of the mod.
 fn info_grid(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) {
@@ -208,7 +144,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
             let (kind, color) = theme::kind_style(entry.kind);
             theme::badge(ui, kind, color);
             ui.add_space(4.0);
-            let mut actions = actions_row(ui, entry);
+            let mut actions = super::mod_actions::show(ui, entry, app);
             ui.separator();
             info_grid(ui, entry, details);
             actions.extend(super::variant::show(ui, entry, details));

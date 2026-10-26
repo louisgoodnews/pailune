@@ -31,6 +31,9 @@
 - New options: confirm deletes, update check at start, enable new mods, trash size, automatic
   backups and how many to keep, days of logs kept.
 
+### Mod management
+- Move a mod straight to a load-order number from its details panel.
+
 ### Documentation
 - User guide, vision, architecture, data model, extension guide and decision records in `docs/`.
 

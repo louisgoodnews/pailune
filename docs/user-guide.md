@@ -48,7 +48,8 @@ mods* is on).
 - Tick a mod's checkbox to enable it. Nothing changes in the game yet; a banner says
   **Changes not applied**.
 - **Load order:** when two mods change the same file, the one **lower in the list wins**. Click a
-  mod to open its details and use *Top*, *⏶*, *⏷*, *Bottom*.
+  mod to open its details and use *Top*, *⏶*, *⏷*, *Bottom*, or type a number into **Move to
+  number** and press *Move* (Enter works too).
 - **Apply** (Ctrl+Enter) links the enabled mods into the game. The status line tells you what
   happened; problems are listed on the *Log* tab.
 - **Unlink all** removes every link and restores the originals.
