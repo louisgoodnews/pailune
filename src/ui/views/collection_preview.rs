@@ -22,7 +22,7 @@ pub fn show(
         .filter(|m| m.selected)
         .map(|m| m.size)
         .sum();
-    egui::Modal::new(egui::Id::unique("pylune_collection"))
+    egui::Modal::new(egui::Id::unique("pailune_collection"))
         .show(ctx, |ui| {
             ui.set_max_width(600.0);
             ui.heading(RichText::new(&c.name).color(accent()));

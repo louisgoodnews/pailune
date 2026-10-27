@@ -3,7 +3,7 @@
 //! Authentication uses the personal API key from
 //! <https://www.nexusmods.com/users/myaccount?tab=api>. Direct downloads need
 //! a Premium account; free accounts download through `nxm://` links that the
-//! website's "Mod Manager Download" button hands to Pylune.
+//! website's "Mod Manager Download" button hands to Pailune.
 
 pub mod api;
 pub mod collection;

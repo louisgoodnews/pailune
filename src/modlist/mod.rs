@@ -7,7 +7,7 @@
 
 pub mod apply;
 
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::mod_engine::model::{NexusRef, Registry};
 use crate::nexus::collection::Collection;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ use std::fs;
 use std::path::Path;
 
 /// Marker in every file, so other JSON is rejected early.
-pub const KIND: &str = "pylune-modlist";
+pub const KIND: &str = "pailune-modlist";
 
 /// Version of the layout.
 pub const FORMAT: u32 = 1;
@@ -113,13 +113,13 @@ pub fn write(path: &Path, list: &ModList) -> Result<()> {
 /// Reads and checks a mod list file.
 pub fn read(path: &Path, game: &str) -> Result<ModList> {
     let list: ModList = serde_json::from_str(&fs::read_to_string(path).at(path)?)
-        .map_err(|e| PyluneError::Invalid(format!("not a Pylune mod list: {e}")))?;
+        .map_err(|e| PailuneError::Invalid(format!("not a Pailune mod list: {e}")))?;
     match (list.kind == KIND, list.format <= FORMAT, list.game == game) {
-        (false, _, _) => Err(PyluneError::Invalid("not a Pylune mod list".into())),
-        (_, false, _) => Err(PyluneError::Invalid(
-            "this mod list was made by a newer Pylune; please update".into(),
+        (false, _, _) => Err(PailuneError::Invalid("not a Pailune mod list".into())),
+        (_, false, _) => Err(PailuneError::Invalid(
+            "this mod list was made by a newer Pailune; please update".into(),
         )),
-        (_, _, false) => Err(PyluneError::Invalid(format!(
+        (_, _, false) => Err(PailuneError::Invalid(format!(
             "this mod list is for '{}', not '{game}'",
             list.game
         ))),

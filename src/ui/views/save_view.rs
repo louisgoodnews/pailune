@@ -6,7 +6,7 @@ use crate::savefile::edit::parse_value;
 use crate::savefile::view::{Editable, Node, item_count, scalar};
 use crate::ui::state::SaveView;
 use crate::ui::theme::{accent, danger, muted};
-use crate::ui::{Action, BackupAction, PyluneApp};
+use crate::ui::{Action, BackupAction, PailuneApp};
 use eframe::egui::{self, RichText};
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -115,7 +115,7 @@ type CacheKey = (usize, String);
 /// The search result for `needle`, cached in egui's memory by slot, tree
 /// (a reopened slot is a new tree) and text.
 fn cached_hits(ui: &egui::Ui, slot: &str, tree: &[Node], needle: &str) -> Arc<Vec<Hits>> {
-    let id = egui::Id::unique(("pylune_save_hits", slot));
+    let id = egui::Id::unique(("pailune_save_hits", slot));
     let key = (tree.as_ptr() as usize, needle.to_string());
     let cached: Option<(CacheKey, Arc<Vec<Hits>>)> = ui.data(|d| d.get_temp(id));
     match cached {
@@ -174,7 +174,7 @@ fn edit_bar(ui: &mut egui::Ui, view: &mut SaveView) -> Vec<Action> {
 }
 
 /// The open save, filling `ui` (the Saves tab's main area).
-pub fn panel(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+pub fn panel(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     let Some(view) = &mut app.save_view else {
         ui.add_space(40.0);
         ui.vertical_centered(|ui| {

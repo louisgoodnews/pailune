@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds Pylune-<version>-x86_64.AppImage in target/appimage/.
+# Builds Pailune-<version>-x86_64.AppImage in target/appimage/.
 # Usage: packaging/appimage.sh   (run from the project folder)
 # Needs: cargo, rsvg-convert (librsvg) and appimagetool on PATH, or set
 # APPIMAGETOOL=/path/to/appimagetool-x86_64.AppImage
@@ -13,19 +13,19 @@ command -v rsvg-convert >/dev/null || { echo "rsvg-convert not found (install li
 version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
 cargo build --release --locked
 out=target/appimage
-app="$out/Pylune.AppDir"
+app="$out/Pailune.AppDir"
 rm -rf "$app"
 mkdir -p "$app/usr/bin" "$app/usr/share/applications" \
     "$app/usr/share/icons/hicolor/scalable/apps" "$app/usr/share/icons/hicolor/256x256/apps" \
     "$app/usr/share/metainfo"
-install -m 755 target/release/pylune "$app/usr/bin/pylune"
-install -m 644 packaging/pylune.desktop "$app/usr/share/applications/pylune.desktop"
-install -m 644 packaging/pylune.svg "$app/usr/share/icons/hicolor/scalable/apps/pylune.svg"
-rsvg-convert -w 256 -h 256 packaging/pylune.svg -o "$app/usr/share/icons/hicolor/256x256/apps/pylune.png"
-install -m 644 packaging/pylune.appdata.xml "$app/usr/share/metainfo/pylune.appdata.xml"
-cp "$app/usr/share/applications/pylune.desktop" "$app/pylune.desktop"
-cp "$app/usr/share/icons/hicolor/256x256/apps/pylune.png" "$app/pylune.png"
-ln -s pylune.png "$app/.DirIcon"
-ln -s usr/bin/pylune "$app/AppRun"
-ARCH=x86_64 "$tool" "$app" "$out/Pylune-$version-x86_64.AppImage"
-echo "Built $out/Pylune-$version-x86_64.AppImage"
+install -m 755 target/release/pailune "$app/usr/bin/pailune"
+install -m 644 packaging/pailune.desktop "$app/usr/share/applications/pailune.desktop"
+install -m 644 packaging/pailune.svg "$app/usr/share/icons/hicolor/scalable/apps/pailune.svg"
+rsvg-convert -w 256 -h 256 packaging/pailune.svg -o "$app/usr/share/icons/hicolor/256x256/apps/pailune.png"
+install -m 644 packaging/pailune.appdata.xml "$app/usr/share/metainfo/pailune.appdata.xml"
+cp "$app/usr/share/applications/pailune.desktop" "$app/pailune.desktop"
+cp "$app/usr/share/icons/hicolor/256x256/apps/pailune.png" "$app/pailune.png"
+ln -s pailune.png "$app/.DirIcon"
+ln -s usr/bin/pailune "$app/AppRun"
+ARCH=x86_64 "$tool" "$app" "$out/Pailune-$version-x86_64.AppImage"
+echo "Built $out/Pailune-$version-x86_64.AppImage"

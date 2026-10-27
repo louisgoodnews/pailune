@@ -1,6 +1,6 @@
 //! Byte-patch JSON mods ("JSON mod", JMM v1/v2, `"format": 2`), per
 //! `docs/paz-format.md` §10.1. A mod lists changes to the decrypted,
-//! decompressed bytes of archived game files; Pylune applies them to the
+//! decompressed bytes of archived game files; Pailune applies them to the
 //! vanilla bytes and packs the result into its overlay.
 
 pub mod apply;

@@ -2,7 +2,7 @@
 
 use crate::app_backup::{AUTO_LABEL, BackupKind, create, restore as restore_backup};
 use crate::db;
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::jobs::JobOutput;
 use crate::jobs::context::JobContext;
 use crate::logging::{Event, EventKind, Severity};
@@ -42,7 +42,7 @@ pub fn create(ctx: &JobContext, full: bool, label: &str) -> Result<JobOutput> {
 pub fn restore(ctx: &JobContext, archive: &Path) -> Result<JobOutput> {
     let mut conn = ctx.db()?;
     if !db::links::load(&conn)?.links.is_empty() {
-        return Err(PyluneError::Invalid(
+        return Err(PailuneError::Invalid(
             "unlink all mods before restoring a backup".into(),
         ));
     }

@@ -2,7 +2,7 @@
 //! `HKCU\Software\Classes\nxm`, written and read with `reg.exe`. Compiled on
 //! every platform so the parsing is tested everywhere; only Windows calls it.
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use std::path::Path;
 use std::process::Command;
 
@@ -60,10 +60,10 @@ fn reg(args: &[&str]) -> Result<String> {
     let out = crate::platform::background("reg")
         .args(args)
         .output()
-        .map_err(|e| PyluneError::Invalid(format!("reg.exe failed: {e}")))?;
+        .map_err(|e| PailuneError::Invalid(format!("reg.exe failed: {e}")))?;
     match out.status.success() {
         true => Ok(String::from_utf8_lossy(&out.stdout).into_owned()),
-        false => Err(PyluneError::Invalid(format!(
+        false => Err(PailuneError::Invalid(format!(
             "reg.exe failed: {}",
             String::from_utf8_lossy(&out.stderr).trim()
         ))),
@@ -100,11 +100,11 @@ pub fn forward(command: &str, url: &str) -> Result<()> {
     let argv = expand(command, url);
     let (program, rest) = argv
         .split_first()
-        .ok_or_else(|| PyluneError::Invalid("empty handler command".into()))?;
+        .ok_or_else(|| PailuneError::Invalid("empty handler command".into()))?;
     let mut spawn = Command::new(program);
     spawn.args(rest);
     crate::launch::run::spawn(spawn)
-        .map_err(|e| PyluneError::Invalid(format!("could not start {program}: {e}")))
+        .map_err(|e| PailuneError::Invalid(format!("could not start {program}: {e}")))
 }
 
 #[cfg(test)]
@@ -124,11 +124,11 @@ mod tests {
             ]
         );
         assert_eq!(parse_default("ERROR: nothing"), None);
-        let ours = command_line(Path::new(r"C:\Games\Pylune\pylune.exe"));
-        assert_eq!(ours, r#""C:\Games\Pylune\pylune.exe" "%1""#);
+        let ours = command_line(Path::new(r"C:\Games\Pailune\pailune.exe"));
+        assert_eq!(ours, r#""C:\Games\Pailune\pailune.exe" "%1""#);
         assert_eq!(
             expand(&ours, "nxm://x"),
-            [r"C:\Games\Pylune\pylune.exe", "nxm://x"]
+            [r"C:\Games\Pailune\pailune.exe", "nxm://x"]
         );
     }
 }

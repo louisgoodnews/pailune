@@ -1,6 +1,6 @@
-# Initialization Prompt: Pylune - Crimson Desert Linux Mod Manager
+# Initialization Prompt: Pailune - Crimson Desert Linux Mod Manager
 
-You are tasked with building a native Linux mod manager named **Pylune** (named after Pylune, the game's first explorable region) for the game **Crimson Desert** (running via Steam Proton) using **Rust** and a GUI built with **Egui** (via `eframe`).
+You are tasked with building a native Linux mod manager named **Pailune** (named after Pailune, the game's first explorable region) for the game **Crimson Desert** (running via Steam Proton) using **Rust** and a GUI built with **Egui** (via `eframe`).
 
 ## Initial Interaction Requirement
 Upon startup and before generating the core implementation, you must **explicitly ask the user** to provide:
@@ -13,9 +13,9 @@ Wait for the user's input regarding these paths before finalizing the setup scri
 
 ## Core Architecture & File Handling Philosophy
 
-Pylune must adhere strictly to a non-destructive file management approach:
-- **Staging Folder:** Pylune will keep all installed and managed mods in a dedicated local staging folder.
-- **Symlink Deployment:** Pylune deploys mods exclusively via **symbolic links (symlinks)**. It never touches or modifies original game data files directly.
+Pailune must adhere strictly to a non-destructive file management approach:
+- **Staging Folder:** Pailune will keep all installed and managed mods in a dedicated local staging folder.
+- **Symlink Deployment:** Pailune deploys mods exclusively via **symbolic links (symlinks)**. It never touches or modifies original game data files directly.
 - **Safe Backups (`.bak`):** The original target file/directory structures (such as core mod directories or metadata) are archived as `.bak` files to allow instant, reliable reverts.
 
 ---

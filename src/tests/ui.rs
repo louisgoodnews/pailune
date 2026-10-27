@@ -1,22 +1,22 @@
-//! UI actions end to end: a real `PyluneApp` with a headless egui context,
+//! UI actions end to end: a real `PailuneApp` with a headless egui context,
 //! driven through `dispatch` and `poll` like the buttons do.
 
 use super::{Fixture, fixture};
 use crate::config::paths::DataPaths;
 use crate::nexus::collection::{Collection, Member};
 use crate::ui::{
-    Action, Confirm, DeployAction, JobState, Level, ModAction, NexusAction, ProfileAction,
-    PyluneApp,
+    Action, Confirm, DeployAction, JobState, Level, ModAction, NexusAction, PailuneApp,
+    ProfileAction,
 };
 use std::fs;
 use std::time::{Duration, Instant};
 
-pub(super) fn app(fx: &Fixture) -> PyluneApp {
+pub(super) fn app(fx: &Fixture) -> PailuneApp {
     let root = fx.staging.parent().unwrap().to_path_buf();
     let paths = DataPaths::under(&root, &root);
     paths.create_dirs().unwrap();
     let conn = crate::db::open(&paths.database).unwrap();
-    PyluneApp::build(
+    PailuneApp::build(
         eframe::egui::Context::default(),
         paths,
         fx.config.clone(),
@@ -26,7 +26,7 @@ pub(super) fn app(fx: &Fixture) -> PyluneApp {
 }
 
 /// Polls until no job is queued or running.
-pub(super) fn settle(app: &mut PyluneApp) {
+pub(super) fn settle(app: &mut PailuneApp) {
     let start = Instant::now();
     loop {
         app.poll();
@@ -42,7 +42,7 @@ pub(super) fn settle(app: &mut PyluneApp) {
 }
 
 /// Runs the next poll as if a second had passed (process scan, spool).
-fn tick(app: &mut PyluneApp) {
+fn tick(app: &mut PailuneApp) {
     app.last_poll = Instant::now() - Duration::from_secs(2);
     app.poll();
 }

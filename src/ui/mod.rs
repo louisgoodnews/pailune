@@ -1,4 +1,4 @@
-//! egui front-end. [`PyluneApp`] holds plain state; behaviour lives in
+//! egui front-end. [`PailuneApp`] holds plain state; behaviour lives in
 //! [`actions`] (state transitions) and [`views`] (rendering).
 
 mod actions;
@@ -72,7 +72,7 @@ pub struct SettingsDraft {
 }
 
 /// Complete application state.
-pub struct PyluneApp {
+pub struct PailuneApp {
     pub paths: DataPaths,
     pub config: Config,
     pub draft: SettingsDraft,
@@ -115,7 +115,7 @@ pub struct PyluneApp {
     pub focus_requested: bool,
     /// The first-run dialog for choosing the game folder is open.
     pub setup_open: bool,
-    /// Backups of Pylune's state, newest first.
+    /// Backups of Pailune's state, newest first.
     pub backups: Vec<crate::app_backup::BackupInfo>,
     /// Backups of the game's save files, newest first.
     pub save_backups: Vec<crate::save_backup::SaveBackup>,

@@ -33,7 +33,7 @@ pub fn load(conn: &Connection) -> Result<Manifest> {
     })
 }
 
-/// Re-stamps the hard links of `source` after Pylune itself rewrote it: a
+/// Re-stamps the hard links of `source` after Pailune itself rewrote it: a
 /// hard link shares the new contents, so its old stamp would make the next
 /// undeploy treat the file as the user's own. Copies keep their stamp.
 pub fn restamp_shared(conn: &Connection, source: &std::path::Path) -> Result<()> {

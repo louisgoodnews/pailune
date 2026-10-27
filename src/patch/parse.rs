@@ -1,12 +1,12 @@
 //! Reading byte-patch JSON, tolerating the dialects of the community tools.
 
 use super::{Anchor, Change, Edit, FilePatch, JsonMod};
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use serde_json::Value;
 
 /// Shorthand for an invalid-input error.
-fn invalid(what: String) -> PyluneError {
-    PyluneError::Invalid(what)
+fn invalid(what: String) -> PailuneError {
+    PailuneError::Invalid(what)
 }
 
 /// Hex bytes, tolerating spaces and a `0x` prefix.

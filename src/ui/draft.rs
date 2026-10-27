@@ -2,7 +2,7 @@
 
 use super::{SettingsDraft, SettingsPage};
 use crate::config::Config;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use std::path::PathBuf;
 
 impl SettingsDraft {
@@ -17,7 +17,7 @@ impl SettingsDraft {
 
     /// Validates the draft into a [`Config`].
     pub fn to_config(&self) -> Result<Config> {
-        let invalid = |what: &str| Err(PyluneError::Invalid(what.to_string()));
+        let invalid = |what: &str| Err(PailuneError::Invalid(what.to_string()));
         let mut next = self.config.clone();
         next.game.dir = PathBuf::from(self.game_dir.trim());
         next.nexus.domain = next.nexus.domain.trim().to_lowercase();
@@ -38,7 +38,7 @@ impl SettingsDraft {
                 invalid("parallel jobs must be between 1 and 16")
             }
             _ if tracing_subscriber::EnvFilter::try_new(&next.logging.level).is_err() => {
-                invalid("the log level is not a valid filter (try info or pylune=debug)")
+                invalid("the log level is not a valid filter (try info or pailune=debug)")
             }
             _ => Ok(next),
         }
@@ -83,7 +83,7 @@ mod tests {
         draft.game_dir = "/games/cd".into();
         draft.config.nexus.domain = " CrimsonDesert ".into();
         assert_eq!(draft.to_config().unwrap().nexus.domain, "crimsondesert");
-        draft.config.logging.level = "pylune=nonsense=x".into();
+        draft.config.logging.level = "pailune=nonsense=x".into();
         assert!(draft.to_config().is_err());
         draft.reset(SettingsPage::Advanced);
         draft.config.mods.trash_keep = 3;

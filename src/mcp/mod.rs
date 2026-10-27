@@ -1,5 +1,5 @@
-//! Model Context Protocol server (B-14): `pylune mcp` speaks JSON-RPC 2.0,
-//! one message per line on stdin/stdout, and offers Pylune's operations as
+//! Model Context Protocol server (B-14): `pailune mcp` speaks JSON-RPC 2.0,
+//! one message per line on stdin/stdout, and offers Pailune's operations as
 //! tools. Logs go to the log file, never to stdout.
 //!
 //! Changing tools take the single-instance lock on first use and keep it for
@@ -94,11 +94,11 @@ fn initialize(params: &Value) -> Value {
     json!({
         "protocolVersion": asked.filter(|v| *v == PROTOCOL).unwrap_or(PROTOCOL),
         "capabilities": {"tools": {"listChanged": false}},
-        "serverInfo": {"name": "pylune", "version": env!("CARGO_PKG_VERSION")},
-        "instructions": "Pylune manages Crimson Desert mods. Mods load in list order; later ones win \
+        "serverInfo": {"name": "pailune", "version": env!("CARGO_PKG_VERSION")},
+        "instructions": "Pailune manages Crimson Desert mods. Mods load in list order; later ones win \
             conflicts. Changes reach the game only after `apply`. Deletes are restorable; \
             clean_slate and restore_backup need confirm: true. Changing tools fail while the \
-            Pylune window is open.",
+            Pailune window is open.",
     })
 }
 

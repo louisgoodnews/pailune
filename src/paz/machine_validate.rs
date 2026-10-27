@@ -1,4 +1,4 @@
-//! Strict checks of the installed game's indexes and of Pylune's deployed
+//! Strict checks of the installed game's indexes and of Pailune's deployed
 //! overlay (`cargo test strict_index -- --ignored --nocapture`, read-only).
 
 use super::{pamt_check, papgt};

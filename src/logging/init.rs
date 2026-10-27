@@ -10,7 +10,7 @@ pub fn init(logs_dir: &Path, level: &str, keep_days: usize) -> Option<WorkerGuar
     // Daily files, the newest `keep_days` kept.
     let appender = tracing_appender::rolling::Builder::new()
         .rotation(tracing_appender::rolling::Rotation::DAILY)
-        .filename_prefix("pylune.log")
+        .filename_prefix("pailune.log")
         .max_log_files(keep_days.max(1))
         .build(logs_dir)
         .ok()?;

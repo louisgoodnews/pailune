@@ -86,7 +86,7 @@ fn revert(record: &LinkRecord) -> Result<Reverted> {
 ///
 /// Each record leaves the journal only after it was reverted, so an
 /// interruption keeps the remaining records for the next attempt.
-/// Directories Pylune created are removed again if they ended up empty.
+/// Directories Pailune created are removed again if they ended up empty.
 pub fn undeploy(manifest: &mut Manifest, journal: &mut dyn Journal) -> Result<Report> {
     let outcomes = std::iter::from_fn(|| manifest.links.pop())
         .map(|record| {

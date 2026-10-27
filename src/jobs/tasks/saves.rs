@@ -1,7 +1,7 @@
 //! Save-game backup jobs.
 
 use crate::db;
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::jobs::JobOutput;
 use crate::jobs::context::JobContext;
 use crate::launch::{GameProcess, run};
@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 /// The save folder of the configured game's Proton prefix.
 pub fn save_folder(ctx: &JobContext) -> Result<PathBuf> {
     save_backup::save_dir(locate::resolve(&ctx.config).prefix_dir.as_deref()).ok_or_else(|| {
-        PyluneError::Invalid(
+        PailuneError::Invalid(
             "the game's Proton prefix was not found — start the game once from Steam".into(),
         )
     })
@@ -54,20 +54,20 @@ pub fn restore(ctx: &JobContext, archive: &Path) -> Result<JobOutput> {
 /// only after the rewritten save read back exactly as intended.
 pub fn edit(ctx: &JobContext, slot: &Path, edits: &[SaveEdit]) -> Result<JobOutput> {
     if run::game_process() == GameProcess::Running {
-        return Err(PyluneError::Invalid(
+        return Err(PailuneError::Invalid(
             "close Crimson Desert before editing a save — it would overwrite the change".into(),
         ));
     }
     let saves = save_folder(ctx)?;
     if !slot.starts_with(&saves) {
-        return Err(PyluneError::Invalid(
+        return Err(PailuneError::Invalid(
             "not a slot of the game's save folder".into(),
         ));
     }
     let path = slot.join("save.save");
     let written = savefile::edit::apply(&fs::read(&path).at(&path)?, edits)?;
     let backup = save_backup::create(&saves, &ctx.paths.save_backups, "before-edit", db::now())?;
-    let temp = slot.join(".save.save.pylune-edit");
+    let temp = slot.join(".save.save.pailune-edit");
     fs::write(&temp, &written).at(&temp)?;
     fs::rename(&temp, &path).at(&path)?;
     let slot_name = slot.file_name().unwrap_or_default().to_string_lossy();

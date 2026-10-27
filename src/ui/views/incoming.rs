@@ -32,11 +32,11 @@ pub fn show(ctx: &egui::Context, pending: &[Incoming]) -> Vec<Action> {
     if pending.is_empty() {
         return Vec::new();
     }
-    egui::Modal::new(egui::Id::unique("pylune_incoming"))
+    egui::Modal::new(egui::Id::unique("pailune_incoming"))
         .show(ctx, |ui| {
             ui.set_max_width(520.0);
             ui.heading("Download from Nexus Mods?");
-            ui.label(RichText::new("Your browser asked Pylune to download:").color(muted()));
+            ui.label(RichText::new("Your browser asked Pailune to download:").color(muted()));
             ui.add_space(6.0);
             pending
                 .iter()

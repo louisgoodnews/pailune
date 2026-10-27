@@ -48,7 +48,7 @@ const fn rgb(r: u8, g: u8, b: u8) -> Color32 {
     Color32::from_rgb(r, g, b)
 }
 
-/// Pylune's dark palette on top of egui's dark visuals.
+/// Pailune's dark palette on top of egui's dark visuals.
 fn dark_visuals() -> egui::Visuals {
     let mut visuals = egui::Visuals::dark();
     visuals.panel_fill = rgb(0x17, 0x19, 0x1d);
@@ -60,7 +60,7 @@ fn dark_visuals() -> egui::Visuals {
     visuals
 }
 
-/// Pylune's light palette on top of egui's light visuals.
+/// Pailune's light palette on top of egui's light visuals.
 fn light_visuals() -> egui::Visuals {
     let mut visuals = egui::Visuals::light();
     visuals.panel_fill = rgb(0xf6, 0xf5, 0xf2);

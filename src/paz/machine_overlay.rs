@@ -1,4 +1,4 @@
-//! Read-only check of the overlay Pylune deployed into the local game
+//! Read-only check of the overlay Pailune deployed into the local game
 //! (`cargo test deployed_overlay -- --ignored --nocapture`): what it holds,
 //! how it differs from the vanilla files, and where else the game keeps them.
 
@@ -62,7 +62,7 @@ fn json_value_conflicts_on_the_real_tables() {
     let patches = [
         (
             "Arrow Test".to_string(),
-            dir.join("Pylune Test 1 - Arrow Stacks/arrow_stacks.json"),
+            dir.join("Pailune Test 1 - Arrow Stacks/arrow_stacks.json"),
         ),
         (
             "Fat Stacks".to_string(),
@@ -70,7 +70,7 @@ fn json_value_conflicts_on_the_real_tables() {
         ),
         (
             "Drops".to_string(),
-            dir.join("Pylune Test 3 - Drop Rates/drop_rates.json"),
+            dir.join("Pailune Test 3 - Drop Rates/drop_rates.json"),
         ),
     ];
     let mut config = crate::config::Config::default();
@@ -93,7 +93,7 @@ fn json_value_conflicts_on_the_real_tables() {
     assert_eq!(values, ["Arrow", "Pyeonjeon_Arrow"]);
 }
 
-/// What Pylune would do with the mod in `PYLUNE_DRY_RUN_MOD=<dir>`: file
+/// What Pailune would do with the mod in `PYLUNE_DRY_RUN_MOD=<dir>`: file
 /// placements, options, and an overlay built into `PYLUNE_DRY_RUN_OUT`
 /// from the installed game (read only; nothing is written to the game).
 #[test]

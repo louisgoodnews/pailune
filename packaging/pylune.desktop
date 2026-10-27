@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=Pylune
+Name=Pailune
 GenericName=Mod Manager
 Comment=Crimson Desert mod manager for Linux (Steam / Proton)
-Exec=pylune %U
-Icon=pylune
+Exec=pailune %U
+Icon=pailune
 Terminal=false
 Categories=Game;Utility;
-StartupWMClass=pylune
+StartupWMClass=pailune

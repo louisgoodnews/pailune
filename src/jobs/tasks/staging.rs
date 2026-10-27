@@ -2,7 +2,7 @@
 
 use super::deploy::redeploy;
 use crate::db;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::jobs::JobOutput;
 use crate::jobs::context::JobContext;
 use crate::logging::{Event, EventKind, Severity, journal};
@@ -88,7 +88,7 @@ pub fn remove(ctx: &JobContext, name: &str) -> Result<JobOutput> {
         .mods
         .into_iter()
         .find(|m| m.name == name)
-        .ok_or_else(|| PyluneError::Invalid(format!("no mod named '{name}'")))?;
+        .ok_or_else(|| PailuneError::Invalid(format!("no mod named '{name}'")))?;
     // Decide by what is actually linked, not by the (possibly changed) flag.
     let mod_dir = ctx.paths.staging.join(name);
     let deployed = db::links::load(&conn)?

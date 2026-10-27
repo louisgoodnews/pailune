@@ -4,7 +4,7 @@
 //! separate chunks (LZ4 or raw) whose sizes are stamped into the header's
 //! `reserved1[0..4]`; `dwReserved2` (byte 124) holds a format class.
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 
 /// Size of the classic DDS header including the `DDS ` magic.
 const HEADER: usize = 128;
@@ -32,7 +32,7 @@ pub struct DdsInfo {
 fn u32_at(data: &[u8], off: usize) -> Result<u32> {
     data.get(off..off + 4)
         .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
-        .ok_or_else(|| PyluneError::Archive("DDS header truncated".into()))
+        .ok_or_else(|| PailuneError::Archive("DDS header truncated".into()))
 }
 
 /// A FourCC code as the u32 stored in DDS headers.
@@ -57,7 +57,7 @@ fn dxgi_layout(format: u32) -> Option<(Option<usize>, Option<usize>)> {
 /// Parses the parts of a DDS header the codec needs.
 pub fn info(data: &[u8]) -> Result<DdsInfo> {
     if data.get(0..4) != Some(b"DDS ") {
-        return Err(PyluneError::Archive("not a DDS file".into()));
+        return Err(PailuneError::Archive("not a DDS file".into()));
     }
     let (height, width, mips) = (
         u32_at(data, 12)?,
@@ -67,12 +67,12 @@ pub fn info(data: &[u8]) -> Result<DdsInfo> {
     let four_cc = u32_at(data, 84)?;
     let caps2 = u32_at(data, 112)?;
     if caps2 & 0x200 != 0 {
-        return Err(PyluneError::Archive("cube maps are not supported".into()));
+        return Err(PailuneError::Archive("cube maps are not supported".into()));
     }
     let (header_len, layout) = match four_cc {
         c if c == fourcc(b"DX10") => {
             if u32_at(data, 140)? > 1 {
-                return Err(PyluneError::Archive(
+                return Err(PailuneError::Archive(
                     "texture arrays are not supported".into(),
                 ));
             }
@@ -97,7 +97,7 @@ pub fn info(data: &[u8]) -> Result<DdsInfo> {
         _ => (HEADER, None),
     };
     let (block_bytes, bits_per_pixel) =
-        layout.ok_or_else(|| PyluneError::Archive("unsupported DDS pixel format".into()))?;
+        layout.ok_or_else(|| PailuneError::Archive("unsupported DDS pixel format".into()))?;
     Ok(DdsInfo {
         header_len,
         width,
@@ -162,21 +162,21 @@ pub fn decode(stored: &[u8], orig_size: usize) -> Result<Vec<u8>> {
         let raw = mip_size(&dds, i as u32);
         let chunk = stored
             .get(cursor..cursor + m[i])
-            .ok_or_else(|| PyluneError::Archive("DDS chunk truncated".into()))?;
+            .ok_or_else(|| PailuneError::Archive("DDS chunk truncated".into()))?;
         match m[i] < raw {
             true => out.extend(
                 lz4_flex::block::decompress(chunk, raw)
-                    .map_err(|e| PyluneError::Archive(format!("DDS LZ4: {e}")))?,
+                    .map_err(|e| PailuneError::Archive(format!("DDS LZ4: {e}")))?,
             ),
             false => out.extend(&chunk[..raw]),
         }
         cursor += m[i];
-        Ok::<(), PyluneError>(())
+        Ok::<(), PailuneError>(())
     })?;
     out.extend(&stored[cursor.min(stored.len())..]);
     match out.len() == orig_size {
         true => Ok(out),
-        false => Err(PyluneError::Archive(format!(
+        false => Err(PailuneError::Archive(format!(
             "DDS decoded to {} bytes, expected {orig_size}",
             out.len()
         ))),

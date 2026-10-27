@@ -5,9 +5,9 @@ use crate::error::Result;
 use crate::steam::GameStatus;
 use crate::ui::guide::GuideAction;
 use crate::ui::guide::steps::Facts;
-use crate::ui::{Level, PyluneApp, StatusLine};
+use crate::ui::{Level, PailuneApp, StatusLine};
 
-impl PyluneApp {
+impl PailuneApp {
     /// The state the getting-started steps are checked against.
     pub fn guide_facts(&self) -> Facts {
         let mods = &self.registry.mods;

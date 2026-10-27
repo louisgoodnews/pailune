@@ -2,7 +2,7 @@
 
 use super::hash::pa_hash;
 use super::reader::Reader;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use std::collections::HashMap;
 
 /// "No node" marker in name tries and folder records.
@@ -41,7 +41,7 @@ pub(crate) fn full_name(block: &[u8], offset: u32, depth: usize) -> Result<Strin
         return Ok(String::new());
     }
     if depth > 512 {
-        return Err(PyluneError::Archive(
+        return Err(PailuneError::Archive(
             "pamt name trie too deep (cycle?)".into(),
         ));
     }
@@ -57,7 +57,7 @@ pub fn parse(data: &[u8]) -> Result<Pamt> {
     let mut r = Reader::new(data);
     let crc = r.u32()?;
     if data.len() < 12 || pa_hash(&data[12..]) != crc {
-        return Err(PyluneError::Archive("0.pamt checksum mismatch".into()));
+        return Err(PailuneError::Archive("0.pamt checksum mismatch".into()));
     }
     let paz_count = r.u32()?;
     let unknown = r.u32()?;
@@ -103,7 +103,7 @@ pub fn parse(data: &[u8]) -> Result<Pamt> {
         .map(|(folder, i)| {
             let (name, record) = records
                 .get(i)
-                .ok_or_else(|| PyluneError::Archive("pamt file range out of bounds".into()))?;
+                .ok_or_else(|| PailuneError::Archive("pamt file range out of bounds".into()))?;
             let base = full_name(names, *name, 0)?;
             let path = match folder.is_empty() {
                 true => base,

@@ -4,7 +4,7 @@
 use super::clicked;
 use crate::mod_engine::model::{ModEntry, MoveTo};
 use crate::ui::theme::danger;
-use crate::ui::{Action, Confirm, ModAction, PyluneApp};
+use crate::ui::{Action, Confirm, ModAction, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// Enable, order, update, open and delete buttons.
@@ -73,7 +73,7 @@ fn buttons(ui: &mut egui::Ui, entry: &ModEntry) -> Vec<Action> {
 /// "Move to number" field: type the load-order position and press Move
 /// (B-15). The typed number lives in egui's memory per mod and starts at the
 /// mod's current number.
-fn position(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) -> Vec<Action> {
+fn position(ui: &mut egui::Ui, entry: &ModEntry, app: &PailuneApp) -> Vec<Action> {
     let count = app.registry.mods.len();
     let current = app
         .registry
@@ -81,7 +81,7 @@ fn position(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) -> Vec<Action>
         .iter()
         .position(|m| m.name == entry.name)
         .map_or(1, |i| i + 1);
-    let id = egui::Id::unique(("pylune_move_to", &entry.name, current));
+    let id = egui::Id::unique(("pailune_move_to", &entry.name, current));
     let mut number = ui.data(|d| d.get_temp(id)).unwrap_or(current);
     ui.horizontal(|ui| {
         ui.label("Move to number");
@@ -104,7 +104,7 @@ fn position(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) -> Vec<Action>
 }
 
 /// Renders the buttons and the position field.
-pub fn show(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, entry: &ModEntry, app: &PailuneApp) -> Vec<Action> {
     let mut actions = buttons(ui, entry);
     actions.extend(position(ui, entry, app));
     actions

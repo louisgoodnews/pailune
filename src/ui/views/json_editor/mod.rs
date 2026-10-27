@@ -9,7 +9,7 @@ use crate::mod_engine::model::{ModDetails, ModEntry};
 use crate::mod_engine::plan::Placement;
 use crate::patch::{JsonMod, document};
 use crate::ui::theme::{danger, muted, success};
-use crate::ui::{Action, ModAction, PyluneApp};
+use crate::ui::{Action, ModAction, PailuneApp};
 use eframe::egui::{self, RichText};
 use std::path::{Path, PathBuf};
 
@@ -91,7 +91,7 @@ fn buttons(
 /// One JSON file: summary, table or raw text, and the buttons. The file is
 /// read only while its section is open; a mod's only file starts open.
 fn editor(ui: &mut egui::Ui, path: &Path, rel: &Path, only: bool) -> Option<Action> {
-    let id = egui::Id::unique(("pylune_json", path));
+    let id = egui::Id::unique(("pailune_json", path));
     let mut action = None;
     egui::CollapsingHeader::new(rel.display().to_string())
         .id_salt(id)
@@ -147,7 +147,7 @@ pub fn show(
     ui: &mut egui::Ui,
     entry: &ModEntry,
     details: &ModDetails,
-    app: &PyluneApp,
+    app: &PailuneApp,
 ) -> Vec<Action> {
     let files = json_files(details);
     if files.is_empty() {

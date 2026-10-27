@@ -3,7 +3,7 @@
 use crate::logging::timestamp;
 use crate::ui::notify::{NoticeAction, Notification, TOAST_TIME};
 use crate::ui::theme::{self, muted};
-use crate::ui::{Action, PyluneApp};
+use crate::ui::{Action, PailuneApp};
 use eframe::egui::{self, RichText};
 use std::time::Instant;
 
@@ -34,7 +34,7 @@ fn content(ui: &mut egui::Ui, n: &Notification, with_time: bool) {
 }
 
 /// The current toasts; clicking one closes it.
-pub fn toasts(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
+pub fn toasts(ctx: &egui::Context, app: &PailuneApp) -> Vec<Action> {
     if !app.config.behavior.toasts || app.notices.open {
         return Vec::new();
     }
@@ -45,7 +45,7 @@ pub fn toasts(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
     }
     // Wake up when the oldest shown toast should go, even if nothing moves.
     ctx.request_repaint_after(TOAST_TIME);
-    egui::Area::new(egui::Id::unique("pylune_toasts"))
+    egui::Area::new(egui::Id::unique("pailune_toasts"))
         .anchor(egui::Align2::RIGHT_TOP, [-12.0, 100.0])
         .order(egui::Order::Foreground)
         .show(ctx, |ui| {
@@ -71,7 +71,7 @@ pub fn toasts(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
 }
 
 /// The notification center, while open.
-pub fn center(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
+pub fn center(ctx: &egui::Context, app: &PailuneApp) -> Vec<Action> {
     if !app.notices.open {
         return Vec::new();
     }

@@ -1,11 +1,11 @@
 //! Bottom bar: last message and deployment summary.
 
 use crate::ui::theme::{level_color, muted};
-use crate::ui::{Action, ModAction, PyluneApp};
+use crate::ui::{Action, ModAction, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// Renders the status bar. It never emits actions.
-pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     ui.horizontal(|ui| {
         ui.label(RichText::new("⏺").color(level_color(app.status.level)));
         ui.label(&app.status.text);

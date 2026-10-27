@@ -4,7 +4,7 @@
 
 use crate::mod_engine::model::{ModDetails, ModEntry};
 use crate::ui::theme::{danger, muted};
-use crate::ui::{Action, ModAction, PyluneApp};
+use crate::ui::{Action, ModAction, PailuneApp};
 use eframe::egui::{self, RichText};
 use std::path::{Path, PathBuf};
 
@@ -18,7 +18,7 @@ struct Draft {
 /// One file: a text editor with Save and Revert. The file is read only
 /// while its section is open; a draft is kept only while it differs.
 fn editor(ui: &mut egui::Ui, path: &Path, rel: &Path) -> Option<Action> {
-    let id = egui::Id::unique(("pylune_ini", path));
+    let id = egui::Id::unique(("pailune_ini", path));
     let mut action = None;
     egui::CollapsingHeader::new(rel.display().to_string())
         .id_salt(id)
@@ -88,7 +88,7 @@ pub fn show(
     ui: &mut egui::Ui,
     entry: &ModEntry,
     details: &ModDetails,
-    app: &PyluneApp,
+    app: &PailuneApp,
 ) -> Vec<Action> {
     let root = app.paths.staging.join(&entry.name);
     let files = settings_files(details);

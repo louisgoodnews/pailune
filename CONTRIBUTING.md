@@ -1,6 +1,6 @@
-# Contributing to Pylune
+# Contributing to Pailune
 
-Thanks for helping! Pylune is a mod manager for *Crimson Desert* — Linux first, with Windows and
+Thanks for helping! Pailune is a mod manager for *Crimson Desert* — Linux first, with Windows and
 macOS on the roadmap. This page explains how to set up, what we expect from changes, and how to
 propose them. By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 
@@ -16,7 +16,7 @@ propose them. By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.
 ## Set up
 
 ```sh
-git clone <repository> && cd pylune
+git clone <repository> && cd pailune
 cargo build            # Rust stable, edition 2024
 cargo test             # offline; never touches your game
 cargo run
@@ -69,6 +69,6 @@ Use `local/` (git-ignored) for samples.
 
 ## License
 
-Pylune is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE). Unless you
+Pailune is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE). Unless you
 state otherwise, any contribution you intentionally submit is licensed the same way, without
 additional terms or conditions.

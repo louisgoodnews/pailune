@@ -2,7 +2,7 @@
 //!
 //! Without environment variables the game is started through the Steam
 //! client (`steam -applaunch`), so Steam's own launch options apply too.
-//! Launch options that set environment variables need Pylune to start the
+//! Launch options that set environment variables need Pailune to start the
 //! game through Proton directly, with the Steam client still running.
 
 pub mod options;

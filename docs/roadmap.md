@@ -1,4 +1,4 @@
-# Pylune roadmap
+# Pailune roadmap
 
 Derived from [audit.md](audit.md) (IDs `A-xx`, owner requests `B-xx`). Since 2026-10-25 work is
 ordered **small before large**: quick, independent items first, then medium features, then
@@ -31,7 +31,7 @@ the large reworks that build on them. Day-to-day status lives in [board.md](boar
 
 - B-12 Portable mod lists: export/import with variants, Nexus origins and collections;
   offer to download what is missing.
-- B-14 Headless core + CLI, then an MCP server (`pylune mcp`) on top of it.
+- B-14 Headless core + CLI, then an MCP server (`pailune mcp`) on top of it.
 - B-08 (step 1) Platform layer: move Linux-specific code behind a `Platform` trait.
 
 ## Phase 13 — Research
@@ -47,9 +47,9 @@ the large reworks that build on them. Day-to-day status lives in [board.md](boar
 - B-08 (step 2) Windows and macOS support (deployment strategy per platform, packaging).
 - B-13 (step 2) Bridge installation, if the research says it is viable.
 
-## Phase 15 — Pylune as a modding tool (D-13)
+## Phase 15 — Pailune as a modding tool (D-13)
 
-Mods are created as ordinary staged mods, so everything Pylune does for installed mods (Apply,
+Mods are created as ordinary staged mods, so everything Pailune does for installed mods (Apply,
 undo, conflicts, logs) works for them while they are being made.
 
 ### B-16 JSON mod creation (first)
@@ -59,7 +59,7 @@ undo, conflicts, logs) works for them while they are being made.
 2. **Data browser** — read-only view of the game's data tables from the archives: search
    records by name or key, show fields with values where the layout is verified, raw bytes
    otherwise. *(M)*
-3. **Change from the browser** — pick a field (or select bytes) and enter a new value; Pylune adds
+3. **Change from the browser** — pick a field (or select bytes) and enter a new value; Pailune adds
    the change with the original bytes filled in (format 2 `entry` + `rel_offset`, or format 3
    `set` where the field is proven). *(M)*
 4. **Check against the game** — dry run on the installed version: every change found, original
@@ -75,12 +75,12 @@ undo, conflicts, logs) works for them while they are being made.
    can offer without knowledge of the game's code. *(Research)*
 2. **Templates** — *Create ASI plugin* scaffolds a project (entry point, INI settings, log file)
    outside the game folder. *(M)*
-3. **Build and deploy** — build from Pylune, stage the result as a mod, Apply, launch. *(M)*
-4. **Debug loop** — show the plugin's log, crash and loader messages in Pylune; rebuild and
+3. **Build and deploy** — build from Pailune, stage the result as a mod, Apply, launch. *(M)*
+4. **Debug loop** — show the plugin's log, crash and loader messages in Pailune; rebuild and
    redeploy with one action. *(M)*
 5. **Package** — DLL/ASI, INI and readme as an installable mod. *(S)*
 
 ## Owner tasks
 
-- A-21 Register Pylune with Nexus Mods (API acceptable use policy) before a public release.
+- A-21 Register Pailune with Nexus Mods (API acceptable use policy) before a public release.
 - Real-world tests: a JSON mod (e.g. MEGA STACKS) and a collection install.

@@ -15,7 +15,7 @@ pub const STEPS: [(Step, &str, &str); 5] = [
     (
         Step::FindGame,
         "Find the game",
-        "Pylune needs the Crimson Desert folder (it contains bin64/ and meta/).",
+        "Pailune needs the Crimson Desert folder (it contains bin64/ and meta/).",
     ),
     (
         Step::AddMod,
@@ -35,13 +35,13 @@ pub const STEPS: [(Step, &str, &str); 5] = [
     (
         Step::Play,
         "Play",
-        "Start the game from Pylune; pending changes are applied first.",
+        "Start the game from Pailune; pending changes are applied first.",
     ),
 ];
 
 /// The three ideas a new user needs before anything else (R-18).
 pub const CONCEPTS: [&str; 3] = [
-    "Mods are kept in Pylune's own folder — installing, enabling and ordering never touches the game.",
+    "Mods are kept in Pailune's own folder — installing, enabling and ordering never touches the game.",
     "Apply links the enabled mods into the game folder; replaced originals are kept as .bak.",
     "Unlink all puts the game back exactly as it was.",
 ];

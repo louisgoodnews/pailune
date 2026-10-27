@@ -1,6 +1,6 @@
 //! Symlink deployment with `.bak` preservation of shadowed originals.
 //!
-//! Every link Pylune creates is recorded in a [`Manifest`], so a revert
+//! Every link Pailune creates is recorded in a [`Manifest`], so a revert
 //! removes exactly what was added and nothing else.
 
 pub mod deploy;
@@ -77,7 +77,7 @@ pub fn same_contents(a: &Path, b: &Path) -> bool {
     }
 }
 
-/// Everything Pylune currently has deployed into the game directory.
+/// Everything Pailune currently has deployed into the game directory.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Manifest {
     /// Links in creation order.

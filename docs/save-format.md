@@ -1,6 +1,6 @@
 # Save-game format (B-07)
 
-Status 2026-10-26: **container and body fully decoded by Pylune's own implementation**
+Status 2026-10-26: **container and body fully decoded by Pailune's own implementation**
 (`src/savefile/`), verified read-only on all 10 real saves of build 2.3.2: every HMAC checks out,
 re-encrypting the decrypted payload reproduces each file byte for byte, and every top-level
 object (1 881 in total) decodes with no byte left over.
@@ -62,7 +62,7 @@ table of contents; its field names come from the game's data tables (`iteminfo`,
   per-patch key tables); edits that change lengths have crashed the game loader in community
   reports.
 - **Steam Cloud** can sync a broken save to every machine — and back over a restored one.
-- Pylune already backs up saves before every launch (A-28); any editor must work on copies
+- Pailune already backs up saves before every launch (A-28); any editor must work on copies
   and keep that backup.
 
 ## Key and checksum
@@ -117,7 +117,7 @@ serialisation without the container) and `user_engine_option_save.xml` (graphics
 
 ## Decisions
 
-- 2026-10-26: Pylune implements its own decoder (owner). The scheme is credited to `crimson-rs`.
+- 2026-10-26: Pailune implements its own decoder (owner). The scheme is credited to `crimson-rs`.
 - Editing will need: re-encoding with a fresh nonce and HMAC (implemented and tested), a body
   writer (the walk already keeps exact positions), and validation per game version.
 

@@ -20,7 +20,7 @@ fn speaks_mcp_and_manages_mods() {
     let init = server
         .handle(&json!({"jsonrpc": "2.0", "id": 0, "method": "initialize", "params": {"protocolVersion": PROTOCOL}}))
         .unwrap();
-    assert_eq!(init["result"]["serverInfo"]["name"], "pylune");
+    assert_eq!(init["result"]["serverInfo"]["name"], "pailune");
     assert!(
         server
             .handle(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"}))

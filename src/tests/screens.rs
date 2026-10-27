@@ -5,7 +5,7 @@ use super::{Fixture, fixture};
 use crate::config::paths::DataPaths;
 use crate::config::prefs::Theme;
 use crate::ui::guide::{GuideAction, GuidePage};
-use crate::ui::{Action, ModAction, PyluneApp, SettingsPage, Tab};
+use crate::ui::{Action, ModAction, PailuneApp, SettingsPage, Tab};
 use egui_kittest::Harness;
 use std::path::PathBuf;
 
@@ -17,7 +17,7 @@ const ARROWS: &str = r#"{"modinfo": {"title": "Arrow Stacks"}, "patches": [{
     {"entry": "Pyeonjeon_Arrow", "rel_offset": 1, "original": "6400000000000000",
      "patched": "e703000000000000", "label": "Pyeonjeon_Arrow max stack 100 -> 999"}]}]}"#;
 
-fn harness(fx: &Fixture, theme: Theme) -> Harness<'static, PyluneApp> {
+fn harness(fx: &Fixture, theme: Theme) -> Harness<'static, PailuneApp> {
     let root = fx.staging.parent().unwrap().to_path_buf();
     let paths = DataPaths::under(&root, &root);
     paths.create_dirs().unwrap();
@@ -32,11 +32,11 @@ fn harness(fx: &Fixture, theme: Theme) -> Harness<'static, PyluneApp> {
         .wgpu()
         .build_eframe(move |cc| {
             let conn = crate::db::open(&paths.database).unwrap();
-            PyluneApp::new(cc, paths, config, conn, None)
+            PailuneApp::new(cc, paths, config, conn, None)
         })
 }
 
-fn shoot(harness: &mut Harness<'static, PyluneApp>, name: &str) {
+fn shoot(harness: &mut Harness<'static, PailuneApp>, name: &str) {
     let dir = std::env::var_os("PYLUNE_SHOTS")
         .map_or_else(|| PathBuf::from("target/screens"), PathBuf::from);
     std::fs::create_dir_all(&dir).unwrap();

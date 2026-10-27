@@ -1,7 +1,7 @@
 //! Diagnostics: a rolling application log plus a structured event journal.
 //!
 //! Every [`Event`] goes to three sinks: the `tracing` log file
-//! (`logs/pylune.log.YYYY-MM-DD`), the `events` table in SQLite, and — when it
+//! (`logs/pailune.log.YYYY-MM-DD`), the `events` table in SQLite, and — when it
 //! concerns a mod — that mod's own log (`logs/mods/<mod>.log`).
 
 pub mod init;

@@ -1,4 +1,4 @@
-//! User configuration, stored as TOML in `~/.config/pylune/config.toml`.
+//! User configuration, stored as TOML in `~/.config/pailune/config.toml`.
 
 pub mod detect;
 pub mod file;
@@ -59,7 +59,7 @@ pub struct JobsConfig {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct LoggingConfig {
-    /// `tracing` filter for the log file, e.g. `info` or `pylune=debug`.
+    /// `tracing` filter for the log file, e.g. `info` or `pailune=debug`.
     pub level: String,
     /// Daily log files kept.
     pub keep_days: usize,

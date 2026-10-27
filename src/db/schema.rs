@@ -108,7 +108,7 @@ pub fn migrate(conn: &mut Connection) -> Result<()> {
 mod tests {
     use super::MIGRATIONS;
 
-    /// A database created by an older Pylune keeps its rows when upgraded.
+    /// A database created by an older Pailune keeps its rows when upgraded.
     #[test]
     fn upgrades_a_version_1_database() {
         let dir = tempfile::tempdir().unwrap();

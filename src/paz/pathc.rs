@@ -5,7 +5,7 @@
 
 use super::hash::pa_hash;
 use super::reader::Reader;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 
 /// One map entry: selector plus chunk sizes m1..m4.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -162,7 +162,7 @@ impl Pathc {
     /// Adds or replaces the entry for `vpath` (§6.3).
     pub fn upsert(&mut self, vpath: &str, template: &[u8], m: [u32; 4]) -> Result<()> {
         if template.len() != self.record_size as usize {
-            return Err(PyluneError::Archive(
+            return Err(PailuneError::Archive(
                 "texture template has the wrong size".into(),
             ));
         }
@@ -174,7 +174,7 @@ impl Pathc {
             }
         } as u32;
         if record > 0xFFFF {
-            return Err(PyluneError::Archive("too many texture templates".into()));
+            return Err(PailuneError::Archive("too many texture templates".into()));
         }
         match self.hashes.binary_search(&key(vpath)) {
             Ok(i) if self.map[i].selector >> 16 == 0xFFFF => {
@@ -193,7 +193,7 @@ impl Pathc {
                     self.blob_path(self.collisions[*j as usize].path_offset) == path.as_bytes()
                 });
                 let j = found.ok_or_else(|| {
-                    PyluneError::Archive(format!("{vpath}: hash collides with another texture"))
+                    PailuneError::Archive(format!("{vpath}: hash collides with another texture"))
                 })?;
                 let c = &mut self.collisions[j as usize];
                 (c.record, c.m) = (record, m);

@@ -1,12 +1,12 @@
 //! Game-directory actions and launching.
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::jobs::JobKind;
 use crate::launch::{GameProcess, LaunchMethod, options, proton, run};
 use crate::logging::{Event, EventKind, Severity};
-use crate::ui::{DeployAction, Level, PyluneApp, StatusLine};
+use crate::ui::{DeployAction, Level, PailuneApp, StatusLine};
 
-impl PyluneApp {
+impl PailuneApp {
     /// Handles game-folder actions (mostly by queueing exclusive jobs).
     pub(super) fn deploy_action(&mut self, action: DeployAction) -> Result<Option<StatusLine>> {
         let (kind, text) = match action {
@@ -50,7 +50,7 @@ impl PyluneApp {
     /// Applies first when configured and needed, otherwise launches now.
     fn launch(&mut self) -> Result<StatusLine> {
         if self.process == GameProcess::Running {
-            return Err(PyluneError::Invalid(
+            return Err(PailuneError::Invalid(
                 "Crimson Desert is already running".into(),
             ));
         }

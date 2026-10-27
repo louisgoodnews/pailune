@@ -9,7 +9,7 @@ mod staging;
 
 use super::context::JobContext;
 use super::{JobKind, JobOutput};
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::launch::{GameProcess, run};
 use crate::steam::{GameStatus, SteamInfo, locate};
 
@@ -46,13 +46,13 @@ pub fn run(ctx: &JobContext, kind: JobKind) -> Result<JobOutput> {
 /// Fails unless the game directory is valid and the game is not running.
 fn require_game(info: &SteamInfo) -> Result<()> {
     match (locate::game_status(info), run::game_process()) {
-        (_, GameProcess::Running) => Err(PyluneError::Invalid(
+        (_, GameProcess::Running) => Err(PailuneError::Invalid(
             "Crimson Desert is running — close it first".into(),
         )),
         (GameStatus::Ready, GameProcess::Stopped) => Ok(()),
-        (GameStatus::Unrecognised, _) => Err(PyluneError::Invalid(
+        (GameStatus::Unrecognised, _) => Err(PailuneError::Invalid(
             "game directory does not contain bin64/CrimsonDesert.exe and meta/0.papgt".into(),
         )),
-        (GameStatus::Missing, _) => Err(PyluneError::Invalid("game directory not found".into())),
+        (GameStatus::Missing, _) => Err(PailuneError::Invalid("game directory not found".into())),
     }
 }

@@ -2,7 +2,7 @@
 
 use super::papgt::{GroupEntry, Papgt};
 use super::{pamt, papgt};
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::Path;
@@ -19,7 +19,7 @@ pub struct Wanted {
     pub names: BTreeSet<String>,
 }
 
-/// Vanilla group table plus the storage flags Pylune must reuse.
+/// Vanilla group table plus the storage flags Pailune must reuse.
 #[derive(Debug, Clone)]
 pub struct Vanilla {
     pub papgt: Papgt,
@@ -56,7 +56,7 @@ pub fn load(game_dir: &Path, papgt_bytes: &[u8], wanted: &Wanted) -> Result<Vani
         };
         let index = pamt::parse(&data)?;
         if index.crc != group.pamt_crc {
-            return Err(PyluneError::Invalid(format!(
+            return Err(PailuneError::Invalid(format!(
                 "the metadata backup does not match archive group {} — the game was probably \
                  updated; refresh the backup first",
                 group.name

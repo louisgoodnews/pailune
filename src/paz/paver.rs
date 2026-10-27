@@ -2,7 +2,7 @@
 
 use super::hash::pa_hash;
 use super::reader::Reader;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 
 /// The installed game build.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -24,7 +24,7 @@ pub fn parse(data: &[u8]) -> Result<GameVersion> {
     };
     match pa_hash(&data[..6]) == version.checksum {
         true => Ok(version),
-        false => Err(PyluneError::Archive("0.paver checksum mismatch".into())),
+        false => Err(PailuneError::Archive("0.paver checksum mismatch".into())),
     }
 }
 

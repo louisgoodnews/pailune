@@ -2,7 +2,7 @@
 //! scanned, failed …) shown as toasts and kept in a notification center for
 //! the session. The Log tab stays the permanent record.
 
-use super::{Level, PyluneApp, StatusLine};
+use super::{Level, PailuneApp, StatusLine};
 use crate::error::Result;
 use crate::jobs::JobKind;
 use std::time::{Duration, Instant};
@@ -115,7 +115,7 @@ fn job_title(kind: &JobKind, ok: bool) -> Option<&'static str> {
     Some(title)
 }
 
-impl PyluneApp {
+impl PailuneApp {
     /// Notifies about a finished job; its message is the status line it set.
     pub(super) fn notify_job(&mut self, kind: &JobKind, ok: bool) {
         if let Some(title) = job_title(kind, ok) {

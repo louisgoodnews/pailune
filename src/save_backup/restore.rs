@@ -1,7 +1,7 @@
 //! Putting a save backup back in place.
 
 use super::{SaveBackup, create, read_info, save_files};
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::mod_engine::install::unique_suffix;
 use std::fs;
 use std::path::Path;
@@ -30,11 +30,11 @@ pub fn recover(saves: &Path) -> Result<()> {
         found
     };
     if !saves.exists()
-        && let Some(old) = named(".pylune-old-saves-").last()
+        && let Some(old) = named(".pailune-old-saves-").last()
     {
         fs::rename(old, saves).at(saves)?;
     }
-    named(".pylune-restore-")
+    named(".pailune-restore-")
         .iter()
         .for_each(|w| drop(fs::remove_dir_all(w)));
     Ok(())
@@ -45,11 +45,11 @@ pub fn recover(saves: &Path) -> Result<()> {
 /// folder is never left half-written. Returns the safety backup.
 pub fn restore(archive: &Path, saves: &Path, dest: &Path, now: i64) -> Result<Option<SaveBackup>> {
     read_info(archive).ok_or_else(|| {
-        PyluneError::Invalid(format!("{} is not a save backup", archive.display()))
+        PailuneError::Invalid(format!("{} is not a save backup", archive.display()))
     })?;
     let parent = saves
         .parent()
-        .ok_or_else(|| PyluneError::Invalid("the save folder has no parent".into()))?;
+        .ok_or_else(|| PailuneError::Invalid("the save folder has no parent".into()))?;
     recover(saves)?;
     let has_saves = !save_files(saves).is_empty();
     let safety = match has_saves {
@@ -57,20 +57,20 @@ pub fn restore(archive: &Path, saves: &Path, dest: &Path, now: i64) -> Result<Op
         false => None,
     };
     let suffix = unique_suffix();
-    let work = parent.join(format!(".pylune-restore-{suffix}"));
+    let work = parent.join(format!(".pailune-restore-{suffix}"));
     let extracted = (|| {
         zip::ZipArchive::new(fs::File::open(archive).at(archive)?)?.extract(&work)?;
-        Ok::<_, PyluneError>(work.join("save"))
+        Ok::<_, PailuneError>(work.join("save"))
     })();
     let restored = match extracted {
         Ok(dir) if dir.is_dir() => dir,
         other => {
             let _ = fs::remove_dir_all(&work);
             other?;
-            return Err(PyluneError::Invalid("the backup contains no saves".into()));
+            return Err(PailuneError::Invalid("the backup contains no saves".into()));
         }
     };
-    let old = parent.join(format!(".pylune-old-saves-{suffix}"));
+    let old = parent.join(format!(".pailune-old-saves-{suffix}"));
     if saves.exists() {
         fs::rename(saves, &old).at(saves)?;
     }

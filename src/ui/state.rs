@@ -118,7 +118,7 @@ pub struct SaveView {
 /// and executed at the end of the frame.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct WindowRequests {
-    /// Close Pylune (through the normal close, so its guard applies).
+    /// Close Pailune (through the normal close, so its guard applies).
     pub quit: bool,
     /// Text to put on the clipboard.
     pub clipboard: Option<String>,

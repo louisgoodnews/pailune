@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### Mods in the game's archives
-- Pylune builds its own archive group and a rebuilt `meta/0.papgt` (listed first, verified in
+- Pailune builds its own archive group and a rebuilt `meta/0.papgt` (listed first, verified in
   game on build 2.3.2), deployed as symlinks; vanilla archives are never modified.
 - RAW mods (`files/NNNN/<path>`, `NNNN/<path>`), DDS textures (with a rebuilt `meta/0.pathc`),
   prebuilt archive groups and byte-patch JSON mods are supported.
@@ -32,7 +32,7 @@
   backups and how many to keep, days of logs kept.
 
 ### Mod management
-- Field-name JSON (format 3): raw changes on every data table; `set` by name where Pylune derived and verified the layout (21 tables so far), plus the leading fields of the item table (stack sizes: mods like *Fat Stacks* work).
+- Field-name JSON (format 3): raw changes on every data table; `set` by name where Pailune derived and verified the layout (21 tables so far), plus the leading fields of the item table (stack sizes: mods like *Fat Stacks* work).
 - ASI plugins: list with their mod on the Diagnostics page; edit plugin settings (`.ini`).
 - HTML patch files (`*.html.patch`) with CSS-style selectors.
 - XML patch and merge files (`*.xml.patch`, `*.xml.merge`) change the game's XML in place.
@@ -64,16 +64,16 @@
   backups made, scans finished or something failed; the 🔔 button keeps them for the session.
   Pop-ups can be switched off in *Settings → Behavior*.
 - The mod table fills the window width; the background jobs panel is resizable and scrolls.
-- *More → Quit Pylune* (Ctrl+Q) closes Pylune; the menu stays usable while the game runs.
+- *More → Quit Pailune* (Ctrl+Q) closes Pailune; the menu stays usable while the game runs.
 - *Log → Copy log* copies the shown entries as text, e.g. for bug reports.
 - Reworked against documented UX principles: Clean slate in a *More* menu, dialogs name their
   action, larger text and checkboxes, consistent wording, contrast-checked colours.
 
 ### Command line and agents
-- `pylune <command>` for every main task, with `--json`; `pylune mcp` for AI agents (MCP).
+- `pailune <command>` for every main task, with `--json`; `pailune mcp` for AI agents (MCP).
 
 ### Platforms
-- Windows: Pylune can register itself for `nxm://` links and forwards other games' links.
+- Windows: Pailune can register itself for `nxm://` links and forwards other games' links.
 - Files can be deployed as hard links or copies where symlinks are not allowed (Windows), with the same exact revert.
 - Operating-system specifics moved into one platform layer; Windows and macOS builds in CI.
 
@@ -84,8 +84,8 @@
 - New **Saves** tab next to Mods: slots and save backups on the left, the open save on the right.
 - Save editing: change any number or flag of a save in the inspector (copper coins have a
   shortcut); written after a confirmation, with every save backed up first.
-- Pylune reads the game's save files: slot list with level and time, a searchable read-only
-  inspector, `pylune saves` / `pylune save`, MCP tools.
+- Pailune reads the game's save files: slot list with level and time, a searchable read-only
+  inspector, `pailune saves` / `pailune save`, MCP tools.
 - Save files are backed up before every Play and on request; restore keeps a safety copy.
 
 ### Onboarding
@@ -110,5 +110,5 @@
 - Windows: no console windows flash up; links open without going through `cmd`.
 
 ### Storage
-- SQLite application state (`~/.local/share/pylune/pylune.sqlite3`), TOML settings
-  (`~/.config/pylune/config.toml`).
+- SQLite application state (`~/.local/share/pailune/pailune.sqlite3`), TOML settings
+  (`~/.config/pailune/config.toml`).

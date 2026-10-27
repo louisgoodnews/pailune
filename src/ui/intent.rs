@@ -145,7 +145,7 @@ pub enum Action {
     OpenLogFolder,
     /// Copy the shown log entries to the clipboard.
     CopyLog,
-    /// Close Pylune.
+    /// Close Pailune.
     Quit,
     /// Put text on the clipboard.
     Copy(String),

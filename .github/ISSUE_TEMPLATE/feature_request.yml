@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an idea or an improvement for Pylune.
+description: Suggest an idea or an improvement for Pailune.
 labels: [enhancement]
 body:
   - type: textarea

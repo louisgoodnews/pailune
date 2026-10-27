@@ -12,7 +12,7 @@ pub mod edit;
 pub mod slots;
 pub mod view;
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 
 /// Largest unpacked body accepted (real saves are about 3 MB).
 const MAX_BODY: usize = 256 << 20;
@@ -40,8 +40,8 @@ pub struct SaveFile {
     pub body: Vec<u8>,
 }
 
-fn invalid(what: &str) -> PyluneError {
-    PyluneError::Invalid(format!("not a readable save: {what}"))
+fn invalid(what: &str) -> PailuneError {
+    PailuneError::Invalid(format!("not a readable save: {what}"))
 }
 
 fn u32_at(bytes: &[u8], at: usize) -> u32 {

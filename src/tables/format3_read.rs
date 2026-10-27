@@ -2,7 +2,7 @@
 //! several (`targets`), each intent naming a record, field and new value.
 
 use super::format3::{FieldPatch, Intent};
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use serde_json::Value;
 
 /// Whether a parsed JSON document is a format-3 mod.
@@ -34,7 +34,7 @@ pub fn parse(root: &Value) -> Result<Vec<FieldPatch>> {
         Ok(FieldPatch {
             target: file
                 .and_then(Value::as_str)
-                .ok_or_else(|| PyluneError::Invalid("format-3 target without a file".into()))?
+                .ok_or_else(|| PailuneError::Invalid("format-3 target without a file".into()))?
                 .to_string(),
             intents: intents
                 .and_then(Value::as_array)

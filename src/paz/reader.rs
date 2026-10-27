@@ -1,6 +1,6 @@
 //! A bounds-checked little-endian cursor over a byte slice.
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 
 /// Reads little-endian values, failing (never panicking) past the end.
 pub struct Reader<'a> {
@@ -31,7 +31,7 @@ impl<'a> Reader<'a> {
             .checked_add(n)
             .filter(|end| *end <= self.data.len())
             .ok_or_else(|| {
-                PyluneError::Archive(format!(
+                PailuneError::Archive(format!(
                     "truncated data: need {n} bytes at offset {}",
                     self.pos
                 ))

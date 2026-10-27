@@ -1,4 +1,4 @@
-# CD JSON Mod Manager (JMM) compared with Pylune
+# CD JSON Mod Manager (JMM) compared with Pailune
 
 Looked at 2026-10-26 from `local/test-mods/CD JSON Mod Manager/` (not committed). JMM is a
 Windows .NET single-file application (80 MB) that embeds a Python engine. It was examined only
@@ -7,7 +7,7 @@ through the texts it carries (its localised messages, built-in help, and method 
 
 ## What JMM does (from its own texts)
 
-| Area | JMM | Pylune |
+| Area | JMM | Pailune |
 |------|-----|--------|
 | JSON byte patches | Decompress the game file, apply `original`→`patched`, recompress, write into an **overlay group** | Same (`src/overlay/patches.rs`) |
 | Overlay group | Folders `0036+` (`AllocateOverlayGroupNames`), entry added to `0.papgt` (`add_papgt_entry`) | `0100`+, first in `0.papgt`, deployed as symlinks |
@@ -27,19 +27,19 @@ its readable texts mention `binarystaticinfo__` or `staticinfobody`.
 
 ## What this means for "mods have no effect" (2026-10-26)
 
-* Pylune's deployed overlay passes every check that can be made outside the game: index
+* Pailune's deployed overlay passes every check that can be made outside the game: index
   checksum, folder hashes, sorted folders and names, contiguous ranges, archive checksums and
   sizes, 16-byte alignment, entry first in `0.papgt` with the data groups' language mask. The
   same checker passes every vanilla group.
 * Save editing (direct write to the game's files) works in game; DMM's in-place route made
   *Fat Stacks* work.
-* JMM uses the same overlay route as Pylune for JSON mods, but also an in-place route.
+* JMM uses the same overlay route as Pailune for JSON mods, but also an in-place route.
 
 Open: whether the game reads data tables (`gamedata/binarystaticinfo__/…`) through the overlay
-at all. The control test (title-screen CSS, which worked through Pylune's overlay on
+at all. The control test (title-screen CSS, which worked through Pailune's overlay on
 2026-10-25) separates "overlay not active" from "tables not taken from overlays". If only the
 tables are the problem, the alternative is an in-place route like DMM's/JMM's, which needs an
-owner decision because Pylune so far never changes the game's archives.
+owner decision because Pailune so far never changes the game's archives.
 
 ## Decompilation (2026-10-26, authorised by the owner)
 
@@ -58,9 +58,9 @@ with the Rust extension `crimson_rs`) handles Field JSON v3.
 * **Overlay:** groups `0036+` (it treats every group ≥ 36 as its own and deletes it — this
   would remove the game's optional voice-pack groups 0036–0040), inserted at index 0 with
   language mask `0x3FFF`; PAMT unknown `0x610E0232`; one trie node per path segment, flat file
-  names; entries LZ4 + ChaCha20 when the vanilla entry is encrypted (Pylune: the vanilla flags).
+  names; entries LZ4 + ChaCha20 when the vanilla entry is encrypted (Pailune: the vanilla flags).
   The companion table index is added only after size-changing inserts.
-* **Checksums** as Pylune (`pa_hash`: `init = len + 0xDEBA1DCD`); a wrong PAMT checksum crashes
+* **Checksums** as Pailune (`pa_hash`: `init = len + 0xDEBA1DCD`); a wrong PAMT checksum crashes
   the game according to JMM's own validator.
 
 **Consequence:** JMM offers no route that is known to work for current data tables, and its

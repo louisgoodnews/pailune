@@ -3,7 +3,7 @@
 
 use std::path::PathBuf;
 
-/// Everything Pylune can do without its window.
+/// Everything Pailune can do without its window.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Op {
     /// Game, deployment and mod counts.
@@ -16,7 +16,7 @@ pub enum Op {
         mod_name: Option<String>,
         limit: usize,
     },
-    /// Pylune and save-game backups.
+    /// Pailune and save-game backups.
     Backups,
     /// The game's save slots.
     Saves,
@@ -87,7 +87,7 @@ impl Op {
         )
     }
 
-    /// Cannot be undone from Pylune; front-ends ask for explicit confirmation.
+    /// Cannot be undone from Pailune; front-ends ask for explicit confirmation.
     pub fn destructive(&self) -> bool {
         matches!(self, Op::CleanSlate | Op::RestoreBackup { .. })
     }

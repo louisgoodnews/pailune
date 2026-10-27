@@ -1,13 +1,13 @@
 //! Parsing `nxm://` links handed over by the Nexus website.
 
 use super::NxmLink;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 
 /// Parses `nxm://<domain>/mods/<mod_id>/files/<file_id>[?key=..&expires=..]`.
 pub fn parse(url: &str) -> Result<NxmLink> {
     // Never echo the query: it carries the per-download key.
     let shown = url.split('?').next().unwrap_or_default().to_string();
-    let invalid = || PyluneError::Invalid(format!("not a valid nxm link: {shown}"));
+    let invalid = || PailuneError::Invalid(format!("not a valid nxm link: {shown}"));
     let rest = url.trim().strip_prefix("nxm://").ok_or_else(invalid)?;
     let (path, query) = rest.split_once('?').unwrap_or((rest, ""));
     let segments: Vec<&str> = path.trim_end_matches('/').split('/').collect();
@@ -36,9 +36,9 @@ pub fn parse(url: &str) -> Result<NxmLink> {
 /// `nxm://` URL cannot produce a valid key, so it cannot trigger downloads.
 pub fn validate(link: &NxmLink, domain: &str) -> Result<()> {
     match (link.domain == domain, link.key.as_deref(), link.expires) {
-        (false, _, _) => Err(PyluneError::Invalid(format!("nxm link is for '{}', not this game", link.domain))),
+        (false, _, _) => Err(PailuneError::Invalid(format!("nxm link is for '{}', not this game", link.domain))),
         (true, Some(key), Some(_)) if !key.is_empty() => Ok(()),
-        _ => Err(PyluneError::Invalid(
+        _ => Err(PailuneError::Invalid(
             "ignored an nxm link without a download key — use the website's \"Mod Manager Download\" button".into(),
         )),
     }
@@ -79,7 +79,7 @@ pub fn parse_mod_id(input: &str) -> Result<u64> {
     tail.split(|c: char| !c.is_ascii_digit())
         .next()
         .and_then(|digits| digits.parse().ok())
-        .ok_or_else(|| PyluneError::Invalid(format!("'{trimmed}' is not a Nexus mod id or URL")))
+        .ok_or_else(|| PailuneError::Invalid(format!("'{trimmed}' is not a Nexus mod id or URL")))
 }
 
 #[cfg(test)]

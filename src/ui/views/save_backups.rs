@@ -4,7 +4,7 @@
 use super::clicked;
 use crate::save_backup::SaveBackup;
 use crate::ui::theme::muted;
-use crate::ui::{Action, BackupAction, Confirm, PyluneApp};
+use crate::ui::{Action, BackupAction, Confirm, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// One save backup: time, contents and its buttons.
@@ -36,7 +36,7 @@ fn row(ui: &mut egui::Ui, b: &SaveBackup) -> Vec<Action> {
 }
 
 /// The player's save slots; clicking one opens it in the editor.
-fn slots(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+fn slots(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     if app.save_slots.is_empty() {
         return Vec::new();
     }
@@ -76,7 +76,7 @@ fn slots(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
 }
 
 /// Renders the section and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     let slot_actions = slots(ui, app);
     ui.separator();
     ui.label(RichText::new("Save backups").strong());

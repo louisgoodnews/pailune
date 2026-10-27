@@ -1,13 +1,13 @@
 # Research: deriving the game's table layouts (A-01, format 3)
 
-Owner decision (2026-10-26): derive Pylune's own layouts from the game instead of shipping
+Owner decision (2026-10-26): derive Pailune's own layouts from the game instead of shipping
 community schemas, so field definitions match the game exactly. This page records what the
 game reveals and the method. Everything below was measured read-only on build 2.3.2.
 
 ## What the data says
 
 * 134 tables in `0008/gamedata/binarystaticinfo__/bin/`: `*.staticinfobody` plus a
-  `*.staticinfoheader` index; 128 parse with Pylune's index reader, 296 155 records in total.
+  `*.staticinfoheader` index; 128 parse with Pailune's index reader, 296 155 records in total.
 * No schema ships with the data. Records are `key | u32 name_len | name | payload`; the
   payload has no type information.
 * 24 tables have fixed-size payloads (e.g. `categoryinfo` 7 bytes, `gimmickgateinfo` 21,
@@ -19,7 +19,7 @@ game reveals and the method. Everything below was measured read-only on build 2.
 * The data sections of `CrimsonDesert.exe` contain `Class` / ` _field` string pairs (likely
   serializer messages): 513 classes with their field names, e.g. 115 for `ItemInfo`.
 * Nothing in the data sections points at these strings; the engine registers its reflection
-  at runtime in code. That code is in protected sections (`.xtext`, `.xtls`), and Pylune does
+  at runtime in code. That code is in protected sections (`.xtext`, `.xtls`), and Pailune does
   not analyse it — only plain data is read, nothing is executed, decrypted or modified.
 * Sizes agree with names for small tables: `CategoryInfo` = `_isBlocked` (1) + three category
   indexes (2 each) = 7 bytes; `GimmickGateInfo` = `_isBlocked` (1) + `_position` (12) +
@@ -61,7 +61,7 @@ game reveals and the method. Everything below was measured read-only on build 2.
 * **Names**: fields of equal size can swap without breaking an exact fit, so a name is certain
   only if its shape is unique in the class (and `_isBlocked` at offset 0, seen in every table).
 * Shipped: **21 tables, 129 fields, 38 editable** (`data/table-layouts.json`, game 2.3.2), each
-  verified on every record of the installed game, also in Pylune's Rust decoder
+  verified on every record of the installed game, also in Pailune's Rust decoder
   (`shipped_table_layouts_match_the_game`). The tool is in `tools/table-layouts/`.
 * Not solved yet: tables whose classes nest structures, optional blocks and other string forms —
   including `iteminfo` (the inference reaches field 47 of 113), `dropsetinfo`, `skill`,
@@ -95,8 +95,8 @@ A published format-3 mod (`target: iteminfo.pabgb`, 2391 intents `set max_stack_
 `entry` and `key`, files for 2x … 100x and 999999). For every intent the record named by `key`
 has the named `entry`, and `new` is exactly the multiple of the u64 at payload offset +1 — in all
 seven multiplier files. This independently confirms `_maxStackCount` = u64 at +1 on 2391 of the
-2412 records where that value is above 1. Confirmed in game on 2026-10-26: Pylune's arrow test (u64 at +1 = 999) let arrows stack past
-100. Since 2026-10-26 Pylune ships a **partial layout** for `iteminfo`
+2412 records where that value is above 1. Confirmed in game on 2026-10-26: Pailune's arrow test (u64 at +1 = 999) let arrows stack past
+100. Since 2026-10-26 Pailune ships a **partial layout** for `iteminfo`
 (`"partial": true`: `_isBlocked`, `_maxStackCount`; checked on every record, the rest of each record
 is left untouched), and every Fat Stacks file resolves completely against the installed game.
 

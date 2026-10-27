@@ -52,10 +52,10 @@ Cutscene dialogue and weapon/socket placement XML are "overlay-blind" (hence in 
 `.pabgb`/`.pabgh` on disk outrank every archive group; a group without a `0.papgt` entry is
 never read; an older table in another numbered folder may win.
 
-## Consequences for Pylune
+## Consequences for Pailune
 
 1. Data tables: one group per table with its header, registered like DMM (name first, index 0,
    mask `0x3FFF`), header stored uncompressed — implemented 2026-10-26.
 2. The in-place route (D-14) is needed only for files the engine reads outside overlays
-   (per DMM: dialogue audio, weapon/socket XML). Pylune's design keeps the vanilla `.paz` files
+   (per DMM: dialogue audio, weapon/socket XML). Pailune's design keeps the vanilla `.paz` files
    untouched (an added archive per group instead of appending to `0.paz` and copying 900 MB).

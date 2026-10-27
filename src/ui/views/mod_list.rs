@@ -3,12 +3,12 @@
 use super::clicked;
 use crate::mod_engine::model::{ModEntry, MoveTo};
 use crate::ui::theme::{self, accent, danger, muted, warning};
-use crate::ui::{Action, ModAction, PyluneApp};
+use crate::ui::{Action, ModAction, PailuneApp};
 use eframe::egui::{self, RichText};
 use egui_extras::{Column, TableBuilder, TableRow};
 
 /// Badges after the name: Nexus origin, update available, conflicts.
-fn status_cell(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) {
+fn status_cell(ui: &mut egui::Ui, entry: &ModEntry, app: &PailuneApp) {
     ui.horizontal(|ui| {
         let collection = app.nexus.collections.iter().find(|c| {
             c.members
@@ -36,7 +36,7 @@ fn status_cell(ui: &mut egui::Ui, entry: &ModEntry, app: &PyluneApp) {
 }
 
 /// Renders one table row and returns the actions it triggered.
-fn row(mut cells: TableRow, index: usize, entry: &ModEntry, app: &PyluneApp) -> Vec<Action> {
+fn row(mut cells: TableRow, index: usize, entry: &ModEntry, app: &PailuneApp) -> Vec<Action> {
     let last = app.registry.mods.len().saturating_sub(1);
     let name = entry.name.clone();
     let selected = app.mods.selected.as_ref() == Some(&entry.name);
@@ -119,7 +119,7 @@ fn toolbar(ui: &mut egui::Ui) -> Vec<Action> {
 }
 
 /// Renders the mod table and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     let mut actions = toolbar(ui);
     ui.horizontal(|ui| {
         ui.label("🔍");
@@ -130,7 +130,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
                 .desired_width(260.0),
         );
     });
-    let app: &PyluneApp = app;
+    let app: &PailuneApp = app;
     let needle = app.mods.filter.trim().to_lowercase();
     ui.label(
         RichText::new("Load order runs top to bottom — later mods win file conflicts. Click a name for details.")
@@ -194,7 +194,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
 }
 
 /// "Recently deleted" mods with restore and permanent-delete buttons.
-fn trash(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+fn trash(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     if app.mods.trash.is_empty() {
         return Vec::new();
     }

@@ -1,27 +1,27 @@
-# Pylune user guide
+# Pailune user guide
 
-Pylune installs and manages *Crimson Desert* mods on Linux (Steam with Proton). This guide covers
+Pailune installs and manages *Crimson Desert* mods on Linux (Steam with Proton). This guide covers
 everything from installation to troubleshooting. Inside the app, **❓ Guide** (or **F1**) shows the
 short version with a searchable list of tasks.
 
 ## Three things to know
 
-1. **Mods are kept in Pylune's own folder.** Installing, enabling and ordering mods never touches
+1. **Mods are kept in Pailune's own folder.** Installing, enabling and ordering mods never touches
    the game.
 2. **Apply links the enabled mods into the game.** Files a mod replaces are kept as `.bak`.
 3. **Unlink all puts the game back exactly as it was.**
 
-## Install Pylune
+## Install Pailune
 
-- **AppImage:** download `Pylune-<version>-x86_64.AppImage`, make it executable
+- **AppImage:** download `Pailune-<version>-x86_64.AppImage`, make it executable
   (`chmod +x`, or *Properties → Allow executing*), and start it. Keep it in a fixed place
   (e.g. `~/Applications`) — browser downloads are routed to the file you register.
 - **From source:** install Rust, then in the project folder run `cargo build --release` and
-  `packaging/install.sh` (puts `pylune` into `~/.local/bin` and adds a menu entry).
+  `packaging/install.sh` (puts `pailune` into `~/.local/bin` and adds a menu entry).
 
 ## First start
 
-Pylune looks for Crimson Desert in your Steam libraries (normal, Flatpak and Snap Steam). If it
+Pailune looks for Crimson Desert in your Steam libraries (normal, Flatpak and Snap Steam). If it
 cannot find the game, it asks for the folder that contains `bin64/` and `meta/`. It then takes a
 backup of the game's metadata files and opens the getting-started guide, which walks you through
 your first mod: **add a mod → enable it → Apply → Play**.
@@ -32,13 +32,13 @@ your first mod: **add a mod → enable it → Apply → Play**.
   `.dll` or `.json`; *Import folder…* for unpacked mods; or drop files onto the window. Several
   imports run in parallel.
 - **From Nexus Mods:** on the *Nexus* tab paste your personal API key (nexusmods.com → your
-  account → API keys) and press *Save key*. Press *Make Pylune the nxm:// handler* once; from then
-  on the website's **Mod manager download** buttons send files to Pylune, which asks before each
+  account → API keys) and press *Save key*. Press *Make Pailune the nxm:// handler* once; from then
+  on the website's **Mod manager download** buttons send files to Pailune, which asks before each
   download. You can also enter a mod's number or address and press *Fetch* to see its files.
 - **Collections:** *Nexus → Collections*, paste the collection's address and *Fetch*. Review the
   list (optional mods can be unticked), then *Install*. Premium accounts download everything at
   once; with a free account, open each member's page from the list and click the website's
-  download button — Pylune accepts the matching files automatically.
+  download button — Pailune accepts the matching files automatically.
 
 Installed mods appear at the end of the mod list, disabled (unless *Settings → Mods → Enable new
 mods* is on).
@@ -54,16 +54,16 @@ mods* is on).
   happened; problems are listed on the *Log* tab.
 - **Unlink all** removes every link and restores the originals.
 
-### What Pylune can install
+### What Pailune can install
 
-| Mod contains | What Pylune does |
+| Mod contains | What Pailune does |
 |--------------|------------------|
 | Files under `bin64/` | Linked at the same place. |
 | `.asi`, `.dll`, `.ini` plugins | Linked into `bin64/` (needs an ASI loader, see below). |
-| Game files for the archives (`files/NNNN/…`, `NNNN/…`, textures `.dds`) | Packed into Pylune's own archive group, which the game reads first. |
+| Game files for the archives (`files/NNNN/…`, `NNNN/…`, textures `.dds`) | Packed into Pailune's own archive group, which the game reads first. |
 | Prebuilt archive groups (`NNNN/0.pamt`, `*.paz`) | Registered under a free group number. |
 | Byte-patch JSON mods | Applied to the game file inside the archives; each change is checked against the original bytes. |
-| Field-name JSON mods (format 3, `.field.json`) | Raw `old`/`new` changes work on every data table; `set` by field name works for tables whose layout Pylune has derived and verified for your game version, and for item stack sizes (`max_stack_count`). Anything else is refused with a reason in the Log tab. |
+| Field-name JSON mods (format 3, `.field.json`) | Raw `old`/`new` changes work on every data table; `set` by field name works for tables whose layout Pailune has derived and verified for your game version, and for item stack sizes (`max_stack_count`). Anything else is refused with a reason in the Log tab. |
 | `*.css.patch`, `*.css.merge` | Applied to the game's stylesheets. |
 | `*.xml.patch` (JSON or `<xml-patch>`), `*.xml.merge` | Applied to the game's XML files; only the changed parts are rewritten. |
 | `*.html.patch` (`<html-patch>` or comment directives) | Applied to the game's HTML files with CSS-style selectors. |
@@ -164,7 +164,7 @@ deleting a mod*.
 
 ## Backups
 
-- **Pylune backups** (*Settings → Backups*): settings, mod list, order, options, profiles and
+- **Pailune backups** (*Settings → Backups*): settings, mod list, order, options, profiles and
   collections; a *Full backup* also contains the mod files. One is taken automatically each day.
   Restoring needs all mods unlinked and takes a safety backup first.
 - **Save games** (*Saves* tab): copied before every Play and on request (*Back up saves now*).
@@ -191,15 +191,15 @@ reports a cloud conflict afterwards, keep the local files.
 
 ## After a game update
 
-When the game's files change, Pylune blocks *Apply* and shows a yellow banner with three steps:
+When the game's files change, Pailune blocks *Apply* and shows a yellow banner with three steps:
 **1. Unlink all → 2. Verify files in Steam → 3. Refresh backup**. Then apply again. This keeps
-Pylune's backups in step with the new game version.
+Pailune's backups in step with the new game version.
 
 ## Start over
 
 *More → Clean slate…* unlinks and disables every mod, restores the game's original metadata and
 sets aside archive folders that other tools added (restorable in *Settings → Diagnostics*). Your
-mods stay in Pylune.
+mods stay in Pailune.
 
 ## Settings
 
@@ -222,30 +222,30 @@ Everything important also works without the window. Read-only commands work whil
 open; commands that change something need the window closed (they use the same safety rules).
 
 ```sh
-pylune status                    # game, mods, links, pending changes
-pylune list                      # load order
-pylune install ~/Downloads/SomeMod.zip
-pylune enable "Some Mod"         # or: pylune enable --all
-pylune move "Some Mod" 3         # load-order number
-pylune apply                     # link into the game
-pylune unlink
-pylune profile save Vanilla+     # / pylune profile load Vanilla+
-pylune export setup.json         # / pylune import setup.json
-pylune backup --full             # / pylune backups, pylune restore <file> --yes
-pylune clean-slate --yes
-pylune launch
-pylune log --mod "Some Mod" --limit 20
-pylune saves                     # save slots: level, time
-pylune save 1 --find ItemSaveData  # what a save contains (read-only)
+pailune status                    # game, mods, links, pending changes
+pailune list                      # load order
+pailune install ~/Downloads/SomeMod.zip
+pailune enable "Some Mod"         # or: pailune enable --all
+pailune move "Some Mod" 3         # load-order number
+pailune apply                     # link into the game
+pailune unlink
+pailune profile save Vanilla+     # / pailune profile load Vanilla+
+pailune export setup.json         # / pailune import setup.json
+pailune backup --full             # / pailune backups, pailune restore <file> --yes
+pailune clean-slate --yes
+pailune launch
+pailune log --mod "Some Mod" --limit 20
+pailune saves                     # save slots: level, time
+pailune save 1 --find ItemSaveData  # what a save contains (read-only)
 ```
 
 Add `--json` for machine-readable output (`{"ok", "message", "data"}`); the exit code is 0 on
 success, 1 on failure. Operations that cannot be undone need `--yes`.
 
-**AI agents (MCP).** `pylune mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io)
+**AI agents (MCP).** `pailune mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io)
 server on standard input/output with the same operations as tools (`status`, `list_mods`,
 `install_mods`, `enable_mods`, `move_mod`, `apply`, `launch_game`, …). Register it with your
-agent, for example in Claude Code: `claude mcp add pylune -- pylune mcp`. `clean_slate` and
+agent, for example in Claude Code: `claude mcp add pailune -- pailune mcp`. `clean_slate` and
 `restore_backup` require `confirm: true`.
 
 ## Keyboard shortcuts
@@ -256,7 +256,7 @@ agent, for example in Claude Code: `claude mcp add pylune -- pylune mcp`. `clean
 | Ctrl+F | Search mods |
 | Ctrl+I | Import files |
 | Ctrl+Enter | Apply |
-| Ctrl+Q | Quit Pylune (also *More → Quit Pylune*) |
+| Ctrl+Q | Quit Pailune (also *More → Quit Pailune*) |
 | F5 | Rescan the staging folder |
 | Delete | Delete the selected mod (undoable) |
 
@@ -267,18 +267,18 @@ agent, for example in Claude Code: `claude mcp add pylune -- pylune mcp`. `clean
 | A mod has no effect | Check its ⚔ conflicts and move it lower; check the *Log* tab for skipped files or failed patches; ASI mods need a loader and launch options. |
 | "Changes not applied" stays | Press *Apply*; if it is blocked, read the status line (game running, a job running, or a game update). |
 | The game does not start | Start it once from Steam so the Proton prefix exists; check *Settings → Diagnostics*. |
-| Browser downloads do not reach Pylune | *Nexus → Make Pylune the nxm:// handler* again (needed after moving the AppImage). |
+| Browser downloads do not reach Pailune | *Nexus → Make Pailune the nxm:// handler* again (needed after moving the AppImage). |
 | Something went wrong after an update | Follow the yellow banner; or *More → Clean slate…*. |
 | Reporting a bug | *Settings → Advanced → Open log folder*; set the log level to `debug` and restart for detail. |
 
-## Where Pylune keeps its files
+## Where Pailune keeps its files
 
-Settings in `~/.config/pylune/config.toml`; everything else in `~/.local/share/pylune/` (mods in
+Settings in `~/.config/pailune/config.toml`; everything else in `~/.local/share/pailune/` (mods in
 `staging/`, backups in `backups/` and `save-backups/`, logs in `logs/`). See
 [data-model.md](data-model.md) for the full list.
 
-## Removing Pylune
+## Removing Pailune
 
 Press **Unlink all** first (the game is then exactly as before), then delete the AppImage or
-`~/.local/bin/pylune`, and optionally `~/.config/pylune/`, `~/.local/share/pylune/` and
-`~/.local/share/applications/pylune*.desktop`.
+`~/.local/bin/pailune`, and optionally `~/.config/pailune/`, `~/.local/share/pailune/` and
+`~/.local/share/applications/pailune*.desktop`.

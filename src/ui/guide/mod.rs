@@ -20,7 +20,7 @@ pub struct GuideState {
     pub page: GuidePage,
     /// Search text of the "How do I…" page.
     pub query: String,
-    /// The game was started from Pylune in this session.
+    /// The game was started from Pailune in this session.
     pub played: bool,
 }
 

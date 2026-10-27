@@ -1,12 +1,12 @@
 //! Editing a save from the viewer (B-07): typed values become checked
 //! changes, written by an exclusive job after confirmation.
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::jobs::JobKind;
 use crate::savefile::edit::{SaveEdit, parse_value};
 use crate::savefile::view::{Editable, Node};
 use crate::ui::state::SaveView;
-use crate::ui::{BackupAction, Confirm, Level, PyluneApp, StatusLine};
+use crate::ui::{BackupAction, Confirm, Level, PailuneApp, StatusLine};
 use std::path::{Path, PathBuf};
 
 /// Every editable value of a tree, by body offset.
@@ -27,7 +27,7 @@ pub fn changes(view: &SaveView) -> Result<Vec<SaveEdit>> {
         .filter_map(|(at, text)| values.iter().find(|v| v.at == *at).map(|v| (v, text)))
         .map(|(value, text)| {
             let new = parse_value(&value.type_name, value.bytes.len(), text)
-                .map_err(|e| PyluneError::Invalid(format!("{}: {e}", value.field)))?;
+                .map_err(|e| PailuneError::Invalid(format!("{}: {e}", value.field)))?;
             Ok(SaveEdit {
                 at: value.at,
                 old: value.bytes.clone(),
@@ -39,7 +39,7 @@ pub fn changes(view: &SaveView) -> Result<Vec<SaveEdit>> {
         .collect()
 }
 
-impl PyluneApp {
+impl PailuneApp {
     /// Opens a slot in the viewer (replacing what was open).
     pub(super) fn open_save(&mut self, dir: PathBuf) -> Result<Option<StatusLine>> {
         let tree = crate::savefile::slots::inspect(&dir)?;
@@ -77,7 +77,7 @@ impl PyluneApp {
             BackupAction::WriteSaveEdits => {
                 self.confirm = None;
                 if self.process == crate::launch::GameProcess::Running {
-                    return Err(PyluneError::Invalid(
+                    return Err(PailuneError::Invalid(
                         "close Crimson Desert before editing a save".into(),
                     ));
                 }

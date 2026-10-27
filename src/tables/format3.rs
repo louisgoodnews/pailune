@@ -1,6 +1,6 @@
 //! Field-name JSON mods ("format 3", `.field.json`): `set` by field name and
 //! raw `old`/`new` within a record, resolved against the game's own table
-//! and Pylune's derived layouts into ordinary verified byte changes.
+//! and Pailune's derived layouts into ordinary verified byte changes.
 //!
 //! Only fields whose offset is proven and whose name is certain may be set;
 //! other operations (`clone_record`, `new_record`, `delete_record`,
@@ -114,7 +114,7 @@ fn change(
     ))
 }
 
-/// Why Pylune cannot carry out an intent of a newer format revision yet.
+/// Why Pailune cannot carry out an intent of a newer format revision yet.
 fn unsupported(i: &Intent) -> Option<String> {
     let field = i.field.as_deref().unwrap_or_default();
     match (&i.matches, field.contains(['[', '.'])) {

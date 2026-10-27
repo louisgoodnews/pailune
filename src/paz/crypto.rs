@@ -1,7 +1,7 @@
 //! ChaCha20 entry encryption (`docs/paz-format.md` §7.2).
 
 use super::hash::pa_hash;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use chacha20::ChaCha20;
 use chacha20::cipher::{KeyIvInit, StreamCipher, StreamCipherSeek};
 
@@ -45,7 +45,7 @@ pub fn apply(vpath: &str, buf: &mut [u8]) -> Result<()> {
     let seed = seed(vpath);
     let blocks = buf.len().div_ceil(64) as u64;
     if u64::from(seed) + blocks > u64::from(u32::MAX) + 1 {
-        return Err(PyluneError::Archive(format!(
+        return Err(PailuneError::Archive(format!(
             "{vpath}: ChaCha20 counter would overflow"
         )));
     }

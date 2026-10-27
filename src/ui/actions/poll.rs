@@ -3,7 +3,7 @@
 use crate::instance;
 use crate::jobs::{JobEvent, JobKind, JobOutput, JobUpdate};
 use crate::launch::run;
-use crate::ui::{JobState, Level, PyluneApp, StatusLine};
+use crate::ui::{JobState, Level, PailuneApp, StatusLine};
 use std::time::{Duration, Instant};
 
 /// How often the game process and the request spool are checked.
@@ -11,7 +11,7 @@ const POLL_INTERVAL: Duration = Duration::from_secs(1);
 /// How long finished jobs stay visible in the jobs panel.
 const FINISHED_LINGER: Duration = Duration::from_secs(8);
 
-impl PyluneApp {
+impl PailuneApp {
     /// Handles everything that happened since the last frame.
     pub fn poll(&mut self) {
         let events = self.pool.poll();
@@ -198,7 +198,7 @@ impl PyluneApp {
     }
 }
 
-impl PyluneApp {
+impl PailuneApp {
     /// Whether a job that changes the game directory is queued or running.
     pub fn game_job_active(&self) -> bool {
         self.jobs.iter().any(|j| {

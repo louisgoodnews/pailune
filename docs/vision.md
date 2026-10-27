@@ -1,13 +1,13 @@
 # Vision
 
-## Why Pylune exists
+## Why Pailune exists
 
 *Crimson Desert* runs on Linux through Steam and Proton, but its mod tooling targets Windows:
 managers copy files into the game folder, edit the game's archives in place, or need a Windows
 runtime of their own. On Linux that means broken installs after a game update, no clean way back
 to an unmodded game, and fiddly launch options for script loaders.
 
-Pylune is a mod manager for this one game. It started on Linux and is growing into a
+Pailune is a mod manager for this one game. It started on Linux and is growing into a
 cross-platform tool: Linux first, then Windows and macOS (decided 2026-10-26). It aims to make
 modding **safe to try and easy to undo** on every platform.
 
@@ -26,11 +26,11 @@ and they care a great deal about not breaking their game or their saves.
 2. **Understandable.** One obvious path (add → enable → apply → play), plain language, a guide
    that teaches by doing, and visible state ("Changes not applied").
 3. **Complete for this game.** Loose files, ASI/DLL plugins, files inside the game's PAZ
-   archives (via Pylune's own archive group), textures, byte-patch JSON and CSS patches, mods
+   archives (via Pailune's own archive group), textures, byte-patch JSON and CSS patches, mods
    with options, Nexus Mods downloads, updates and collections.
 4. **Native, light and portable.** One Rust binary per platform with an egui interface; no
    emulation layer, no background service, no telemetry. Network access only for Nexus features the user starts.
-5. **Recoverable everywhere.** Undo for deletes, daily backups of Pylune's state, save-game
+5. **Recoverable everywhere.** Undo for deletes, daily backups of Pailune's state, save-game
    backups before every launch.
 
 ## Non-goals
@@ -50,7 +50,7 @@ and they care a great deal about not breaking their game or their saves.
 
 ## Where it is going
 
-Open work is tracked in [board.md](board.md) and ordered in [roadmap.md](roadmap.md). Pylune is
+Open work is tracked in [board.md](board.md) and ordered in [roadmap.md](roadmap.md). Pailune is
 growing from a mod manager into a **modding tool** as well (decision D-13): first creating JSON
 mods from the game's data tables, then building and testing ASI plugins. Creating mods follows
 the same goals — the installed game is never modified, every change is checked against the

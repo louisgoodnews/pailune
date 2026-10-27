@@ -1,7 +1,7 @@
 {
  "format": 1,
  "game_version": "2.3.2",
- "derived": "Pylune table-layout research (docs/research/table-layouts.md)",
+ "derived": "Pailune table-layout research (docs/research/table-layouts.md)",
  "tables": {
   "aidialogtypeinfo": {
    "class": "AIDialogTypeInfo",

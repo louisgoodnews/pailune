@@ -1,8 +1,8 @@
-//! Which archive groups Pylune builds: every patched data table (body and
+//! Which archive groups Pailune builds: every patched data table (body and
 //! its index) in a group of its own, as DMM does (`docs/research/
 //! dmm-analysis.md`), and everything else in one main group.
 
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::paz::write::{self, Packed};
 use std::collections::BTreeMap;
 use std::fs;
@@ -47,12 +47,12 @@ pub fn write_group(files: Vec<Packed>, dir: &Path) -> Result<u32> {
     fs::write(dir.join("0.pamt"), &group.pamt).at(dir)?;
     let problems = crate::paz::pamt_check::problems(&group.pamt, dir)?;
     if !problems.is_empty() {
-        return Err(PyluneError::Archive(format!(
+        return Err(PailuneError::Archive(format!(
             "the built archive index failed its check: {}",
             problems.join("; ")
         )));
     }
-    fs::write(dir.join(".pylune_owned"), b"").at(dir)?;
+    fs::write(dir.join(".pailune_owned"), b"").at(dir)?;
     Ok(group.pamt_crc)
 }
 

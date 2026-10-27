@@ -1,7 +1,7 @@
 //! Spawning the game and checking whether it runs.
 
 use super::{GameProcess, LaunchMethod, LaunchSpec, ProtonSetup};
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::steam::SteamInfo;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -14,7 +14,7 @@ pub fn launch_url(app_id: u32) -> String {
     format!("steam://rungameid/{app_id}")
 }
 
-/// Spawns a command fully detached from Pylune's stdio.
+/// Spawns a command fully detached from Pailune's stdio.
 ///
 /// A thread reaps the child when it exits, so no zombie processes pile up.
 pub fn spawn(mut command: Command) -> std::io::Result<()> {
@@ -53,7 +53,7 @@ fn via_steam(info: &SteamInfo, spec: &LaunchSpec) -> Result<LaunchMethod> {
     spawn(steam)
         .map(|()| LaunchMethod::SteamCli)
         .or_else(|_| spawn(xdg).map(|()| LaunchMethod::XdgOpen))
-        .map_err(|e| PyluneError::Invalid(format!("could not start Steam: {e}")))
+        .map_err(|e| PailuneError::Invalid(format!("could not start Steam: {e}")))
 }
 
 /// Asks Steam to verify (repair) the game files (`steam://validate/<id>`).
@@ -64,7 +64,7 @@ pub fn verify_files(app_id: u32) -> Result<()> {
     let xdg = crate::platform::open_command(url.as_ref());
     spawn(steam)
         .or_else(|_| spawn(xdg))
-        .map_err(|e| PyluneError::Invalid(format!("could not start Steam: {e}")))
+        .map_err(|e| PailuneError::Invalid(format!("could not start Steam: {e}")))
 }
 
 /// Directly through Proton (inside its Steam Linux Runtime, as Steam does),
@@ -88,7 +88,7 @@ fn via_proton(info: &SteamInfo, setup: &ProtonSetup, spec: &LaunchSpec) -> Resul
         .chain(spec.args.iter().cloned())
         .collect();
     let Some((program, rest)) = argv.split_first() else {
-        return Err(PyluneError::Invalid("empty launch command".into()));
+        return Err(PailuneError::Invalid("empty launch command".into()));
     };
     let mut command = Command::new(program);
     command
@@ -105,7 +105,7 @@ fn via_proton(info: &SteamInfo, setup: &ProtonSetup, spec: &LaunchSpec) -> Resul
     tracing::info!(?argv, "launching through Proton directly");
     spawn(command)
         .map(|()| LaunchMethod::ProtonDirect)
-        .map_err(|e| PyluneError::Invalid(format!("could not start {program}: {e}")))
+        .map_err(|e| PailuneError::Invalid(format!("could not start {program}: {e}")))
 }
 
 /// Directly, where the game runs natively (Windows), with the extra
@@ -120,7 +120,7 @@ fn via_native(info: &SteamInfo, spec: &LaunchSpec) -> Result<LaunchMethod> {
         .chain(spec.args.iter().cloned())
         .collect();
     let Some((program, rest)) = argv.split_first() else {
-        return Err(PyluneError::Invalid("empty launch command".into()));
+        return Err(PailuneError::Invalid("empty launch command".into()));
     };
     let mut command = Command::new(program);
     command
@@ -130,7 +130,7 @@ fn via_native(info: &SteamInfo, spec: &LaunchSpec) -> Result<LaunchMethod> {
         .envs(spec.env.iter().map(|(k, v)| (k, v)));
     spawn(command)
         .map(|()| LaunchMethod::Direct)
-        .map_err(|e| PyluneError::Invalid(format!("could not start {program}: {e}")))
+        .map_err(|e| PailuneError::Invalid(format!("could not start {program}: {e}")))
 }
 
 /// Starts the game, choosing the method the launch options require:
@@ -146,7 +146,7 @@ pub fn launch(
         (false, _) => via_steam(info, spec),
         (true, _) if !crate::platform::USES_PROTON => via_native(info, spec),
         (true, Some(setup)) => via_proton(info, setup, spec),
-        (true, None) => Err(PyluneError::Invalid(
+        (true, None) => Err(PailuneError::Invalid(
             "launch options need a direct Proton launch, but no Proton installation was found \
              for this game — start it once from Steam first"
                 .into(),

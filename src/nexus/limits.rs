@@ -1,6 +1,6 @@
 //! Nexus API rate limits, read from the `X-RL-*` response headers.
 //!
-//! Nexus allows a daily and an hourly budget per account. Pylune records
+//! Nexus allows a daily and an hourly budget per account. Pailune records
 //! the remaining counts after every API call and stops issuing calls when
 //! the hourly budget is nearly spent, instead of running into HTTP 429.
 

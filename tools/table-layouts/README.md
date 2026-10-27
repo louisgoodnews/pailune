@@ -9,7 +9,7 @@ mkdir -p /tmp/layouts/tables && cd /tmp/layouts
 PYLUNE_TABLES_OUT=/tmp/layouts/tables cargo test export_tables_for_layout_research -- --ignored
 python3 <repo>/tools/table-layouts/names.py ".../bin64/CrimsonDesert.exe" names.json
 PYLUNE_LAYOUT_WORK=/tmp/layouts python3 <repo>/tools/table-layouts/export.py <repo>/data/table-layouts.json
-cargo test shipped_table_layouts -- --ignored     # verify in Pylune itself
+cargo test shipped_table_layouts -- --ignored     # verify in Pailune itself
 ```
 
 * `names.py` — field names from the executable's data sections (no code analysis).

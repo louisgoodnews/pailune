@@ -3,7 +3,7 @@
 use super::clicked;
 use crate::logging::{Event, Severity};
 use crate::ui::theme::{danger, muted, warning};
-use crate::ui::{Action, PyluneApp};
+use crate::ui::{Action, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// Colour of a journal severity.
@@ -36,7 +36,7 @@ fn row(ui: &mut egui::Ui, event: &Event) {
 }
 
 /// Renders the log page and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     ui.heading("Log");
     let actions = ui
         .horizontal(|ui| {

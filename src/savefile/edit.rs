@@ -4,7 +4,7 @@
 //! decoded again and compared before anyone writes it.
 
 use super::{SaveFile, body, decode, encode};
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use sha2::{Digest, Sha256};
 
 /// One change: the value at `at` in the body becomes `new`.
@@ -18,8 +18,8 @@ pub struct SaveEdit {
     pub label: String,
 }
 
-fn invalid(what: String) -> PyluneError {
-    PyluneError::Invalid(what)
+fn invalid(what: String) -> PailuneError {
+    PailuneError::Invalid(what)
 }
 
 /// The bytes of `text` as a value of `type_name` with `size` bytes — the

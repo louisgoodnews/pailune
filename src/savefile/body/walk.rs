@@ -14,7 +14,7 @@
 //! * 6, 7 — `0x00`, `u32 count`, 13 bytes, then `count` embedded objects.
 
 use super::{Body, Cursor, TypeDef};
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 
 /// Deepest nesting of embedded objects accepted.
 const MAX_DEPTH: usize = 64;
@@ -43,8 +43,8 @@ pub struct Object {
     pub fields: Vec<(usize, Value)>,
 }
 
-fn bad(what: &str) -> PyluneError {
-    PyluneError::Invalid(format!("save object: {what}"))
+fn bad(what: &str) -> PailuneError {
+    PailuneError::Invalid(format!("save object: {what}"))
 }
 
 /// Whether bit `i` of the presence mask is set.

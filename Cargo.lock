@@ -3035,6 +3035,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "pailune"
+version = "0.1.0"
+dependencies = [
+ "chacha20",
+ "clap",
+ "directories",
+ "eframe",
+ "egui",
+ "egui_extras",
+ "egui_kittest",
+ "hmac 0.12.1",
+ "lz4_flex",
+ "md-5",
+ "rfd",
+ "roxmltree",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sevenz-rust2",
+ "sha2 0.10.9",
+ "tempfile",
+ "thiserror 2.0.21",
+ "toml",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "unrar",
+ "ureq",
+ "walkdir",
+ "windows-sys 0.61.2",
+ "zip",
+]
+
+[[package]]
 name = "parking"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3330,40 +3364,6 @@ name = "pxfm"
 version = "0.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d55d956fa96f5ec02be2e13af0e20391a5aa83d6a074e3ad368959d0fab299ea"
-
-[[package]]
-name = "pylune"
-version = "0.1.0"
-dependencies = [
- "chacha20",
- "clap",
- "directories",
- "eframe",
- "egui",
- "egui_extras",
- "egui_kittest",
- "hmac 0.12.1",
- "lz4_flex",
- "md-5",
- "rfd",
- "roxmltree",
- "rusqlite",
- "serde",
- "serde_json",
- "sevenz-rust2",
- "sha2 0.10.9",
- "tempfile",
- "thiserror 2.0.21",
- "toml",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
- "unrar",
- "ureq",
- "walkdir",
- "windows-sys 0.61.2",
- "zip",
-]
 
 [[package]]
 name = "quick-error"

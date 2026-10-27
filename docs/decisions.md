@@ -23,21 +23,21 @@ Tested by interrupting a deploy after every journal write (`src/tests/crash.rs`)
 ## D-03 Own archive group instead of editing the game's archives
 
 **Context.** Most content lives in PAZ archives. Other tools rewrite them in place.
-**Decision.** Build Pylune's own group (`0100`) from mod files and a rebuilt `meta/0.papgt` that
+**Decision.** Build Pailune's own group (`0100`) from mod files and a rebuilt `meta/0.papgt` that
 lists it first; deploy both as symlinks. Verified in game: the first listed group wins.
 **Why.** The game's archives stay untouched, so unlinking restores vanilla byte for byte and game
 updates cannot be corrupted by modded archives.
 
 ## D-04 SQLite for state, TOML for settings
 
-**Decision.** Settings a user may edit by hand go to `config.toml`; everything Pylune manages
+**Decision.** Settings a user may edit by hand go to `config.toml`; everything Pailune manages
 (mod list, links, profiles, journal) goes to SQLite.
 **Why.** TOML is readable and diffable; SQLite gives transactions, concurrent access from job
 threads (WAL) and online backups. Splitting them keeps a broken hand edit from touching state.
 
 ## D-05 One exclusive lane for game-folder jobs
 
-**Decision.** Jobs that change the game folder or Pylune's whole state run on one dedicated
+**Decision.** Jobs that change the game folder or Pailune's whole state run on one dedicated
 thread in submission order; everything else runs on a small shared pool.
 **Why.** Ordering is what users expect ("delete, then apply"), two deploys can never interleave,
 and long downloads never block an Apply.
@@ -47,7 +47,7 @@ and long downloads never block an Apply.
 **Decision.** Immediate-mode egui/eframe.
 **Why.** One native binary without a web runtime, fast to build and test (the whole app runs
 headless in tests, and screens can be rendered offscreen), and simple state handling: views are
-functions of `PyluneApp` that return intents.
+functions of `PailuneApp` that return intents.
 **Trade-off.** Fewer native widgets; accessibility relies on egui's AccessKit support. The emoji
 font is bundled so icons do not depend on system fonts.
 
@@ -81,27 +81,27 @@ Apache option adds an explicit patent grant.
 
 ## D-14 Mods may be written into the game's archives, with backups (accepted 2026-10-26)
 
-**Context.** Mods packed into Pylune's own archive group had no effect in game for data tables
+**Context.** Mods packed into Pailune's own archive group had no effect in game for data tables
 (and the control test is still open), while save editing (writing the game's files) and DMM's
 in-place route (*Fat Stacks*) work. The owner prefers not to change the game's files but decided
-to do it, provided Pylune keeps a **base backup** of the vanilla state and a **version backup**
+to do it, provided Pailune keeps a **base backup** of the vanilla state and a **version backup**
 on every change, so any state — and vanilla — can be restored easily.
 **Decision.** Add an in-place deployment route for archived game files (design in
 [design/in-place.md](design/in-place.md)): the game's large `.paz` archives are never rewritten;
-Pylune's patched entries live in an additional archive file of the affected group (deployed as a
-symlink, like every other Pylune file), and only the group's index (`0.pamt`) and `meta/0.papgt`
+Pailune's patched entries live in an additional archive file of the affected group (deployed as a
+symlink, like every other Pailune file), and only the group's index (`0.pamt`) and `meta/0.papgt`
 are rewritten. The vanilla index files are backed up once (base), every Apply that changes them
 stores a version, and *Revert to vanilla* / *Roll back to version N* restore them. The overlay
 route stays for content that works through it; which route a file takes is decided per file type
 after the in-game control test and the JMM/DMM analysis.
 **Supersedes** the "the game's own archives are never edited" goal for this route only.
 
-## D-13 Pylune also creates mods (accepted 2026-10-26)
+## D-13 Pailune also creates mods (accepted 2026-10-26)
 
-**Context.** The vision listed "editing mods" as a non-goal. Pylune since gained what mod
+**Context.** The vision listed "editing mods" as a non-goal. Pailune since gained what mod
 authors need most: a verified reader for the game's archives and data tables, derived table
 layouts, byte-checked patching and a JSON editor. The owner asked for mod creation.
-**Decision.** Pylune is a mod manager *and* a modding tool. Creation starts with JSON mods
+**Decision.** Pailune is a mod manager *and* a modding tool. Creation starts with JSON mods
 (B-16, built on the table reader and layouts), then ASI plugins (B-17, tooling around the
 author's own code). The installed game stays read-only; created mods are ordinary staged mods
 and deploy through the same journaled path.
@@ -109,12 +109,12 @@ and deploy through the same journaled path.
 third-party schemas into created mods beyond the changed bytes.
 **Supersedes** the "Editing mods" non-goal in [vision.md](vision.md).
 
-## D-12 No script runtime in Pylune (accepted 2026-10-26)
+## D-12 No script runtime in Pailune (accepted 2026-10-26)
 
 **Context.** B-13 asked whether scripts can be injected into the running game. The archives
 contain no script files; native mods hook functions by pattern scanning via ASI plugins and
 break with patches ([research/script-bridge.md](research/script-bridge.md)).
-**Decision.** Pylune does not embed a script runtime; it manages ASI loader and plugins well
+**Decision.** Pailune does not embed a script runtime; it manages ASI loader and plugins well
 (install, status, update warnings, INI settings) and extends data patching instead.
 
 ## D-11 Deployment per platform

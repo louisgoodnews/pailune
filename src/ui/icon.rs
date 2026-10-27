@@ -9,7 +9,7 @@ const ACCENT: [u8; 4] = [0xd0, 0x8a, 0x3c, 0xff];
 /// Background colour.
 const BACKGROUND: [u8; 4] = [0x17, 0x19, 0x1d, 0xff];
 
-/// 64×64 RGBA crescent matching `packaging/pylune.svg`.
+/// 64×64 RGBA crescent matching `packaging/pailune.svg`.
 pub fn icon() -> IconData {
     let inside =
         |x: f32, y: f32, cx: f32, cy: f32, r: f32| (x - cx).powi(2) + (y - cy).powi(2) <= r * r;

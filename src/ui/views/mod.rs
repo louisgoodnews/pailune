@@ -1,4 +1,4 @@
-//! Rendering functions. Each view reads [`PyluneApp`](super::PyluneApp)
+//! Rendering functions. Each view reads [`PailuneApp`](super::PailuneApp)
 //! state (or mutates only its own input widgets) and returns the
 //! [`Action`]s the user triggered.
 

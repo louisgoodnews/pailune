@@ -13,7 +13,7 @@ pub struct Plugin {
     /// Path relative to `bin64/`.
     pub name: String,
     pub path: PathBuf,
-    /// The Pylune mod that deployed it; `None` when installed otherwise.
+    /// The Pailune mod that deployed it; `None` when installed otherwise.
     pub owner: Option<String>,
     /// Its settings file (`<stem>.ini` next to it), if any.
     pub ini: Option<PathBuf>,

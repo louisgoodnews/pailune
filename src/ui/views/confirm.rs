@@ -25,7 +25,7 @@ fn details(confirm: &Confirm) -> (String, String, Action) {
             "Put the game back to its original state?".into(),
             "Every mod is unlinked and disabled, the game's original files are restored, and \
              archive folders added by other tools are set aside (you can restore them in \
-             Settings › Diagnostics). Your mods stay in Pylune."
+             Settings › Diagnostics). Your mods stay in Pailune."
                 .into(),
             Action::Deploy(DeployAction::CleanSlate),
         ),
@@ -85,7 +85,7 @@ pub fn show(ctx: &egui::Context, pending: Option<&Confirm>) -> Vec<Action> {
         return Vec::new();
     };
     let (title, body, action, verb) = describe(confirm);
-    let response = egui::Modal::new(egui::Id::unique("pylune_confirm")).show(ctx, |ui| {
+    let response = egui::Modal::new(egui::Id::unique("pailune_confirm")).show(ctx, |ui| {
         ui.set_max_width(380.0);
         ui.heading(title);
         ui.add_space(4.0);

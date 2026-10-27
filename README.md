@@ -1,21 +1,21 @@
-# Pylune
+# Pailune
 
 Native Linux mod manager for **Crimson Desert** (Steam / Proton), written in Rust with egui.
 
 **Documentation:** [user guide](docs/user-guide.md) · [vision](docs/vision.md) ·
 [architecture](docs/architecture.md) · [data model](docs/data-model.md) ·
-[extending Pylune](docs/extending.md) · [decisions](docs/decisions.md) ·
+[extending Pailune](docs/extending.md) · [decisions](docs/decisions.md) ·
 [UX principles](docs/ux-principles.md) · [all documents](docs/README.md)
 
-**Command line & AI agents:** `pylune --help` lists commands (`status`, `list`, `install`,
-`enable`, `move`, `apply`, …, with `--json`); `pylune mcp` serves them over the Model Context
+**Command line & AI agents:** `pailune --help` lists commands (`status`, `list`, `install`,
+`enable`, `move`, `apply`, …, with `--json`); `pailune mcp` serves them over the Model Context
 Protocol. See the [user guide](docs/user-guide.md#command-line-and-ai-agents).
 
 **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## First start
 
-Pylune finds Crimson Desert through Steam's library configuration. If that fails, a setup
+Pailune finds Crimson Desert through Steam's library configuration. If that fails, a setup
 dialog asks for the game folder. After a game update, a banner guides you through
 unlink → verify files in Steam → refresh backup before mods can be applied again.
 
@@ -23,13 +23,13 @@ unlink → verify files in Steam → refresh backup before mods can be applied a
 
 | What | Path |
 |------|------|
-| Settings | `~/.config/pylune/config.toml` |
-| Application state (mods, load order, links, profiles, event journal) | `~/.local/share/pylune/pylune.sqlite3` |
-| Staged mods | `~/.local/share/pylune/staging/<mod>/` |
-| Application log (daily) | `~/.local/share/pylune/logs/pylune.log.YYYY-MM-DD` |
-| Per-mod log (installs, updates, deployments, file lists) | `~/.local/share/pylune/logs/mods/<mod>.log` |
-| Save-game backups | `~/.local/share/pylune/save-backups/saves-<time>-….zip` |
-| Nexus API key (mode `0600`) | `~/.local/share/pylune/nexus_api_key` |
+| Settings | `~/.config/pailune/config.toml` |
+| Application state (mods, load order, links, profiles, event journal) | `~/.local/share/pailune/pailune.sqlite3` |
+| Staged mods | `~/.local/share/pailune/staging/<mod>/` |
+| Application log (daily) | `~/.local/share/pailune/logs/pailune.log.YYYY-MM-DD` |
+| Per-mod log (installs, updates, deployments, file lists) | `~/.local/share/pailune/logs/mods/<mod>.log` |
+| Save-game backups | `~/.local/share/pailune/save-backups/saves-<time>-….zip` |
+| Nexus API key (mode `0600`) | `~/.local/share/pailune/nexus_api_key` |
 
 ## How it works
 
@@ -44,7 +44,7 @@ unlink → verify files in Steam → refresh backup before mods can be applied a
 
 ## Getting started
 
-On first start Pylune opens a short guide: three ideas to know, then five steps you do for real
+On first start Pailune opens a short guide: three ideas to know, then five steps you do for real
 (find the game, add a mod, enable it, apply, play) with buttons for each. The guide's
 *How do I…* page answers common tasks and can be searched; reopen it with **❓ Guide** or **F1**.
 
@@ -87,7 +87,7 @@ A profile stores which mods are enabled, their load order and **its own launch o
 (Steam syntax, e.g. `WINEDLLOVERRIDES="winmm=n,b" %command% -dx12`).
 
 - Plain arguments: the game starts via `steam -applaunch 3321460 <args>`.
-- Environment variables (`KEY=value`) or wrappers (`gamemoderun %command%`): Pylune starts
+- Environment variables (`KEY=value`) or wrappers (`gamemoderun %command%`): Pailune starts
   the game itself through the same tool chain Steam uses (Steam Linux Runtime → Proton,
   read from `toolmanifest.vdf`). The Steam client must be running.
 
@@ -98,10 +98,10 @@ If the active profile has no options, `[launch] default_options` is used.
 1. Paste your personal API key (<https://www.nexusmods.com/users/myaccount?tab=api>) on the
    *Nexus* page.
 2. **Premium:** enter a mod id or URL, *Fetch*, and download any file directly.
-3. **Free accounts:** click *Make Pylune the nxm:// handler*, then use the website's
-   "Mod Manager Download" button. Pylune asks for confirmation before every download, and
+3. **Free accounts:** click *Make Pailune the nxm:// handler*, then use the website's
+   "Mod Manager Download" button. Pailune asks for confirmation before every download, and
    accepts only links carrying the website's download key. Links for other games are passed
-   to the handler Pylune replaced (e.g. MO2 or Vortex).
+   to the handler Pailune replaced (e.g. MO2 or Vortex).
 4. **Collections:** enter a collection slug or URL (or use the website's collection install
    button) and review the mod list; optional mods can be ticked. Premium accounts download all
    members in parallel; free accounts get a list of pending mods with links to their Nexus file
@@ -114,15 +114,15 @@ If the active profile has no options, `[launch] default_options` is used.
 ## Backups
 
 *Settings → Backups* saves your settings, mod list (order, enabled flags, chosen options),
-profiles and collections into one `.zip` in `~/.local/share/pylune/backups/`; a **full backup**
+profiles and collections into one `.zip` in `~/.local/share/pailune/backups/`; a **full backup**
 also contains every mod file. One automatic backup is taken per day (the newest 10 are kept).
 Restoring needs the mods to be unlinked, takes a safety backup first and keeps the replaced mod
 folder aside. Deleted mods go to *Recently deleted* on the Mods page and can be restored (or
 undone right away from the status bar). The Nexus API key is never part of a backup.
 
-**Save games:** every time you press *Play*, Pylune copies the game's save files (from
+**Save games:** every time you press *Play*, Pailune copies the game's save files (from
 `<Proton prefix>/drive_c/users/steamuser/AppData/Local/Pearl Abyss/CD/save/`) to
-`~/.local/share/pylune/save-backups/` (the newest 10 automatic copies are kept). *Settings →
+`~/.local/share/pailune/save-backups/` (the newest 10 automatic copies are kept). *Settings →
 Backups → Save games* backs them up on request and restores an older copy; the current saves
 are backed up first. If Steam reports a cloud conflict afterwards, keep the local files.
 
@@ -132,18 +132,18 @@ are backed up first. If Steam reports a cloud conflict afterwards, keep the loca
 |------------------------------------------------|------------------------------------------|
 | `bin64/…`                                      | linked at the same path                  |
 | `*.asi`, `*.dll`, `*.ini` elsewhere            | linked into `bin64/`                     |
-| RAW `files/NNNN/<path>` or `NNNN/<path>` game files, including `.dds` textures | packed into **Pylune's archive group** (encrypted/compressed like the game file they replace; textures are also registered in a rebuilt `0.pathc`) |
+| RAW `files/NNNN/<path>` or `NNNN/<path>` game files, including `.dds` textures | packed into **Pailune's archive group** (encrypted/compressed like the game file they replace; textures are also registered in a rebuilt `0.pathc`) |
 | prebuilt groups `NNNN/0.pamt` + `*.paz`        | registered under a free group number     |
-| byte-patch JSON mods (`"patches": [{ "game_file", "changes" }]`) | applied to the game file, packed into Pylune's archive group; every change is checked against the original bytes, results per mod in the Log tab |
-| `meta/*` shipped by a mod                      | ignored — Pylune generates `0.papgt` from your vanilla backup |
+| byte-patch JSON mods (`"patches": [{ "game_file", "changes" }]`) | applied to the game file, packed into Pailune's archive group; every change is checked against the original bytes, results per mod in the Log tab |
+| `meta/*` shipped by a mod                      | ignored — Pailune generates `0.papgt` from your vanilla backup |
 | CSS patch files (`<file>.css.patch`, `<file>.css.merge`) in RAW layouts | merged into the stylesheet in load order (`@merge`, `@replace`, `@add`, `@remove`) |
 | field-name JSON (format 3), XML/HTML patch files, game files with unknown location | not supported yet — reported in the UI/Log |
 | readmes, images, `manifest.json`               | not deployed (shown in the details panel) |
 
 ### The archive overlay
 
-The game only loads content from PAZ archives listed in `meta/0.papgt`. On *Apply*, Pylune
-builds its own archive group (`0100`) in `~/.local/share/pylune/overlay/`, writes a new
+The game only loads content from PAZ archives listed in `meta/0.papgt`. On *Apply*, Pailune
+builds its own archive group (`0100`) in `~/.local/share/pailune/overlay/`, writes a new
 `0.papgt` that lists it **first** (from the vanilla backup, after checking it against every
 installed archive index), and links both into the game folder. Vanilla archives are never
 modified; *Unlink all* restores the original `0.papgt` (and `0.pathc`) byte for byte. Format details:
@@ -163,7 +163,7 @@ cargo test -- --ignored    # also talks to api.nexusmods.com, renders screens (G
 ```
 
 **AppImage:** `APPIMAGETOOL=/path/to/appimagetool packaging/appimage.sh` writes
-`target/appimage/Pylune-<version>-x86_64.AppImage`. It runs on systems whose glibc is at least as
+`target/appimage/Pailune-<version>-x86_64.AppImage`. It runs on systems whose glibc is at least as
 new as the build machine's; release AppImages are built by CI on Ubuntu 22.04 (glibc 2.35).
 Register the `nxm://` handler from the AppImage you keep — the link points at that file.
 
@@ -173,5 +173,5 @@ Register the `nxm://` handler from the AppImage you keep — the link points at 
 
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
 [MIT license](LICENSE-MIT) at your option. Unless you explicitly state otherwise, any
-contribution intentionally submitted for inclusion in Pylune shall be dual licensed as above,
+contribution intentionally submitted for inclusion in Pailune shall be dual licensed as above,
 without any additional terms or conditions.

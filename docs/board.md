@@ -1,4 +1,4 @@
-# Pylune board
+# Pailune board
 
 Work items from [audit.md](audit.md), scheduled by [roadmap.md](roadmap.md).
 Move a line between columns when its status changes.
@@ -41,7 +41,7 @@ Move a line between columns when its status changes.
   table bodies; headers are now packed too, see `paz-format.md` §9.1). `local/test-mods/`, see its `TESTING.md`: arrow stacks
   (`ItemInfo._maxStackCount`), hunting amounts (drop-entry amount A/B = min/max?), drop rates
   (drop-entry rate). Also the first in-game check of patched data tables through the overlay.
-- [ ] A-21 (rest) Register Pylune with Nexus (AUP) before a public release
+- [ ] A-21 (rest) Register Pailune with Nexus (AUP) before a public release
 
 ## Done
 
@@ -90,7 +90,7 @@ Move a line between columns when its status changes.
   self-describing body (schema, table of contents, exact object walk for every field kind),
   readable values and trees. Verified on all 10 real saves: HMACs valid, byte-identical
   re-encryption, 1 881/1 881 objects decoded exactly. Read-only slot list and inspector
-  (Settings › Backups › Save games), `pylune saves` / `pylune save <slot> --find …`, MCP tools
+  (Settings › Backups › Save games), `pailune saves` / `pailune save <slot> --find …`, MCP tools
   `list_saves` / `read_save`. What saves hold is documented in `docs/save-format.md`.
 - [x] D-12 accepted: no script runtime; ASI plugin management instead (added to Backlog).
 - [x] B-08 Windows GUI subsystem (no console window behind the app); command-line runs re-attach
@@ -130,8 +130,8 @@ Move a line between columns when its status changes.
   files; native mods are ASI plugins with per-patch pattern hooks; proposal D-12.
 - [x] B-14 command line and MCP (`src/cli/`, `src/mcp/`): 25 commands with `--json` and exit
   codes, `--yes` for irreversible ones; read-only commands read the database (work with the
-  window open), changing ones drive a headless `PyluneApp` under the instance lock (same rules as
-  the buttons); `pylune mcp` serves 24 tools over stdio (MCP 2025-06-18, tool annotations,
+  window open), changing ones drive a headless `PailuneApp` under the instance lock (same rules as
+  the buttons); `pailune mcp` serves 24 tools over stdio (MCP 2025-06-18, tool annotations,
   `confirm: true` for destructive tools, errors as `isError` results). Tested: CLI parsing,
   an MCP session installing/ordering/applying mods, and a smoke test of the binary in isolated
   folders (which caught `--json status` opening the window — fixed).
@@ -205,7 +205,7 @@ Move a line between columns when its status changes.
 - [x] A-28 (part) multi-variant mods: option folders detected (≥ 2 sibling folders with game
   layouts), only the chosen option (default: first) deployed, shared root files always; picker in
   the details panel; choice stored (schema v4).
-- [x] A-31 UI actions tested through a headless `PyluneApp` (import/apply/delete, profiles,
+- [x] A-31 UI actions tested through a headless `PailuneApp` (import/apply/delete, profiles,
   settings validation, nxm key rule, collection pending downloads); Nexus download, install,
   update check, rate limits and key rejection tested against a local mock API (`[nexus] api_url`).
 - [x] A-29 (part) dual license MIT OR Apache-2.0 (`LICENSE-MIT`, `LICENSE-APACHE`).

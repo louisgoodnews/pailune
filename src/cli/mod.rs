@@ -1,5 +1,5 @@
-//! Command-line interface (board item B-14): `pylune <command>` manages mods
-//! without the window; `pylune mcp` serves the same operations to AI agents
+//! Command-line interface (board item B-14): `pailune <command>` manages mods
+//! without the window; `pailune mcp` serves the same operations to AI agents
 //! over the Model Context Protocol. Without a command the window opens.
 
 pub mod engine;
@@ -9,15 +9,15 @@ mod saves;
 
 use crate::config::Config;
 use crate::config::paths::DataPaths;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use clap::{Parser, Subcommand};
 use ops::{Op, Report};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-/// Pylune — Crimson Desert mod manager.
+/// Pailune — Crimson Desert mod manager.
 #[derive(Debug, Parser)]
-#[command(name = "pylune", version, about)]
+#[command(name = "pailune", version, about)]
 pub struct Cli {
     #[command(subcommand)]
     command: Option<Command>,
@@ -46,7 +46,7 @@ enum Command {
         #[arg(long, default_value_t = 50)]
         limit: usize,
     },
-    /// Pylune and save-game backups.
+    /// Pailune and save-game backups.
     Backups,
     /// The game's save slots (level, time).
     Saves,
@@ -97,7 +97,7 @@ enum Command {
         #[arg(long)]
         full: bool,
     },
-    /// Restore a Pylune backup (needs --yes).
+    /// Restore a Pailune backup (needs --yes).
     Restore { path: PathBuf },
     /// Back up the game's save files.
     BackupSaves,
@@ -160,7 +160,7 @@ fn op(command: Command) -> Option<Op> {
     })
 }
 
-/// Prints a line; a closed pipe (`pylune list | head`) is not an error.
+/// Prints a line; a closed pipe (`pailune list | head`) is not an error.
 fn out(text: &str) {
     use std::io::Write;
     let _ = writeln!(std::io::stdout(), "{text}");
@@ -188,16 +188,16 @@ pub fn parse() -> Option<Cli> {
 pub fn run(cli: Cli, paths: DataPaths, config: Config) -> ExitCode {
     let (json, yes) = (cli.json, cli.yes);
     let Some(command) = cli.command else {
-        // Options without a command, e.g. `pylune --json`.
-        eprintln!("pylune: a command is needed — see `pylune --help`");
+        // Options without a command, e.g. `pailune --json`.
+        eprintln!("pailune: a command is needed — see `pailune --help`");
         return ExitCode::from(2);
     };
     let Some(op) = op(command) else {
         return crate::mcp::serve(paths, config);
     };
     let outcome = match op.destructive() && !yes {
-        true => Err(PyluneError::Invalid(
-            "this cannot be undone from Pylune — repeat with --yes to confirm".into(),
+        true => Err(PailuneError::Invalid(
+            "this cannot be undone from Pailune — repeat with --yes to confirm".into(),
         )),
         false => execute(&op, &paths, &config),
     };
@@ -221,7 +221,7 @@ pub fn run(cli: Cli, paths: DataPaths, config: Config) -> ExitCode {
             ExitCode::FAILURE
         }
         (Err(err), false) => {
-            eprintln!("pylune: {err}");
+            eprintln!("pailune: {err}");
             ExitCode::FAILURE
         }
     }
@@ -234,15 +234,15 @@ mod tests {
     #[test]
     fn global_flags_work_before_and_after_the_command() {
         let parse = |args: &[&str]| Cli::try_parse_from(args).unwrap();
-        let cli = parse(&["pylune", "--json", "status"]);
+        let cli = parse(&["pailune", "--json", "status"]);
         assert!(cli.json && matches!(cli.command, Some(Command::Status)));
-        let cli = parse(&["pylune", "clean-slate", "--yes"]);
+        let cli = parse(&["pailune", "clean-slate", "--yes"]);
         assert!(cli.yes && matches!(cli.command, Some(Command::CleanSlate)));
-        let cli = parse(&["pylune", "move", "My Mod", "3"]);
+        let cli = parse(&["pailune", "move", "My Mod", "3"]);
         assert!(matches!(
             op(cli.command.unwrap()),
             Some(Op::Move { position: 3, .. })
         ));
-        assert!(Cli::try_parse_from(["pylune", "nxm://crimsondesert/mods/1"]).is_err());
+        assert!(Cli::try_parse_from(["pailune", "nxm://crimsondesert/mods/1"]).is_err());
     }
 }

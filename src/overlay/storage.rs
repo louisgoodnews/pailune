@@ -1,4 +1,4 @@
-//! How packed files are stored in Pylune's archive group.
+//! How packed files are stored in Pailune's archive group.
 
 /// The flags a packed file is stored with. Compression type 1 ("partial")
 /// is written for textures only; other files using it in the game (`.pac`

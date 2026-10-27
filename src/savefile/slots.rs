@@ -2,7 +2,7 @@
 
 use super::body::{self, walk};
 use super::view::{Node, find, tree};
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use std::path::{Path, PathBuf};
 
 /// One save slot.
@@ -31,7 +31,7 @@ fn slot(dir: &Path) -> Slot {
         .map(|m| m.len())
         .unwrap_or(0);
     let summary = std::fs::read(dir.join("lobby.save"))
-        .map_err(|e| PyluneError::Invalid(e.to_string()))
+        .map_err(|e| PailuneError::Invalid(e.to_string()))
         .and_then(|bytes| super::decode(&bytes))
         .and_then(|save| {
             let body = body::parse(&save.body)?;

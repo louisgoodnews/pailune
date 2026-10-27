@@ -1,6 +1,6 @@
 # Architecture
 
-Pylune is one Rust binary (edition 2024). This page explains how its parts fit together; the
+Pailune is one Rust binary (edition 2024). This page explains how its parts fit together; the
 code's rustdoc (`cargo doc --document-private-items`) has the details of every item.
 
 ## Layers
@@ -33,10 +33,10 @@ a plan is computed, then executed), which keeps them testable without a window o
 | `fomod/` | FOMOD installers: XML model and parser, resolution of choices into files (used by `mod_engine::plan`). |
 | `symlink/` | Executes link plans: `.bak` displacement, write-ahead journal, exact undeploy. |
 | `paz/` | Read/write of the game's archive formats (PAPGT, PAMT, PAZ, PATHC, PAVER), ChaCha20, LZ4, DDS. See [paz-format.md](paz-format.md). |
-| `overlay/` | Builds Pylune's archive group (`0100`) and a rebuilt `meta/0.papgt`/`0.pathc` from enabled mods; output is deployed as symlinks. |
+| `overlay/` | Builds Pailune's archive group (`0100`) and a rebuilt `meta/0.papgt`/`0.pathc` from enabled mods; output is deployed as symlinks. |
 | `patch/` | Byte-patch JSON and CSS patch/merge files applied to archived game files. |
 | `backup/` | Snapshot of the game's `meta/` files to `.bak`; detection of game updates and foreign archive folders. |
-| `app_backup/` | Backups of Pylune itself (settings, database, optionally mod files) and restore. |
+| `app_backup/` | Backups of Pailune itself (settings, database, optionally mod files) and restore. |
 | `savefile/` | Reading the game's save files: container crypto, self-describing body, readable trees, slot summaries (read-only). |
 | `save_backup/` | Backups of the game's save folder in the Proton prefix. |
 | `nexus/` | REST v1 + GraphQL v2 client, downloads (resume, MD5), `nxm://` parsing and handler registration, update chains, collections, rate limits, API key storage. |
@@ -44,27 +44,27 @@ a plan is computed, then executed), which keeps them testable without a window o
 | `steam/` | Steam library discovery, VDF parser, game/prefix/loader detection. |
 | `profiles/` | Saved mod setups (enabled set, order, launch options), JSON export/import. |
 | `platform/` | Operating-system differences behind one set of functions (Steam roots, linking, opening, Steam client, process check, private files, `AppData/Local`, Proton or not); `linux.rs` is the reference, `windows.rs`/`macos.rs` are built by CI. |
-| `cli/` | Command line: `ops.rs` (the `Op` set shared with MCP), `read.rs` (read-only, straight from the database), `engine.rs` (changing operations through a headless `PyluneApp` holding the instance lock), clap front-end. |
+| `cli/` | Command line: `ops.rs` (the `Op` set shared with MCP), `read.rs` (read-only, straight from the database), `engine.rs` (changing operations through a headless `PailuneApp` holding the instance lock), clap front-end. |
 | `mcp/` | Model Context Protocol server over stdio (JSON-RPC 2.0); `tools/table.rs` lists the tools, `tools/mod.rs` maps calls to `Op`s. |
 | `instance.rs` | `flock` single-instance lock and the spool directory through which a second start hands over `nxm://` links or a focus request. |
 | `logging/` | Daily log files (`tracing`), the per-mod event journal and per-mod log files. |
 | `jobs/` | Job kinds, the pool, the job context (config snapshot, DB connection, progress, game lock), and `tasks/` implementing each job. |
-| `ui/` | `PyluneApp` state (`mod.rs`, `state.rs`), user intents (`intent.rs`), state transitions (`actions/`), rendering (`views/`), onboarding (`guide/`), theme, shortcuts. |
+| `ui/` | `PailuneApp` state (`mod.rs`, `state.rs`), user intents (`intent.rs`), state transitions (`actions/`), rendering (`views/`), onboarding (`guide/`), theme, shortcuts. |
 
 ## Threads and processes
 
-- **UI thread.** egui calls `PyluneApp::logic` and `ui` every frame. Views read state and return
+- **UI thread.** egui calls `PailuneApp::logic` and `ui` every frame. Views read state and return
   `Action`s; `dispatch` applies them (`ui/actions/`). Anything slower than a few milliseconds is
   submitted as a job. A ticker thread requests a repaint every second, so polling continues while
   the window is hidden.
 - **Job pool** (`jobs/pool.rs`). `max_parallel` shared workers run downloads, imports, Nexus
   queries and conflict analysis. A separate single-thread **exclusive lane** runs every job that
-  touches the game folder or Pylune's state as a whole (Apply, Unlink, Clean Slate, delete,
+  touches the game folder or Pailune's state as a whole (Apply, Unlink, Clean Slate, delete,
   backups) strictly in submission order. Each job gets a `JobContext` with a snapshot of the
   config and its own database connection; panics are caught and reported as failures.
 - **Polling** (`ui/actions/poll.rs`). Once per second the UI drains job events, checks whether
   the game process runs, and reads the spool for requests from secondary instances.
-- **Single instance** (`instance.rs`). The first Pylune holds a `flock`. A second start (e.g. the
+- **Single instance** (`instance.rs`). The first Pailune holds a `flock`. A second start (e.g. the
   browser opening an `nxm://` link) writes the request into the spool directory and exits.
 
 ## Main flows
@@ -96,7 +96,7 @@ checks size and MD5 → imports like a local archive and records the Nexus origi
 
 ## Errors, logging, persistence
 
-- One error type (`error::PyluneError`, `thiserror`); I/O errors carry their path. Actions turn
+- One error type (`error::PailuneError`, `thiserror`); I/O errors carry their path. Actions turn
   errors into a red status line; jobs report them in the jobs panel and the Log tab.
 - `tracing` writes daily log files; domain events (install, deploy, backup …) go to the
   `events` table and per-mod log files, shown in the Log tab.

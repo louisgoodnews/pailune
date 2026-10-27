@@ -1,4 +1,4 @@
-//! Shown instead of the main window when Pylune cannot start safely.
+//! Shown instead of the main window when Pailune cannot start safely.
 
 use super::theme::{self, danger, muted};
 use crate::config::paths::DataPaths;
@@ -33,7 +33,7 @@ impl eframe::App for FatalApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         theme::apply(ui.ctx(), &Default::default());
         egui::CentralPanel::default().show(ui, |ui| {
-            ui.heading(RichText::new("Pylune cannot open its database").color(danger()));
+            ui.heading(RichText::new("Pailune cannot open its database").color(danger()));
             ui.label(&self.message);
             ui.add_space(8.0);
             ui.label(
@@ -41,8 +41,8 @@ impl eframe::App for FatalApp {
             );
             ui.label(
                 "Nothing in the game folder was changed. If another program is using the \
-                 database, close it and start Pylune again. If the file is damaged, move it \
-                 aside (keep a copy) and Pylune will create a new one; the game folder can \
+                 database, close it and start Pailune again. If the file is damaged, move it \
+                 aside (keep a copy) and Pailune will create a new one; the game folder can \
                  then be cleaned with Clean Slate.",
             );
             ui.add_space(8.0);

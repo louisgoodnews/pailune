@@ -2,7 +2,7 @@
 
 use super::setting;
 use crate::config::prefs::{Density, Theme};
-use crate::ui::{Action, PyluneApp, SettingsDraft};
+use crate::ui::{Action, PailuneApp, SettingsDraft};
 use eframe::egui;
 
 /// Scale presets offered (a list instead of a slider, so the control does
@@ -99,12 +99,12 @@ pub fn mods(ui: &mut egui::Ui, draft: &mut SettingsDraft) -> Vec<Action> {
 }
 
 /// Automatic backups, then the list of existing backups.
-pub fn backups(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+pub fn backups(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     let prefs = &mut app.draft.config.backup;
     setting(
         ui,
         "Daily automatic backup",
-        "Saves settings, profiles and the mod list once a day when Pylune starts.",
+        "Saves settings, profiles and the mod list once a day when Pailune starts.",
         |ui| drop(ui.checkbox(&mut prefs.auto_daily, "")),
     );
     setting(

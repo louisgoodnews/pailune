@@ -1,7 +1,7 @@
 //! Pure transformations on [`ProfileBook`]s and registries.
 
 use super::{LoadOutcome, Profile, ProfileBook, ProfileSlot};
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::mod_engine::model::{ModEntry, Registry};
 
 /// Captures the registry's current selection and order as a profile.
@@ -25,7 +25,7 @@ pub fn find<'a>(book: &'a ProfileBook, name: &str) -> Result<&'a Profile> {
     book.profiles
         .iter()
         .find(|p| p.name == name)
-        .ok_or_else(|| PyluneError::Invalid(format!("no profile named '{name}'")))
+        .ok_or_else(|| PailuneError::Invalid(format!("no profile named '{name}'")))
 }
 
 /// Reorders and re-flags `registry` according to `profile`.

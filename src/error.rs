@@ -3,9 +3,9 @@
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// Every failure Pylune can surface to the user.
+/// Every failure Pailune can surface to the user.
 #[derive(Debug, thiserror::Error)]
-pub enum PyluneError {
+pub enum PailuneError {
     /// A filesystem operation failed on a specific path.
     #[error("{path}: {source}")]
     Io { path: PathBuf, source: io::Error },
@@ -35,36 +35,36 @@ pub enum PyluneError {
     Invalid(String),
 }
 
-impl From<zip::result::ZipError> for PyluneError {
+impl From<zip::result::ZipError> for PailuneError {
     fn from(err: zip::result::ZipError) -> Self {
         Self::Archive(err.to_string())
     }
 }
 
-impl From<sevenz_rust2::Error> for PyluneError {
+impl From<sevenz_rust2::Error> for PailuneError {
     fn from(err: sevenz_rust2::Error) -> Self {
         Self::Archive(err.to_string())
     }
 }
 
-impl From<unrar::error::UnrarError> for PyluneError {
+impl From<unrar::error::UnrarError> for PailuneError {
     fn from(err: unrar::error::UnrarError) -> Self {
         Self::Archive(err.to_string())
     }
 }
 
-/// Shorthand result type used throughout Pylune.
-pub type Result<T> = std::result::Result<T, PyluneError>;
+/// Shorthand result type used throughout Pailune.
+pub type Result<T> = std::result::Result<T, PailuneError>;
 
 /// Attaches the offending path to an [`io::Result`].
 pub trait IoContext<T> {
-    /// Converts the error into [`PyluneError::Io`] carrying `path`.
+    /// Converts the error into [`PailuneError::Io`] carrying `path`.
     fn at(self, path: &Path) -> Result<T>;
 }
 
 impl<T> IoContext<T> for io::Result<T> {
     fn at(self, path: &Path) -> Result<T> {
-        self.map_err(|source| PyluneError::Io {
+        self.map_err(|source| PailuneError::Io {
             path: path.to_path_buf(),
             source,
         })

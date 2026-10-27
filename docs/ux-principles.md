@@ -1,10 +1,10 @@
-# Pylune UX principles
+# Pailune UX principles
 
-The design rules behind Pylune's interface (board item B-04), each tied to published evidence from
+The design rules behind Pailune's interface (board item B-04), each tied to published evidence from
 computer science (HCI), cognitive psychology, pedagogy and behavioural economics. Every rule has
 an ID (`R-xx`) so code reviews and issues can refer to it.
 
-Pylune's audience is gamers modding a single game on Linux. Most of them are not experts in
+Pailune's audience is gamers modding a single game on Linux. Most of them are not experts in
 archives, symlinks or Proton, they want to play soon, and they care a great deal about not
 breaking their game or their saves. The rules below are chosen for that situation.
 
@@ -60,7 +60,7 @@ grows with the logarithm of the number of equally likely choices (Hick, 1952; Hy
 Recognition is easier than recall (Nielsen heuristic #6). Gestalt grouping by proximity and
 similarity guides what belongs together (Wertheimer, 1923). Choice overload is often cited, but a
 meta-analysis found an average effect near zero with large variation (Scheibehenne et al., 2010),
-so Pylune does not hide options for that reason alone.
+so Pailune does not hide options for that reason alone.
 
 - **R-09** Progressive disclosure: show the common task first, put rare or expert options one
   level deeper (Settings categories, "Advanced" sections, details panel).
@@ -142,7 +142,7 @@ when left alone and findable when needed.
 
 ---
 
-## Where the rules live in Pylune
+## Where the rules live in Pailune
 
 | Rules | Implementation |
 |-------|----------------|

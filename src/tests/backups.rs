@@ -1,4 +1,4 @@
-//! Backup and restore of Pylune's own state.
+//! Backup and restore of Pailune's own state.
 
 use super::{enabled_registry, fixture};
 use crate::app_backup::{BackupKind, create, restore};

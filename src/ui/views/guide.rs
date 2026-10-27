@@ -6,7 +6,7 @@ use super::clicked;
 use crate::ui::guide::steps::{CONCEPTS, Facts, STEPS, Step};
 use crate::ui::guide::{GuideAction, GuidePage, topics};
 use crate::ui::theme::{accent, muted, success};
-use crate::ui::{Action, DeployAction, ModAction, PyluneApp, Tab};
+use crate::ui::{Action, DeployAction, ModAction, PailuneApp, Tab};
 use eframe::egui::{self, RichText};
 
 /// Buttons that perform a step for the user.
@@ -123,14 +123,14 @@ fn topic_list(ui: &mut egui::Ui, query: &mut String) {
 }
 
 /// Renders the guide window (if open) and returns triggered actions.
-pub fn show(ctx: &egui::Context, app: &mut PyluneApp) -> Vec<Action> {
+pub fn show(ctx: &egui::Context, app: &mut PailuneApp) -> Vec<Action> {
     if !app.guide.open {
         return Vec::new();
     }
     let facts = app.guide_facts();
     let mut show_at_start = app.config.behavior.show_guide;
     let mut open = true;
-    let inner = egui::Window::new("❓ Pylune guide")
+    let inner = egui::Window::new("❓ Pailune guide")
         .open(&mut open)
         .default_width(420.0)
         // Beside the mod list, below the header, so the steps' targets stay visible.
@@ -156,7 +156,7 @@ pub fn show(ctx: &egui::Context, app: &mut PyluneApp) -> Vec<Action> {
             };
             ui.separator();
             let toggled = ui
-                .checkbox(&mut show_at_start, "Show this guide when Pylune starts")
+                .checkbox(&mut show_at_start, "Show this guide when Pailune starts")
                 .changed();
             ui.label(
                 RichText::new("Reopen it any time with ❓ Guide or F1.")

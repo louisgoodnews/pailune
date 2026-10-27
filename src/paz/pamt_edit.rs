@@ -8,7 +8,7 @@
 use super::hash::pa_hash;
 use super::pamt::full_name;
 use super::reader::Reader;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use std::collections::BTreeMap;
 
 /// Where a redirected file's entry now lives in the added archive.
@@ -27,8 +27,8 @@ pub struct AddedPaz {
     pub size: u32,
 }
 
-fn bad(what: String) -> PyluneError {
-    PyluneError::Archive(what)
+fn bad(what: String) -> PailuneError {
+    PailuneError::Archive(what)
 }
 
 /// Byte position of every file record, by lowercase virtual path, and the

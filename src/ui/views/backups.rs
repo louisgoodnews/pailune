@@ -1,9 +1,9 @@
-//! Backups section: create, restore and delete backups of Pylune's state.
+//! Backups section: create, restore and delete backups of Pailune's state.
 
 use super::clicked;
 use crate::app_backup::{BackupInfo, BackupKind};
 use crate::ui::theme::muted;
-use crate::ui::{Action, BackupAction, Confirm, PyluneApp};
+use crate::ui::{Action, BackupAction, Confirm, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// One backup: time, contents and its buttons.
@@ -38,8 +38,8 @@ fn row(ui: &mut egui::Ui, b: &BackupInfo) -> Vec<Action> {
 }
 
 /// Renders the section and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
-    ui.heading("Pylune backups");
+pub fn show(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
+    ui.heading("Pailune backups");
     ui.label(
         RichText::new(
             "Backups hold your settings, mod list (order, choices), profiles and collections; a full \

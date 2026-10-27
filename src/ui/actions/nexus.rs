@@ -1,13 +1,13 @@
 //! Nexus page actions; network work runs as background jobs.
 
 use crate::db;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::jobs::JobKind;
 use crate::nexus::download::DownloadJob;
 use crate::nexus::{handler, key, nxm};
-use crate::ui::{Incoming, Level, NexusAction, PyluneApp, StatusLine};
+use crate::ui::{Incoming, Level, NexusAction, PailuneApp, StatusLine};
 
-/// Key/value entry remembering the `nxm://` handler Pylune replaced.
+/// Key/value entry remembering the `nxm://` handler Pailune replaced.
 const PREVIOUS_HANDLER: &str = "previous_nxm_handler";
 
 /// An informational status line.
@@ -15,7 +15,7 @@ fn info(text: impl Into<String>) -> Option<StatusLine> {
     Some(StatusLine::new(Level::Info, text))
 }
 
-impl PyluneApp {
+impl PailuneApp {
     /// Handles Nexus page actions.
     pub(super) fn nexus_action(&mut self, action: NexusAction) -> Result<Option<StatusLine>> {
         match action {
@@ -82,9 +82,9 @@ impl PyluneApp {
                 self.nexus.handler_registered = handler::is_registered();
                 let text = match previous {
                     Some(p) => {
-                        format!("Pylune now handles nxm:// links; links for other games go to {p}")
+                        format!("Pailune now handles nxm:// links; links for other games go to {p}")
                     }
-                    None => "Pylune now handles nxm:// links".into(),
+                    None => "Pailune now handles nxm:// links".into(),
                 };
                 Ok(Some(StatusLine::new(Level::Success, text)))
             }
@@ -97,9 +97,9 @@ impl PyluneApp {
             .nexus
             .browsing
             .clone()
-            .ok_or_else(|| PyluneError::Invalid("no mod selected".into()))?;
+            .ok_or_else(|| PailuneError::Invalid("no mod selected".into()))?;
         if self.nexus.user.as_ref().is_some_and(|u| !u.is_premium) {
-            return Err(PyluneError::Invalid(
+            return Err(PailuneError::Invalid(
                 "direct downloads need Nexus Premium — use \"Mod Manager Download\" on the website"
                     .into(),
             ));
@@ -178,7 +178,7 @@ impl PyluneApp {
         }
     }
 
-    /// Hands a link for another game to the handler Pylune replaced.
+    /// Hands a link for another game to the handler Pailune replaced.
     fn forward_nxm(&self, url: &str) -> StatusLine {
         let previous = db::get_value(&self.conn, PREVIOUS_HANDLER).ok().flatten();
         match previous.map(|p| handler::forward(&p, url).map(|()| p)) {

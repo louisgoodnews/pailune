@@ -2,7 +2,7 @@
 
 use super::ops::Report;
 use crate::config::Config;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::savefile::slots::{inspect, slots};
 use crate::savefile::view::Node;
 use serde_json::{Value, json};
@@ -13,7 +13,7 @@ fn save_dir(config: &Config) -> Result<PathBuf> {
     let prefix = crate::steam::locate::resolve(config).prefix_dir;
     crate::save_backup::save_dir(prefix.as_deref())
         .filter(|d| d.is_dir())
-        .ok_or_else(|| PyluneError::Invalid("no save folder found (start the game once)".into()))
+        .ok_or_else(|| PailuneError::Invalid("no save folder found (start the game once)".into()))
 }
 
 /// Every slot with level and time.
@@ -83,7 +83,7 @@ pub fn show(config: &Config, slot: &str, find: Option<&str>) -> Result<Report> {
         .into_iter()
         .find(|s| s.name == name);
     let dir = found
-        .ok_or_else(|| PyluneError::Invalid(format!("no save slot '{name}'")))?
+        .ok_or_else(|| PailuneError::Invalid(format!("no save slot '{name}'")))?
         .dir;
     let needle = find.unwrap_or_default().to_lowercase();
     let tree: Vec<Value> = inspect(&dir)?

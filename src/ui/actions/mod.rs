@@ -14,7 +14,7 @@ mod save_edit;
 pub use save_edit::changes as save_changes;
 mod settings;
 
-use super::{Action, Confirm, JobState, JobView, Level, PyluneApp, StatusLine};
+use super::{Action, Confirm, JobState, JobView, Level, PailuneApp, StatusLine};
 use crate::backup::snapshot;
 use crate::db;
 use crate::error::Result;
@@ -33,7 +33,7 @@ impl StatusLine {
     }
 }
 
-impl PyluneApp {
+impl PailuneApp {
     /// Applies one action and records its outcome in the status bar.
     pub fn dispatch(&mut self, action: Action) {
         let outcome: Result<Option<StatusLine>> = match action {
@@ -48,7 +48,7 @@ impl PyluneApp {
             Action::ModList(action) => self.modlist_action(action),
             Action::SwitchTab(tab) => {
                 self.tab = tab;
-                // The game writes saves while Pylune runs: read them fresh.
+                // The game writes saves while Pailune runs: read them fresh.
                 let fresh = match tab {
                     super::Tab::Saves => self.reload(),
                     _ => Ok(()),
@@ -230,7 +230,7 @@ impl PyluneApp {
     pub(super) fn open_path(&self, path: &std::path::Path) -> Result<()> {
         let command = crate::platform::open_command(path.as_os_str());
         crate::launch::run::spawn(command).map_err(|e| {
-            crate::error::PyluneError::Invalid(format!("could not open {}: {e}", path.display()))
+            crate::error::PailuneError::Invalid(format!("could not open {}: {e}", path.display()))
         })
     }
 }

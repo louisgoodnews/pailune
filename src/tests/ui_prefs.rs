@@ -164,7 +164,7 @@ fn fomod_installers_follow_the_chosen_options() {
     app.dispatch(Action::Mod(ModAction::Select("Better Things".into())));
     let installer = app.mods.details.as_ref().unwrap().1.installer.clone();
     assert!(installer.is_some(), "installer detected");
-    let links = |app: &crate::ui::PyluneApp| {
+    let links = |app: &crate::ui::PailuneApp| {
         let entry = app
             .registry
             .mods

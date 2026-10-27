@@ -1,7 +1,7 @@
 //! Blocking HTTP client for the Nexus Mods v1 API.
 
 use super::{DownloadLink, FileList, NexusMod, NexusUser, NxmLink};
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use serde::de::DeserializeOwned;
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ const COLLECTION_QUERY: &str = "query Rev($slug: String!, $domain: String, $revi
     collection { name slug } modFiles { fileId optional file { modId name version sizeInBytes \
     mod { name } } } } }";
 /// Sent as `Application-Name`, as the Nexus API guidelines ask.
-const APP_NAME: &str = "Pylune";
+const APP_NAME: &str = "Pailune";
 /// Sent as `Application-Version`.
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -54,7 +54,7 @@ fn encode(value: &str) -> String {
         .collect()
 }
 
-/// Builds an agent with the Pylune user agent and the given limits.
+/// Builds an agent with the Pailune user agent and the given limits.
 fn agent(global: Option<Duration>, per_read: Option<Duration>) -> ureq::Agent {
     let config = ureq::Agent::config_builder()
         .timeout_global(global)
@@ -70,19 +70,19 @@ fn agent(global: Option<Duration>, per_read: Option<Duration>) -> ureq::Agent {
 }
 
 /// Translates well-known status codes into actionable messages.
-fn explain(err: ureq::Error) -> PyluneError {
+fn explain(err: ureq::Error) -> PailuneError {
     match err {
-        ureq::Error::StatusCode(401) => PyluneError::Invalid("Nexus rejected the API key".into()),
-        ureq::Error::StatusCode(403) => PyluneError::Invalid(
+        ureq::Error::StatusCode(401) => PailuneError::Invalid("Nexus rejected the API key".into()),
+        ureq::Error::StatusCode(403) => PailuneError::Invalid(
             "Nexus refused the download — free accounts must use the website's \
              \"Mod Manager Download\" button (nxm:// link)"
                 .into(),
         ),
-        ureq::Error::StatusCode(404) => PyluneError::Invalid("not found on Nexus Mods".into()),
+        ureq::Error::StatusCode(404) => PailuneError::Invalid("not found on Nexus Mods".into()),
         ureq::Error::StatusCode(429) => {
-            PyluneError::Invalid("Nexus rate limit reached, try later".into())
+            PailuneError::Invalid("Nexus rate limit reached, try later".into())
         }
-        other => PyluneError::Http(other),
+        other => PailuneError::Http(other),
     }
 }
 
@@ -106,7 +106,7 @@ impl Client {
 
     /// Performs an authenticated GET and decodes the JSON body.
     fn get_json<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
-        super::limits::allow().map_err(PyluneError::Invalid)?;
+        super::limits::allow().map_err(PailuneError::Invalid)?;
         let mut response = self
             .agent
             .get(format!("{}/v1{path}", self.api))
@@ -176,7 +176,7 @@ impl Client {
         let path = format!("/games/{}/mods/md5_search/{md5}.json", self.domain);
         let hits: Vec<serde_json::Value> = match self.get_json(&path) {
             Ok(hits) => hits,
-            Err(PyluneError::Invalid(msg)) if msg.contains("not found") => return Ok(Vec::new()),
+            Err(PailuneError::Invalid(msg)) if msg.contains("not found") => return Ok(Vec::new()),
             Err(err) => return Err(err),
         };
         Ok(hits
@@ -199,7 +199,7 @@ impl Client {
             "query": COLLECTION_QUERY,
             "variables": { "slug": slug, "domain": self.domain, "revision": revision },
         });
-        super::limits::allow().map_err(PyluneError::Invalid)?;
+        super::limits::allow().map_err(PailuneError::Invalid)?;
         let mut reply = self
             .agent
             .post(format!("{}/v2/graphql", self.api))
@@ -215,7 +215,7 @@ impl Client {
                 .get("errors")
                 .map(|e| e.to_string())
                 .unwrap_or_else(|| "no such collection".into());
-            PyluneError::Invalid(format!("collection {slug}: {detail}"))
+            PailuneError::Invalid(format!("collection {slug}: {detail}"))
         })
     }
 }

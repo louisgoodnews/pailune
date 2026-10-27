@@ -1,4 +1,4 @@
-//! The MCP tools Pylune offers (data only).
+//! The MCP tools Pailune offers (data only).
 
 /// One tool: name, description, input schema, and hints for clients.
 pub struct Tool {
@@ -52,7 +52,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "list_backups",
-        description: "Pylune backups (settings, mod list, optionally mod files) and save-game backups.",
+        description: "Pailune backups (settings, mod list, optionally mod files) and save-game backups.",
         params: &[],
         read_only: true,
         destructive: false,
@@ -126,7 +126,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "delete_mod",
-        description: "Delete a mod. It moves to Pylune's trash and can be restored from the window.",
+        description: "Delete a mod. It moves to Pailune's trash and can be restored from the window.",
         params: &[NAME],
         read_only: false,
         destructive: false,
@@ -189,7 +189,7 @@ pub const TOOLS: &[Tool] = &[
     },
     Tool {
         name: "restore_backup",
-        description: "Restore a Pylune backup (all mods must be unlinked; a safety backup is taken first). Requires confirm: true.",
+        description: "Restore a Pailune backup (all mods must be unlinked; a safety backup is taken first). Requires confirm: true.",
         params: &[
             ("path", "string", "Backup file from list_backups"),
             ("confirm", "boolean", "Must be true"),

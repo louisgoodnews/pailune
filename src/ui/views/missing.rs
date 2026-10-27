@@ -4,7 +4,7 @@
 use super::clicked;
 use crate::modlist::ListedMod;
 use crate::ui::theme::muted;
-use crate::ui::{Action, ModListAction, PyluneApp};
+use crate::ui::{Action, ModListAction, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// One missing mod: name, where it came from, and how to get it.
@@ -32,7 +32,7 @@ fn row(ui: &mut egui::Ui, index: usize, listed: &ListedMod) -> Vec<Action> {
 }
 
 /// Renders the window while an imported list has missing mods.
-pub fn show(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
+pub fn show(ctx: &egui::Context, app: &PailuneApp) -> Vec<Action> {
     let Some(import) = &app.mods.list_import else {
         return Vec::new();
     };

@@ -1,4 +1,4 @@
-//! Registering Pylune as the desktop handler for `nxm://` links, and
+//! Registering Pailune as the desktop handler for `nxm://` links, and
 //! forwarding links for other games to the handler it replaced.
 //!
 //! Linux uses freedesktop `.desktop` files and `xdg-mime`; Windows the
@@ -6,13 +6,13 @@
 //! registration is not supported yet. The "previous handler" is a desktop
 //! file name on Linux and a command line on Windows.
 
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// Desktop entry file name used for the registration.
-pub const DESKTOP_FILE: &str = "pylune-nxm.desktop";
+pub const DESKTOP_FILE: &str = "pailune-nxm.desktop";
 /// MIME type desktops use for `nxm://` links.
 const MIME: &str = "x-scheme-handler/nxm";
 
@@ -34,7 +34,7 @@ fn pick_executable(
 ) -> Result<PathBuf> {
     match appimage.map(PathBuf::from).filter(|p| p.is_file()) {
         Some(image) => Ok(image),
-        None => current.map_err(|e| PyluneError::Invalid(e.to_string())),
+        None => current.map_err(|e| PailuneError::Invalid(e.to_string())),
     }
 }
 
@@ -54,7 +54,7 @@ pub fn escape_exec_arg(arg: &str) -> String {
 /// Contents of the `.desktop` entry launching `exe` with the link.
 fn desktop_entry(exe: &Path) -> String {
     format!(
-        "[Desktop Entry]\nType=Application\nName=Pylune\n\
+        "[Desktop Entry]\nType=Application\nName=Pailune\n\
          Comment=Crimson Desert mod manager (nxm:// handler)\n\
          Exec={} %u\nTerminal=false\nNoDisplay=true\nMimeType={MIME};\n",
         escape_exec_arg(&exe.display().to_string())
@@ -70,7 +70,7 @@ fn current_default() -> Option<String> {
     Some(String::from_utf8_lossy(&out.stdout).trim().to_string()).filter(|s| !s.is_empty())
 }
 
-/// Whether Pylune is the current default `nxm://` handler.
+/// Whether Pailune is the current default `nxm://` handler.
 pub fn is_registered() -> bool {
     if cfg!(windows) {
         return own_executable().is_ok_and(|exe| super::winreg::is_registered(&exe));
@@ -78,20 +78,20 @@ pub fn is_registered() -> bool {
     cfg!(target_os = "linux") && current_default().as_deref() == Some(DESKTOP_FILE)
 }
 
-/// Makes Pylune the default `nxm://` handler. Returns the handler it
+/// Makes Pailune the default `nxm://` handler. Returns the handler it
 /// replaced, so links for other games can be forwarded to it.
 pub fn register(exe: &Path) -> Result<Option<String>> {
     if cfg!(windows) {
         return super::winreg::register(exe);
     }
     if !cfg!(target_os = "linux") {
-        return Err(PyluneError::Invalid(
+        return Err(PailuneError::Invalid(
             "registering for nxm:// links is not supported on this platform yet".into(),
         ));
     }
     let previous = current_default().filter(|d| d != DESKTOP_FILE);
     let dir = applications_dir()
-        .ok_or_else(|| PyluneError::Invalid("cannot locate ~/.local/share/applications".into()))?;
+        .ok_or_else(|| PailuneError::Invalid("cannot locate ~/.local/share/applications".into()))?;
     fs::create_dir_all(&dir).at(&dir)?;
     let entry = dir.join(DESKTOP_FILE);
     fs::write(&entry, desktop_entry(exe)).at(&entry)?;
@@ -103,7 +103,7 @@ pub fn register(exe: &Path) -> Result<Option<String>> {
     let _ = Command::new("update-desktop-database").arg(&dir).status();
     match ok {
         true => Ok(previous),
-        false => Err(PyluneError::Invalid(
+        false => Err(PailuneError::Invalid(
             "xdg-mime failed to set the nxm handler".into(),
         )),
     }
@@ -177,20 +177,20 @@ pub fn forward(desktop_file: &str, url: &str) -> Result<()> {
         .iter()
         .find_map(|dir| fs::read_to_string(dir.join(desktop_file)).ok())
         .ok_or_else(|| {
-            PyluneError::Invalid(format!("previous nxm handler {desktop_file} not found"))
+            PailuneError::Invalid(format!("previous nxm handler {desktop_file} not found"))
         })?;
     let exec = text
         .lines()
         .find_map(|line| line.trim().strip_prefix("Exec="))
-        .ok_or_else(|| PyluneError::Invalid(format!("{desktop_file} has no Exec line")))?;
+        .ok_or_else(|| PailuneError::Invalid(format!("{desktop_file} has no Exec line")))?;
     let argv = expand_exec(split_exec(exec), url);
     let (program, rest) = argv
         .split_first()
-        .ok_or_else(|| PyluneError::Invalid("empty Exec line".into()))?;
+        .ok_or_else(|| PailuneError::Invalid("empty Exec line".into()))?;
     let mut command = Command::new(program);
     command.args(rest);
     crate::launch::run::spawn(command)
-        .map_err(|e| PyluneError::Invalid(format!("could not start {program}: {e}")))
+        .map_err(|e| PailuneError::Invalid(format!("could not start {program}: {e}")))
 }
 
 #[cfg(test)]
@@ -200,9 +200,9 @@ mod tests {
     #[test]
     fn appimages_register_their_own_file() {
         let dir = tempfile::tempdir().unwrap();
-        let image = dir.path().join("Pylune.AppImage");
+        let image = dir.path().join("Pailune.AppImage");
         fs::write(&image, "").unwrap();
-        let mounted = PathBuf::from("/tmp/.mount_x/usr/bin/pylune");
+        let mounted = PathBuf::from("/tmp/.mount_x/usr/bin/pailune");
         let picked = pick_executable(Some(image.clone().into()), Ok(mounted.clone()));
         assert_eq!(picked.unwrap(), image);
         let gone = dir.path().join("moved.AppImage");
@@ -212,10 +212,10 @@ mod tests {
 
     #[test]
     fn exec_lines_round_trip() {
-        let quoted = escape_exec_arg("/opt/My \"Apps\"/100%/pylune");
-        assert_eq!(quoted, r#""/opt/My \"Apps\"/100%%/pylune""#);
+        let quoted = escape_exec_arg("/opt/My \"Apps\"/100%/pailune");
+        assert_eq!(quoted, r#""/opt/My \"Apps\"/100%%/pailune""#);
         let argv = expand_exec(split_exec(&format!("{quoted} %u")), "nxm://x");
-        assert_eq!(argv, ["/opt/My \"Apps\"/100%/pylune", "nxm://x"]);
+        assert_eq!(argv, ["/opt/My \"Apps\"/100%/pailune", "nxm://x"]);
         let mo2 = expand_exec(
             split_exec("env WINEPREFIX=/p wine nxmhandler.exe %u %i"),
             "nxm://y",

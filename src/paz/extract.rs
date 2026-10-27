@@ -2,7 +2,7 @@
 
 use super::pamt::FileRecord;
 use super::{Compression, Encryption, crypto};
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
@@ -24,7 +24,7 @@ pub fn decode(vpath: &str, record: &FileRecord, mut stored: Vec<u8>) -> Result<V
         Encryption::None => {}
         Encryption::ChaCha20 => crypto::apply(vpath, &mut stored)?,
         Encryption::Unknown(n) => {
-            return Err(PyluneError::Archive(format!(
+            return Err(PailuneError::Archive(format!(
                 "{vpath}: unknown encryption {n}"
             )));
         }
@@ -32,18 +32,18 @@ pub fn decode(vpath: &str, record: &FileRecord, mut stored: Vec<u8>) -> Result<V
     match Compression::from_flags(record.flags) {
         Compression::None => Ok(stored),
         Compression::Lz4 => lz4_flex::block::decompress(&stored, record.orig_size as usize)
-            .map_err(|e| PyluneError::Archive(format!("{vpath}: LZ4: {e}"))),
+            .map_err(|e| PailuneError::Archive(format!("{vpath}: LZ4: {e}"))),
         Compression::DdsPartial if vpath.ends_with(".dds") => {
             super::dds::decode(&stored, record.orig_size as usize)
-                .map_err(|e| PyluneError::Archive(format!("{vpath}: {e}")))
+                .map_err(|e| PailuneError::Archive(format!("{vpath}: {e}")))
         }
         // Other partial files (`.pac` meshes) stored uncompressed are the
         // file itself; compressed ones are not understood yet.
         Compression::DdsPartial if stored.len() == record.orig_size as usize => Ok(stored),
-        Compression::DdsPartial => Err(PyluneError::Archive(format!(
+        Compression::DdsPartial => Err(PailuneError::Archive(format!(
             "{vpath}: compressed partial storage of this file type is not supported yet"
         ))),
-        Compression::Unknown(n) => Err(PyluneError::Archive(format!(
+        Compression::Unknown(n) => Err(PailuneError::Archive(format!(
             "{vpath}: unknown compression {n}"
         ))),
     }
@@ -54,7 +54,7 @@ pub fn extract(group_dir: &Path, vpath: &str, record: &FileRecord) -> Result<Vec
     let data = decode(vpath, record, read_stored(group_dir, record)?)?;
     match data.len() == record.orig_size as usize {
         true => Ok(data),
-        false => Err(PyluneError::Archive(format!(
+        false => Err(PailuneError::Archive(format!(
             "{vpath}: decoded {} bytes, index says {}",
             data.len(),
             record.orig_size

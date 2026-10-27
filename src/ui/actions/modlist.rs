@@ -1,14 +1,14 @@
 //! Mod list export and import (B-12).
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::jobs::JobKind;
 use crate::logging::{Event, EventKind, Severity};
 use crate::modlist::{self, apply::apply, apply::place_new};
 use crate::nexus::download::DownloadJob;
 use crate::ui::state::ListImport;
-use crate::ui::{Level, ModListAction, PyluneApp, StatusLine};
+use crate::ui::{Level, ModListAction, PailuneApp, StatusLine};
 
-impl PyluneApp {
+impl PailuneApp {
     /// Handles mod list intents.
     pub(super) fn modlist_action(&mut self, action: ModListAction) -> Result<Option<StatusLine>> {
         match action {
@@ -25,8 +25,8 @@ impl PyluneApp {
 
     fn export_list(&mut self) -> Result<Option<StatusLine>> {
         let Some(path) = rfd::FileDialog::new()
-            .add_filter("Pylune mod list", &["json"])
-            .set_file_name("pylune-modlist.json")
+            .add_filter("Pailune mod list", &["json"])
+            .set_file_name("pailune-modlist.json")
             .save_file()
         else {
             return Ok(None);
@@ -50,7 +50,7 @@ impl PyluneApp {
 
     fn import_list(&mut self) -> Result<Option<StatusLine>> {
         let Some(path) = rfd::FileDialog::new()
-            .add_filter("Pylune mod list", &["json"])
+            .add_filter("Pailune mod list", &["json"])
             .pick_file()
         else {
             return Ok(None);
@@ -122,7 +122,7 @@ impl PyluneApp {
 
     fn download_missing(&mut self) -> Result<StatusLine> {
         if !self.can_download() {
-            return Err(PyluneError::Invalid(
+            return Err(PailuneError::Invalid(
                 "direct downloads need a Premium account — open each mod's page instead".into(),
             ));
         }
@@ -157,7 +157,7 @@ impl PyluneApp {
             .as_ref()
             .and_then(|i| i.missing.get(index))
             .and_then(|m| m.nexus.clone())
-            .ok_or_else(|| PyluneError::Invalid("this mod did not come from Nexus".into()))?;
+            .ok_or_else(|| PailuneError::Invalid("this mod did not come from Nexus".into()))?;
         let url = format!(
             "https://www.nexusmods.com/{}/mods/{}?tab=files&file_id={}",
             self.config.nexus.domain, nexus.mod_id, nexus.file_id

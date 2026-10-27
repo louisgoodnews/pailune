@@ -1,15 +1,15 @@
 //! Mod management actions: selection, flags, order, import, update, delete.
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::jobs::JobKind;
 use crate::mod_engine::{info, registry};
-use crate::ui::{Level, ModAction, PyluneApp, StatusLine, Tab};
+use crate::ui::{Level, ModAction, PailuneApp, StatusLine, Tab};
 use std::path::PathBuf;
 
 /// Extensions offered in the import dialogs.
 const MOD_FILES: [&str; 7] = ["zip", "7z", "rar", "asi", "dll", "json", "ini"];
 
-impl PyluneApp {
+impl PailuneApp {
     /// Handles mod management actions.
     pub(super) fn mod_action(&mut self, action: ModAction) -> Result<Option<StatusLine>> {
         match action {
@@ -61,12 +61,12 @@ impl PyluneApp {
                     .components()
                     .any(|c| c == std::path::Component::ParentDir);
                 if escapes || !path.starts_with(&self.paths.staging) {
-                    return Err(PyluneError::Invalid(
+                    return Err(PailuneError::Invalid(
                         "not a file of an installed mod".into(),
                     ));
                 }
                 std::fs::write(&path, text)
-                    .map_err(|e| PyluneError::Invalid(format!("{}: {e}", path.display())))?;
+                    .map_err(|e| PailuneError::Invalid(format!("{}: {e}", path.display())))?;
                 crate::db::links::restamp_shared(&self.conn, &path)?;
                 let name = path
                     .file_name()
@@ -158,7 +158,7 @@ impl PyluneApp {
             .mods
             .selected
             .clone()
-            .ok_or_else(|| PyluneError::Invalid("no mod selected".into()))?;
+            .ok_or_else(|| PailuneError::Invalid("no mod selected".into()))?;
         let text = info::read_text(&self.paths.staging.join(name).join(&rel))?;
         self.mods.readme = Some((rel, text));
         Ok(())
@@ -190,7 +190,7 @@ impl PyluneApp {
             .iter()
             .find(|m| m.name == name)
             .cloned()
-            .ok_or_else(|| PyluneError::Invalid(format!("no mod named '{name}'")))?;
+            .ok_or_else(|| PailuneError::Invalid(format!("no mod named '{name}'")))?;
         match entry.nexus {
             Some(origin) => {
                 self.tab = Tab::Nexus;

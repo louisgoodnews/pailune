@@ -3,7 +3,7 @@
 use super::clicked;
 use crate::nexus::collection::Collection;
 use crate::ui::theme::{self, accent, muted, success, warning};
-use crate::ui::{Action, Confirm, NexusAction, PyluneApp};
+use crate::ui::{Action, Confirm, NexusAction, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// Wraps a Nexus intent.
@@ -88,7 +88,7 @@ fn installed(ui: &mut egui::Ui, c: &Collection) -> Vec<Action> {
 }
 
 /// Renders the collections section and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     ui.heading("Collections");
     let mut actions = ui
         .horizontal(|ui| {

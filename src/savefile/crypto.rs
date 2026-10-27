@@ -1,7 +1,7 @@
 //! Save-file key, cipher and checksum (B-07).
 //!
 //! The scheme was documented by the community library `crimson-rs` (MIT,
-//! <https://github.com/bbfox0703/crimson-rs>); this is Pylune's own
+//! <https://github.com/bbfox0703/crimson-rs>); this is Pailune's own
 //! implementation of it, verified by checking the HMAC of real saves.
 
 use chacha20::ChaCha20;

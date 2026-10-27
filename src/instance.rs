@@ -1,6 +1,6 @@
 //! Single-instance coordination and the `nxm://` hand-off spool.
 //!
-//! The primary instance holds an exclusive `flock` on `pylune.lock` for its
+//! The primary instance holds an exclusive `flock` on `pailune.lock` for its
 //! whole lifetime; the kernel releases it on exit or crash, so there is no
 //! stale state. A secondary process (started by the browser for an `nxm://`
 //! link, or by the user) writes one spool file per request — atomically, via
@@ -13,7 +13,7 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Spool entry asking the running window to come to the front.
-pub const FOCUS_REQUEST: &str = "pylune:focus";
+pub const FOCUS_REQUEST: &str = "pailune:focus";
 
 /// Proof of being the primary instance; keep it alive until exit.
 #[derive(Debug)]

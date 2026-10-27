@@ -1,10 +1,10 @@
-//! Pylune's own archive overlay (`docs/paz-format.md` §9).
+//! Pailune's own archive overlay (`docs/paz-format.md` §9).
 //!
-//! RAW and loose game files of enabled mods are packed into one Pylune
+//! RAW and loose game files of enabled mods are packed into one Pailune
 //! archive group, and prebuilt groups shipped by mods are registered under
 //! free numbers. A rebuilt `meta/0.papgt` (from the vanilla backup) lists
 //! these groups first, so the game prefers their files. Everything is built
-//! in Pylune's data folder and deployed as symlinks like any mod file, so
+//! in Pailune's data folder and deployed as symlinks like any mod file, so
 //! Unlink and Clean Slate revert it exactly.
 
 pub mod build;
@@ -43,7 +43,7 @@ pub struct OverlayInput {
 pub struct OverlayPlan {
     /// Symlinks for the group folders and the generated `0.papgt`.
     pub links: Vec<LinkOp>,
-    /// Files packed into Pylune's group.
+    /// Files packed into Pailune's group.
     pub packed: usize,
     /// Of those, files that replace a game file.
     pub replaced: usize,

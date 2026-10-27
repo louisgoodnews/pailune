@@ -1,4 +1,4 @@
-//! Backups of Pylune itself: settings, the database (mod list, load order,
+//! Backups of Pailune itself: settings, the database (mod list, load order,
 //! flags, variants, profiles, collections, journal) and optionally the
 //! staged mod files, as one `.zip` per backup.
 //!

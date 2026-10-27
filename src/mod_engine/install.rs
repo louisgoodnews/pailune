@@ -2,7 +2,7 @@
 
 use super::archive::{self, ArchiveKind};
 use super::plan::is_archive_dir;
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -39,22 +39,22 @@ pub fn unique_suffix() -> String {
 /// swapped out only after the new contents were staged successfully.
 pub fn import_as(source: &Path, staging: &Path, name: &str, replace: bool) -> Result<String> {
     let dest = staging.join(name);
-    let taken = || PyluneError::Invalid(format!("a mod named '{name}' is already staged"));
+    let taken = || PailuneError::Invalid(format!("a mod named '{name}' is already staged"));
     match (dest.exists(), replace) {
         (true, false) => return Err(taken()),
         (false, true) => {
-            return Err(PyluneError::Invalid(format!(
+            return Err(PailuneError::Invalid(format!(
                 "'{name}' is no longer staged"
             )));
         }
         _ => {}
     }
     if source.starts_with(staging) || staging.starts_with(source) {
-        return Err(PyluneError::Invalid(
-            "cannot import from inside Pylune's staging folder".into(),
+        return Err(PailuneError::Invalid(
+            "cannot import from inside Pailune's staging folder".into(),
         ));
     }
-    let work = staging.join(format!(".pylune-incoming-{}", unique_suffix()));
+    let work = staging.join(format!(".pailune-incoming-{}", unique_suffix()));
     fs::create_dir_all(&work).at(&work)?;
     let outcome = match source_kind(source) {
         SourceKind::Directory => copy_tree(source, &work),
@@ -83,7 +83,7 @@ fn claim_and_move(work: &Path, dest: &Path) -> Result<()> {
 /// Replaces `dest` with `work` using renames only, so the mod's folder is
 /// missing for just an instant; the old contents are deleted afterwards.
 fn swap_into_place(work: &Path, dest: &Path, staging: &Path) -> Result<()> {
-    let trash = staging.join(format!(".pylune-trash-{}", unique_suffix()));
+    let trash = staging.join(format!(".pailune-trash-{}", unique_suffix()));
     fs::rename(dest, &trash).at(dest)?;
     fs::rename(work, dest).at(dest)?;
     fs::remove_dir_all(&trash).at(&trash)
@@ -122,14 +122,14 @@ fn mod_name(source: &Path) -> Result<String> {
     };
     raw.map(|n| n.to_string_lossy().trim().to_string())
         .filter(|n| !n.is_empty() && !n.starts_with('.'))
-        .ok_or_else(|| PyluneError::Invalid(format!("cannot name mod from {}", source.display())))
+        .ok_or_else(|| PailuneError::Invalid(format!("cannot name mod from {}", source.display())))
 }
 
 /// Copies a single file into the staging folder.
 fn copy_file(source: &Path, dest_dir: &Path) -> Result<()> {
     let name = source
         .file_name()
-        .ok_or_else(|| PyluneError::Invalid("source has no file name".into()))?;
+        .ok_or_else(|| PailuneError::Invalid("source has no file name".into()))?;
     fs::copy(source, dest_dir.join(name)).at(source).map(|_| ())
 }
 
@@ -173,7 +173,7 @@ fn is_game_dir(path: &Path) -> bool {
 fn hoist_wrapper_dirs(dest: &Path) -> Result<()> {
     match sole_child_dir(dest)? {
         Some(child) if !is_game_dir(&child) => {
-            let tmp = dest.join(".pylune-hoist");
+            let tmp = dest.join(".pailune-hoist");
             fs::rename(&child, &tmp).at(&child)?;
             fs::read_dir(&tmp).at(&tmp)?.try_for_each(|entry| {
                 let from = entry.at(&tmp)?.path();

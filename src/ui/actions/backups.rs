@@ -2,12 +2,12 @@
 
 use crate::app_backup::{AUTO_LABEL, create};
 use crate::config::file;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::jobs::JobKind;
 use crate::save_backup;
-use crate::ui::{BackupAction, Confirm, Level, PyluneApp, SettingsDraft, StatusLine};
+use crate::ui::{BackupAction, Confirm, Level, PailuneApp, SettingsDraft, StatusLine};
 
-impl PyluneApp {
+impl PailuneApp {
     /// Handles backup actions (the work itself runs as exclusive jobs).
     pub(super) fn backup_action(&mut self, action: BackupAction) -> Result<Option<StatusLine>> {
         match action {
@@ -21,7 +21,7 @@ impl PyluneApp {
             BackupAction::Restore(path) => {
                 self.confirm = None;
                 if self.deployed_links > 0 {
-                    return Err(PyluneError::Invalid(
+                    return Err(PailuneError::Invalid(
                         "unlink all mods before restoring a backup".into(),
                     ));
                 }
@@ -33,7 +33,7 @@ impl PyluneApp {
             }
             BackupAction::RestoreFromFile => {
                 let picked = rfd::FileDialog::new()
-                    .add_filter("Pylune backup", &["zip"])
+                    .add_filter("Pailune backup", &["zip"])
                     .pick_file();
                 Ok(picked.map(|path| {
                     self.confirm = Some(Confirm::RestoreBackup(path));
@@ -52,7 +52,7 @@ impl PyluneApp {
             BackupAction::RestoreSaves(path) => {
                 self.confirm = None;
                 if self.process == crate::launch::GameProcess::Running {
-                    return Err(PyluneError::Invalid(
+                    return Err(PailuneError::Invalid(
                         "close Crimson Desert before restoring save games".into(),
                     ));
                 }
@@ -77,7 +77,7 @@ impl PyluneApp {
     /// The game's save folder, if the Proton prefix is known.
     pub(super) fn save_folder(&self) -> Result<std::path::PathBuf> {
         save_backup::save_dir(self.info.prefix_dir.as_deref()).ok_or_else(|| {
-            PyluneError::Invalid(
+            PailuneError::Invalid(
                 "the game's Proton prefix was not found — start the game once from Steam".into(),
             )
         })

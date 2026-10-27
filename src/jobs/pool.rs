@@ -66,13 +66,13 @@ impl JobPool {
         (0..workers.max(1)).for_each(|n| {
             let shared = Arc::clone(&shared);
             let _ = thread::Builder::new()
-                .name(format!("pylune-job-{n}"))
+                .name(format!("pailune-job-{n}"))
                 .spawn(move || work(&shared, &shared.queue));
         });
         let lane = Arc::clone(&shared);
         let exclusive_rx = Mutex::new(exclusive_rx);
         let _ = thread::Builder::new()
-            .name("pylune-game".into())
+            .name("pailune-game".into())
             .spawn(move || work(&lane, &exclusive_rx));
         Self {
             queue: queue_tx,

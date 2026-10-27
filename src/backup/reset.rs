@@ -2,7 +2,7 @@
 
 use super::snapshot::{archived_overlays, ensure_meta_backup, foreign_overlays, meta_backup_state};
 use super::{META_FILES, MetaBackup};
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::steam::SteamInfo;
 use crate::symlink::journal::Journal;
 use crate::symlink::undeploy::undeploy;
@@ -13,7 +13,7 @@ use std::path::Path;
 /// Restores every metadata file from its `.bak` copy (the copy is kept).
 fn restore_meta(info: &SteamInfo) -> Result<usize> {
     match meta_backup_state(info) {
-        MetaBackup::Outdated => Err(PyluneError::Invalid(
+        MetaBackup::Outdated => Err(PailuneError::Invalid(
             "metadata backup predates the installed game version; \
              verify game files in Steam instead, then refresh the backup"
                 .into(),
@@ -46,7 +46,7 @@ fn archive_dir(dir: &Path) -> Result<Option<String>> {
 
 /// Returns the game to a vanilla state.
 ///
-/// 1. Removes all Pylune symlinks and restores shadowed originals.
+/// 1. Removes all Pailune symlinks and restores shadowed originals.
 /// 2. Restores `meta/` files from their `.bak` snapshot.
 /// 3. Sets foreign archive folders (> 35) aside as `NNNN.bak`.
 /// 4. Re-takes the metadata snapshot if step 1 consumed it.

@@ -2,7 +2,7 @@
 
 use super::{AUTO_LABEL, BackupInfo, BackupKind, FORMAT};
 use crate::config::paths::DataPaths;
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::mod_engine::install::unique_suffix;
 use rusqlite::{Connection, MAIN_DB};
 use serde_json::{Value, json};
@@ -24,7 +24,7 @@ fn add_staging(zip: &mut zip::ZipWriter<fs::File>, staging: &Path) -> Result<()>
     WalkDir::new(staging)
         .min_depth(1)
         .into_iter()
-        .filter_entry(|e| !e.file_name().to_string_lossy().starts_with(".pylune"))
+        .filter_entry(|e| !e.file_name().to_string_lossy().starts_with(".pailune"))
         .filter(|e| e.as_ref().map_or(true, |e| e.file_type().is_file()))
         .try_for_each(|entry| {
             let entry = entry?;
@@ -38,7 +38,7 @@ fn add_staging(zip: &mut zip::ZipWriter<fs::File>, staging: &Path) -> Result<()>
 }
 
 /// Writes a backup into `paths.backups`; the database is copied with
-/// SQLite's online backup, so a running Pylune is captured consistently.
+/// SQLite's online backup, so a running Pailune is captured consistently.
 pub fn create(
     paths: &DataPaths,
     conn: &Connection,
@@ -51,7 +51,7 @@ pub fn create(
     conn.backup(MAIN_DB, &snapshot, None::<fn(rusqlite::backup::Progress)>)?;
     let mods = crate::db::mods::load(conn)?.mods.len();
     let target = paths.backups.join(format!(
-        "pylune-{now}-{}-{}.zip",
+        "pailune-{now}-{}-{}.zip",
         kind.as_str(),
         unique_suffix()
     ));
@@ -64,7 +64,7 @@ pub fn create(
         let mut zip = zip::ZipWriter::new(fs::File::create(&part).at(&part)?);
         zip.start_file("manifest.json", SimpleFileOptions::default())?;
         zip.write_all(manifest.to_string().as_bytes()).at(&part)?;
-        add_file(&mut zip, "pylune.sqlite3", &snapshot)?;
+        add_file(&mut zip, "pailune.sqlite3", &snapshot)?;
         if paths.config_file.is_file() {
             add_file(&mut zip, "config.toml", &paths.config_file)?;
         }
@@ -79,7 +79,7 @@ pub fn create(
         let _ = fs::remove_file(&part);
     }
     written?;
-    read_info(&target).ok_or_else(|| PyluneError::Invalid("backup written but unreadable".into()))
+    read_info(&target).ok_or_else(|| PailuneError::Invalid("backup written but unreadable".into()))
 }
 
 /// Reads the manifest of a backup archive.
@@ -93,8 +93,8 @@ pub fn read_manifest(path: &Path) -> Result<Value> {
     let manifest: Value = serde_json::from_str(&text)?;
     match manifest.get("format").and_then(Value::as_u64) {
         Some(FORMAT) => Ok(manifest),
-        _ => Err(PyluneError::Invalid(format!(
-            "{} is not a Pylune backup (or a newer format)",
+        _ => Err(PailuneError::Invalid(format!(
+            "{} is not a Pailune backup (or a newer format)",
             path.display()
         ))),
     }

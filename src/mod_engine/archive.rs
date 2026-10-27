@@ -3,7 +3,7 @@
 //! Every entry path is checked before writing so archives cannot escape the
 //! destination (`../`, absolute paths).
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
@@ -37,7 +37,7 @@ pub fn is_safe_entry(entry: &Path) -> bool {
 fn guard(entry: &Path) -> Result<()> {
     match is_safe_entry(entry) {
         true => Ok(()),
-        false => Err(PyluneError::Archive(format!(
+        false => Err(PailuneError::Archive(format!(
             "unsafe path in archive: {}",
             entry.display()
         ))),
@@ -55,7 +55,7 @@ pub fn extract(archive: &Path, kind: ArchiveKind, dest: &Path) -> Result<()> {
 
 /// `zip` itself refuses entries escaping `dest`.
 fn extract_zip(archive: &Path, dest: &Path) -> Result<()> {
-    let file = fs::File::open(archive).map_err(|e| PyluneError::Archive(e.to_string()))?;
+    let file = fs::File::open(archive).map_err(|e| PailuneError::Archive(e.to_string()))?;
     zip::ZipArchive::new(file)?.extract(dest)?;
     Ok(())
 }

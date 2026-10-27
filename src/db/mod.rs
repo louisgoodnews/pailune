@@ -1,4 +1,4 @@
-//! SQLite persistence: Pylune's application memory.
+//! SQLite persistence: Pailune's application memory.
 //!
 //! Every thread opens its own [`Connection`]; WAL mode and a busy timeout let
 //! background jobs and the UI read and write concurrently.

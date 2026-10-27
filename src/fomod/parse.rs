@@ -3,7 +3,7 @@
 use super::{
     Condition, ConditionalInstall, Config, FileInstall, Group, GroupKind, Plugin, PluginKind, Step,
 };
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use roxmltree::{Document, Node};
 
 /// Child elements named `name` (namespace-free, case-insensitive).
@@ -71,7 +71,7 @@ fn condition(node: Node) -> Condition {
 }
 
 /// [`condition`] at nesting `depth`; anything deeper than [`MAX_DEPTH`]
-/// counts as met, like other conditions Pylune cannot judge.
+/// counts as met, like other conditions Pailune cannot judge.
 fn nested(node: Node, depth: usize) -> Condition {
     match node.tag_name().name().to_lowercase().as_str() {
         "flagdependency" => Condition::Flag(attr(node, "flag"), attr(node, "value")),
@@ -188,7 +188,7 @@ fn step(node: Node) -> Step {
 /// Parses the text of a `ModuleConfig.xml`.
 pub fn parse(text: &str) -> Result<Config> {
     let doc = Document::parse(text)
-        .map_err(|e| PyluneError::Invalid(format!("FOMOD ModuleConfig.xml is invalid: {e}")))?;
+        .map_err(|e| PailuneError::Invalid(format!("FOMOD ModuleConfig.xml is invalid: {e}")))?;
     let root = doc.root_element();
     let steps = child(root, "installSteps").map_or_else(Vec::new, |s| {
         ordered(s, children(s, "installStep").map(step).collect(), |s| {

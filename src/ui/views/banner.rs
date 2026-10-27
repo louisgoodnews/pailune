@@ -5,11 +5,11 @@ use super::clicked;
 use crate::backup::MetaBackup;
 use crate::launch::GameProcess;
 use crate::ui::theme::{self, accent, muted, warning};
-use crate::ui::{Action, DeployAction, PyluneApp};
+use crate::ui::{Action, DeployAction, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// Renders the banner that applies: game update first, else pending changes.
-pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     match (app.backup.meta, app.dirty) {
         (MetaBackup::Outdated, _) => updated(ui, app),
         (_, true) => pending(ui, app),
@@ -19,7 +19,7 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
 
 /// The mod list differs from what is linked into the game; Apply is offered
 /// right where the user looks.
-fn pending(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+fn pending(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     let free = app.process == GameProcess::Stopped && !app.game_job_active();
     egui::Frame::new()
         .stroke(egui::Stroke::new(1.0, accent()))
@@ -44,8 +44,8 @@ fn pending(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         .inner
 }
 
-/// Recovery steps after the game changed under Pylune's backup.
-fn updated(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+/// Recovery steps after the game changed under Pailune's backup.
+fn updated(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     egui::Frame::new()
         .fill(warning().linear_multiply(0.12))
         .stroke(egui::Stroke::new(1.0, warning()))
@@ -53,7 +53,7 @@ fn updated(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
         .inner_margin(8)
         .show(ui, |ui| {
             ui.label(
-                RichText::new("Crimson Desert was updated since Pylune's backup")
+                RichText::new("Crimson Desert was updated since Pailune's backup")
                     .strong()
                     .color(warning()),
             );

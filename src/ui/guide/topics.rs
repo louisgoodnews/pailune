@@ -19,7 +19,7 @@ pub const TOPICS: &[Topic] = &[
         body: &[
             "Mods tab › Import archives / files… (Ctrl+I) or Import folder…, or drop files onto the window.",
             "Supported: folders, .zip, .7z, .rar, and loose .asi, .dll or .json files.",
-            "The mod is copied into Pylune's staging folder; your download is not changed.",
+            "The mod is copied into Pailune's staging folder; your download is not changed.",
         ],
     },
     Topic {
@@ -27,7 +27,7 @@ pub const TOPICS: &[Topic] = &[
         keywords: "nexus download api key nxm mod manager button browser",
         body: &[
             "Nexus tab › paste your personal API key (nexusmods.com › your account › API keys) › Save key.",
-            "Press \"Make Pylune the nxm:// handler\" once; then the website's \"Mod manager download\" button sends files to Pylune.",
+            "Press \"Make Pailune the nxm:// handler\" once; then the website's \"Mod manager download\" button sends files to Pailune.",
             "Each download asks for confirmation before it starts.",
         ],
     },
@@ -37,7 +37,7 @@ pub const TOPICS: &[Topic] = &[
         body: &[
             "Nexus tab › Collections › paste the collection's address or slug › Fetch.",
             "Review the members, untick optional ones, then Install. Mods are ordered like the curator's list.",
-            "Premium accounts download everything at once; free accounts click each member's link on the website and Pylune accepts the matching downloads.",
+            "Premium accounts download everything at once; free accounts click each member's link on the website and Pailune accepts the matching downloads.",
         ],
     },
     Topic {
@@ -54,7 +54,7 @@ pub const TOPICS: &[Topic] = &[
         body: &[
             "Apply links enabled mods into the game folder. A replaced original is renamed to .bak.",
             "Unlink all removes every link and restores the .bak originals, leaving the game as it was.",
-            "Mods inside the game's archives are packed into Pylune's own archive group; the game's archives are never edited.",
+            "Mods inside the game's archives are packed into Pailune's own archive group; the game's archives are never edited.",
         ],
     },
     Topic {
@@ -92,7 +92,7 @@ pub const TOPICS: &[Topic] = &[
         body: &[
             "Nexus tab › Check updates. Mods with a newer file are marked.",
             "Select a mod › Update: Nexus mods show their file list, other mods ask for a replacement archive.",
-            "Settings › Behavior can check for updates every time Pylune starts.",
+            "Settings › Behavior can check for updates every time Pailune starts.",
         ],
     },
     Topic {
@@ -128,7 +128,7 @@ pub const TOPICS: &[Topic] = &[
         ],
     },
     Topic {
-        title: "Back up and restore Pylune",
+        title: "Back up and restore Pailune",
         keywords: "backup restore safety settings mod list",
         body: &[
             "Settings › Backups › Back up now (or Full backup, which also contains the mod files).",
@@ -139,7 +139,7 @@ pub const TOPICS: &[Topic] = &[
         title: "Protect my save games",
         keywords: "save savegame slot progress backup restore cloud edit money coins",
         body: &[
-            "Pylune copies the game's save files every time you press Play (switch it off in Settings › Backups).",
+            "Pailune copies the game's save files every time you press Play (switch it off in Settings › Backups).",
             "Saves tab: Back up saves now, or Restore… an older copy. The current saves are backed up first.",
             "Saves tab: click a slot to see everything it contains and change numbers, e.g. the copper coins in your pouch; Save changes backs up all saves first.",
             "If Steam reports a cloud conflict after a restore, keep the local files.",
@@ -149,7 +149,7 @@ pub const TOPICS: &[Topic] = &[
         title: "After a game update",
         keywords: "game update patch broken version verify",
         body: &[
-            "When the game changed, Pylune blocks Apply and shows a banner with the steps:",
+            "When the game changed, Pailune blocks Apply and shows a banner with the steps:",
             "1. Unlink all › 2. Verify files in Steam › 3. Refresh backup › Apply again.",
         ],
     },
@@ -158,14 +158,14 @@ pub const TOPICS: &[Topic] = &[
         keywords: "clean slate reset vanilla remove all",
         body: &[
             "Clean Slate removes all links, restores the game's original metadata and sets other tools' archive folders aside.",
-            "Your mods stay in Pylune, disabled. Set-aside folders can be restored in Settings › Diagnostics.",
+            "Your mods stay in Pailune, disabled. Set-aside folders can be restored in Settings › Diagnostics.",
         ],
     },
     Topic {
         title: "Report a problem",
         keywords: "log bug error debug report crash",
         body: &[
-            "Log tab shows what Pylune did, per mod. Settings › Advanced › Open log folder has the full log files.",
+            "Log tab shows what Pailune did, per mod. Settings › Advanced › Open log folder has the full log files.",
             "Set the log level to debug in Settings › Advanced and restart for more detail.",
         ],
     },
@@ -177,13 +177,13 @@ pub const TOPICS: &[Topic] = &[
         ],
     },
     Topic {
-        title: "Words used in Pylune",
+        title: "Words used in Pailune",
         keywords: "glossary staging overlay profile collection term meaning",
         body: &[
-            "Staging: Pylune's folder holding your installed mods.",
+            "Staging: Pailune's folder holding your installed mods.",
             "Apply / Unlink: put links to enabled mods into the game / take them out again.",
             "Load order: the list order; lower mods win conflicts.",
-            "Overlay: Pylune's own archive group that carries mods for files inside the game's archives.",
+            "Overlay: Pailune's own archive group that carries mods for files inside the game's archives.",
             "Profile: a saved set of enabled mods, order and launch options.",
             "Collection: a mod list from Nexus Mods, installed as one unit.",
         ],

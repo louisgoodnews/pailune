@@ -1,7 +1,7 @@
 //! Applying byte-patch JSON mods to vanilla game data for the overlay.
 
 use super::table_paths::{header_of, name_of, variants};
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::patch::{self, JsonMod, apply::apply_over};
 use crate::paz::{
     extract,
@@ -73,7 +73,7 @@ pub(super) fn resolve(base: &Vanilla, game_file: &str) -> Result<String> {
             (found.len() == 1).then(|| found[0].clone())
         })
         .ok_or_else(|| {
-            PyluneError::Invalid(format!("game file {game_file:?} not found (or ambiguous)"))
+            PailuneError::Invalid(format!("game file {game_file:?} not found (or ambiguous)"))
         })
 }
 
@@ -81,7 +81,7 @@ pub(super) fn resolve(base: &Vanilla, game_file: &str) -> Result<String> {
 pub(super) fn vanilla_bytes(game_dir: &Path, base: &Vanilla, vpath: &str) -> Result<Vec<u8>> {
     let (group, record) = base
         .locate(vpath)
-        .ok_or_else(|| PyluneError::Invalid(format!("{vpath} not in the game")))?;
+        .ok_or_else(|| PailuneError::Invalid(format!("{vpath} not in the game")))?;
     extract::extract(&game_dir.join(group), vpath, record)
 }
 
@@ -132,7 +132,7 @@ pub fn apply_all(
                 let header = header_of(&vpath)
                     .map(|h| match (packed.get(&h), packed.contains_key(&vpath)) {
                         (Some(own), _) => fs::read(own).at(own),
-                        (None, true) => Err(PyluneError::Invalid(format!(
+                        (None, true) => Err(PailuneError::Invalid(format!(
                             "{vpath}: a mod ships this table without its index ({h})"
                         ))),
                         (None, false) => vanilla_bytes(game_dir, base, &h),
@@ -206,7 +206,7 @@ pub fn apply_text(
             let patch = fs::read_to_string(file).at(file)?;
             // Never rewrite a file lossily: untouched bytes must stay as shipped.
             let base_text = String::from_utf8(base_bytes).map_err(|_| {
-                PyluneError::Invalid("the game file is not UTF-8 text; not patched".into())
+                PailuneError::Invalid("the game file is not UTF-8 text; not patched".into())
             })?;
             let name = file.file_name().unwrap_or_default().to_string_lossy();
             patch::text::apply(target, &name, &base_text, &patch).map(|r| (r, base_text))

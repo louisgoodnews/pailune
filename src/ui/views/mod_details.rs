@@ -3,7 +3,7 @@
 use crate::mod_engine::conflicts::{Contest, ModConflicts};
 use crate::mod_engine::model::{ModDetails, ModEntry};
 use crate::ui::theme::{self, accent, muted, success, warning};
-use crate::ui::{Action, PyluneApp};
+use crate::ui::{Action, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// State, file counts, size and source of the mod.
@@ -40,7 +40,7 @@ fn info_grid(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) {
                 ui.label(
                     RichText::new(format!(
                         "{} file(s) are JSON patches or RAW/loose game files. The game only reads \
-                     these from its PAZ archives, so they are not deployed until Pylune can \
+                     these from its PAZ archives, so they are not deployed until Pailune can \
                      pack archives (roadmap phase 3).",
                         entry.paz_files
                     ))
@@ -124,7 +124,7 @@ fn conflicts(ui: &mut egui::Ui, report: Option<&ModConflicts>, enabled: bool, an
 }
 
 /// Renders the details panel and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     let selected = app.mods.selected.as_ref();
     let entry = selected.and_then(|name| app.registry.mods.iter().find(|m| &m.name == name));
     let details = app

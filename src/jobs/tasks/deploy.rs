@@ -4,7 +4,7 @@ use super::require_game;
 use crate::backup::{MetaBackup, reset, snapshot};
 use crate::db;
 use crate::db::links::DbJournal;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::jobs::JobOutput;
 use crate::jobs::context::JobContext;
 use crate::logging::{Event, EventKind, Severity};
@@ -40,7 +40,7 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
     let info = ctx.steam();
     require_game(&info)?;
     if snapshot::meta_backup_state(&info) == MetaBackup::Outdated {
-        return Err(PyluneError::Invalid(
+        return Err(PailuneError::Invalid(
             "the game was updated since the metadata backup — follow the steps in the \
              yellow banner (unlink, verify in Steam, refresh backup) before applying"
                 .into(),
@@ -132,7 +132,7 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
     Ok(text)
 }
 
-/// Builds Pylune's archive overlay when enabled mods need one.
+/// Builds Pailune's archive overlay when enabled mods need one.
 fn build_overlay(
     ctx: &JobContext,
     info: &crate::steam::SteamInfo,
@@ -221,7 +221,7 @@ pub fn refresh_backup(ctx: &JobContext) -> Result<JobOutput> {
     let info = ctx.steam();
     require_game(&info)?;
     if !db::links::load(&conn)?.links.is_empty() {
-        return Err(PyluneError::Invalid(
+        return Err(PailuneError::Invalid(
             "unlink all mods before refreshing the backup".into(),
         ));
     }

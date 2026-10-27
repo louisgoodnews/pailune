@@ -72,7 +72,7 @@ pub fn nexus(ui: &mut egui::Ui, draft: &mut SettingsDraft) -> Vec<Action> {
 /// Background jobs and logging; both apply after a restart.
 pub fn advanced(ui: &mut egui::Ui, draft: &mut SettingsDraft) -> Vec<Action> {
     let config = &mut draft.config;
-    ui.label("These settings take effect after restarting Pylune.");
+    ui.label("These settings take effect after restarting Pailune.");
     setting(
         ui,
         "Parallel jobs",
@@ -82,7 +82,7 @@ pub fn advanced(ui: &mut egui::Ui, draft: &mut SettingsDraft) -> Vec<Action> {
     setting(
         ui,
         "Log level",
-        "info for normal use; debug or pylune=debug when reporting a problem.",
+        "info for normal use; debug or pailune=debug when reporting a problem.",
         |ui| text(ui, &mut config.logging.level, "info"),
     );
     setting(

@@ -2,7 +2,7 @@
 
 use super::guide::GuideState;
 use super::{
-    Action, Level, LogState, ModsState, NexusState, ProfilesState, PyluneApp, SettingsDraft,
+    Action, Level, LogState, ModsState, NexusState, PailuneApp, ProfilesState, SettingsDraft,
     StatusLine, Tab,
 };
 use super::{theme, views};
@@ -20,7 +20,7 @@ use eframe::egui;
 use std::sync::Arc;
 use std::time::Instant;
 
-impl PyluneApp {
+impl PailuneApp {
     /// Opens the database, starts the job pool and takes the first backup.
     pub fn new(
         cc: &eframe::CreationContext<'_>,
@@ -140,7 +140,7 @@ impl PyluneApp {
     }
 }
 
-impl PyluneApp {
+impl PailuneApp {
     /// Applies appearance preferences when they change; on the settings
     /// page the unsaved draft is previewed live (R-29).
     fn sync_appearance(&mut self, ctx: &egui::Context) {
@@ -156,7 +156,7 @@ impl PyluneApp {
     }
 }
 
-impl eframe::App for PyluneApp {
+impl eframe::App for PailuneApp {
     fn logic(&mut self, _ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.poll();
     }

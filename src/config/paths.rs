@@ -1,14 +1,14 @@
 //! Well-known file locations (XDG data and config directories).
 
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use directories::ProjectDirs;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Every path Pylune reads or writes outside the game directory.
+/// Every path Pailune reads or writes outside the game directory.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DataPaths {
-    /// `~/.config/pylune/config.toml`
+    /// `~/.config/pailune/config.toml`
     pub config_file: PathBuf,
     /// SQLite database holding all application state.
     pub database: PathBuf,
@@ -16,11 +16,11 @@ pub struct DataPaths {
     pub staging: PathBuf,
     /// Temporary location for downloads.
     pub downloads: PathBuf,
-    /// Pylune's generated archive group and `0.papgt`, linked into the game.
+    /// Pailune's generated archive group and `0.papgt`, linked into the game.
     pub overlay: PathBuf,
     /// Deleted mods, restorable until pruned.
     pub trash: PathBuf,
-    /// Backups of Pylune's settings, database and mod files.
+    /// Backups of Pailune's settings, database and mod files.
     pub backups: PathBuf,
     /// Backups of the game's save files.
     pub save_backups: PathBuf,
@@ -41,7 +41,7 @@ impl DataPaths {
     pub fn under(data: &Path, config: &Path) -> Self {
         Self {
             config_file: config.join("config.toml"),
-            database: data.join("pylune.sqlite3"),
+            database: data.join("pailune.sqlite3"),
             staging: data.join("staging"),
             downloads: data.join("downloads"),
             overlay: data.join("overlay"),
@@ -52,7 +52,7 @@ impl DataPaths {
             mod_logs: data.join("logs").join("mods"),
             nexus_key: data.join("nexus_api_key"),
             spool: data.join("spool"),
-            lock: data.join("pylune.lock"),
+            lock: data.join("pailune.lock"),
         }
     }
 
@@ -64,10 +64,10 @@ impl DataPaths {
     }
 }
 
-/// Resolves (and creates) the XDG layout: `~/.local/share/pylune`, `~/.config/pylune`.
+/// Resolves (and creates) the XDG layout: `~/.local/share/pailune`, `~/.config/pailune`.
 pub fn data_paths() -> Result<DataPaths> {
-    let dirs = ProjectDirs::from("dev", "pylune", "pylune")
-        .ok_or_else(|| PyluneError::Invalid("cannot determine home directory".into()))?;
+    let dirs = ProjectDirs::from("dev", "pailune", "pailune")
+        .ok_or_else(|| PailuneError::Invalid("cannot determine home directory".into()))?;
     let paths = DataPaths::under(dirs.data_dir(), dirs.config_dir());
     paths.create_dirs()?;
     Ok(paths)

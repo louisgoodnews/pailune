@@ -2,7 +2,7 @@
 //! HTML (`docs/paz-format.md` §10.5).
 
 use super::xml::Outcome;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 
 /// Result of a text patch: new text, a log line, and whether every target
 /// of the patch was found.
@@ -25,7 +25,7 @@ pub fn apply(target: &str, file_name: &str, base: &str, patch: &str) -> Result<T
     match ext {
         "xml" => super::xml::apply(base, file_name, patch)
             .map(|out| summary(out, "XML"))
-            .map_err(PyluneError::Invalid),
+            .map_err(PailuneError::Invalid),
         "html" => Ok(summary(super::html::apply(base, patch), "HTML")),
         _ => Ok((
             super::css::apply(base, patch),

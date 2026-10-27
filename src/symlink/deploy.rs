@@ -17,7 +17,7 @@ enum Displace {
     RenameToBak(PathBuf),
     /// An identical `.bak` already exists; the original can be dropped.
     ReuseBak(PathBuf),
-    /// A stale Pylune link (pointing into staging) left by an interrupted
+    /// A stale Pailune link (pointing into staging) left by an interrupted
     /// run: remove it; an existing `.bak` is the original it shadowed.
     ReplaceOrphan(Option<PathBuf>),
     /// Cannot proceed without risking data loss.

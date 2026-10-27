@@ -21,7 +21,7 @@ fn placement_rules() {
     assert_eq!(
         at("meta/0.papgt"),
         Placement::Skip,
-        "Pylune generates game metadata"
+        "Pailune generates game metadata"
     );
     assert_eq!(at("0036/0.paz"), Placement::PrebuiltGroup);
     assert_eq!(at("0036/0.pamt"), Placement::PrebuiltGroup);

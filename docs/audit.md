@@ -1,4 +1,4 @@
-# Pylune audit — 2026-10-25
+# Pailune audit — 2026-10-25
 
 Audit of commit `bf76e62` before productive use. Four review passes were run in parallel
 (filesystem safety, concurrency & persistence, Nexus/launch/security, product readiness),
@@ -7,7 +7,7 @@ plus a live investigation of Nexus Mods collections via the public GraphQL API.
 **Verdict: not ready for productive use.** The code base is clean and modular, and
 ASI/DLL deployment is safe on the happy path. But most Crimson Desert mod formats have no
 effect with symlink deployment, and several failure paths can leave the game directory in a
-state Pylune can no longer revert.
+state Pailune can no longer revert.
 
 Severity scale: **blocker** (must fix before use) · **high** · **medium** · **low**.
 Every item has an ID that [roadmap.md](roadmap.md) and [board.md](board.md) refer to.
@@ -22,15 +22,15 @@ Every item has an ID that [roadmap.md](roadmap.md) and [board.md](board.md) refe
   `0.pathc`. Checked against the mods in the most-revised Crimson Desert collection
   ("Crimson QOL", revision 12):
   - **JSON mods** (e.g. `MEGA_STACKS_999999.json`) are byte patches. DMM injects them into
-    PAZ entries (log: `PAZ inject`, `PAPGT_REBUILD`, `PATHC_WRITE`). Pylune links them into
+    PAZ entries (log: `PAZ inject`, `PAPGT_REBUILD`, `PATHC_WRITE`). Pailune links them into
     `bin64/mods`, which nothing reads.
   - **RAW mods** ship `files/<group>/<virtual path>` plus `manifest.json`
-    (e.g. `Better_Radial_Menus/files/0012/ui/...`). Pylune classifies them as `EMPTY`.
+    (e.g. `Better_Radial_Menus/files/0012/ui/...`). Pailune classifies them as `EMPTY`.
   - **Overlay mods** that ship `00NN/` and their own `meta/0.papgt` collide with each other
     (both take the same group number) and break after every game update (stale CRCs).
   - **ASI mods** are the only format that works.
 - **Fix:** a PAZ pipeline. Read PAMT, decompress/decrypt entries, apply JSON patches and RAW
-  files, write a Pylune-owned overlay group, and generate `0.papgt`/`0.pathc`. The
+  files, write a Pailune-owned overlay group, and generate `0.papgt`/`0.pathc`. The
   generated files are still deployed as symlinks with `.bak` originals. Until this exists,
   mark unsupported formats clearly in the UI.
 
@@ -42,7 +42,7 @@ Every item has an ID that [roadmap.md](roadmap.md) and [board.md](board.md) refe
   `.bak` files that Unlink and Clean Slate cannot revert. A later Apply may even back up an
   orphan symlink as the "original".
 - **Fix:** write-ahead journaling (persist each record before touching the filesystem),
-  treat symlinks into staging as Pylune's own, and block window close while exclusive jobs run.
+  treat symlinks into staging as Pailune's own, and block window close while exclusive jobs run.
 
 ### A-03 — Two instances can deploy concurrently
 - **Where:** `src/instance.rs`.
@@ -79,7 +79,7 @@ Every item has an ID that [roadmap.md](roadmap.md) and [board.md](board.md) refe
 | ID | Area | Finding | Fix |
 |----|------|---------|-----|
 | A-07 | Staging | `sync` during an update's `remove_dir_all` + rename window drops the mod's order, flags and Nexus ref (`install.rs` swap, `registry.rs` sync). | Swap with renames only (old → trash, new → dest, then delete the trash); tolerate per-mod scan errors. |
-| A-08 | Staging | Same-name concurrent imports/downloads share `.pylune-incoming-<name>` and `downloads/<file>.part`; a non-replacing import can still delete an existing `dest`. | Unique work and `.part` names per job; no-replace final rename. |
+| A-08 | Staging | Same-name concurrent imports/downloads share `.pailune-incoming-<name>` and `downloads/<file>.part`; a non-replacing import can still delete an existing `dest`. | Unique work and `.part` names per job; no-replace final rename. |
 | A-09 | Deploy | Case: a mod shipping `Bin64/x.asi` is classified as `bin64` but linked with its original case, which creates a second `Bin64/` directory on Linux. | Resolve each path component case-insensitively against existing directories. |
 | A-10 | Launch | Direct Proton launch bypasses the Steam Linux Runtime (`require_tool_appid 4183110`), Steam Cloud sync and the overlay, and misses `STEAM_COMPAT_INSTALL_PATH`/`STEAM_COMPAT_LIBRARY_PATHS`. | Run through the SLR entry point, or write the launch options to Steam and launch through Steam; at least warn. |
 | A-11 | Launch | Wrapper commands before `%command%` (`gamemoderun`, `mangohud`) are passed to the game as arguments. | Keep a wrapper prefix; reject wrappers on the Steam CLI path. |
@@ -175,17 +175,17 @@ Requested after the A-items were largely done. Sizes: **S** small, **M** medium,
 | B-12 | S–M | Mod list backup, export and import | A portable mod list (order, enabled flags, chosen options, Nexus origins, collection membership) that can be exported, shared and imported to reinstall the same setup elsewhere. |
 | B-13 | Research | Script bridge | Find out whether scripts can be injected into the running game, and how. |
 | B-15 | S | Move to position | Move a mod to a given load-order number (details panel field and a list action), instead of repeated up/down. |
-| B-14 | M–L | MCP server for agentic use | A command-line mode that exposes Pylune's actions as Model Context Protocol tools, so agents can manage mods without the window. |
+| B-14 | M–L | MCP server for agentic use | A command-line mode that exposes Pailune's actions as Model Context Protocol tools, so agents can manage mods without the window. |
 
-## Addendum 3 — 2026-10-26: Pylune as a modding tool (B-16, B-17)
+## Addendum 3 — 2026-10-26: Pailune as a modding tool (B-16, B-17)
 
-The owner widened the scope: Pylune should also help **create** mods, not only install and edit
+The owner widened the scope: Pailune should also help **create** mods, not only install and edit
 them (decision D-13). JSON mods come first, ASI mods second.
 
 | ID | Size | Request | Scope |
 |----|------|---------|-------|
 | B-16 | L | JSON mod creation | Start a new JSON mod, browse the game's data tables, pick records and fields (or raw bytes) and turn them into checked changes, test them in game, package the result for sharing. |
-| B-17 | L (research first) | ASI mod creation | Scaffold, build, deploy and debug ASI plugins from Pylune: project templates, a build that works on Linux, the test loop with the game and its log, packaging. Pylune provides the tooling; what a plugin hooks is the author's work (Pylune never analyses the game's protected code). |
+| B-17 | L (research first) | ASI mod creation | Scaffold, build, deploy and debug ASI plugins from Pailune: project templates, a build that works on Linux, the test loop with the game and its log, packaging. Pailune provides the tooling; what a plugin hooks is the author's work (Pailune never analyses the game's protected code). |
 
 ### B-07 — Save files: what we know (read-only look, build 2.3.2)
 
@@ -238,16 +238,16 @@ collection membership in the export, and an import that offers to download missi
   archives would hint at it), anti-tamper measures, and what the community already uses.
 - Research output: a short report (engine scripting, existing ASI frameworks for the game,
   hook points, risks incl. anti-cheat and ToS), then a decision record before any code.
-  Pylune's part would be installing/configuring the bridge like any ASI mod.
+  Pailune's part would be installing/configuring the bridge like any ASI mod.
 
 ### B-14 — MCP: shape
 
-- `pylune mcp` runs headless over stdio (JSON-RPC, MCP spec) and exposes tools mirroring the
+- `pailune mcp` runs headless over stdio (JSON-RPC, MCP spec) and exposes tools mirroring the
   existing intents: list mods/profiles/collections, import, enable/disable, reorder, apply,
   unlink, backup/restore, Nexus lookup/download, launch, read the event journal.
 - Reuses `jobs` and the database; must respect the single-instance lock (forward requests to
   the running window through the spool, or run only when no window is open).
 - Destructive tools (clean slate, restore, delete) require an explicit `confirm: true`
   argument; Nexus downloads stay subject to the account's rules.
-- A plain CLI (`pylune list`, `pylune apply` …) falls out of the same layer and is useful on
+- A plain CLI (`pailune list`, `pailune apply` …) falls out of the same layer and is useful on
   its own.

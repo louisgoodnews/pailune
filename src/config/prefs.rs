@@ -58,7 +58,7 @@ impl Default for UiConfig {
 pub struct BehaviorConfig {
     /// Ask before deleting a mod (deletes can be undone either way).
     pub confirm_deletes: bool,
-    /// Check Nexus for mod updates when Pylune starts.
+    /// Check Nexus for mod updates when Pailune starts.
     pub check_updates_on_start: bool,
     /// Show the getting-started guide on the next start.
     pub show_guide: bool,
@@ -97,7 +97,7 @@ impl Default for ModsConfig {
     }
 }
 
-/// `[backup]` — automatic backups of Pylune's own state.
+/// `[backup]` — automatic backups of Pailune's own state.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct BackupConfig {

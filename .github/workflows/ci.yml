@@ -44,10 +44,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/v')
         with:
-          name: Pylune-${{ matrix.os }}
+          name: Pailune-${{ matrix.os }}
           path: |
-            target/release/pylune.exe
-            target/release/pylune
+            target/release/pailune.exe
+            target/release/pailune
 
   appimage:
     # Release builds only. Ubuntu 22.04 keeps the glibc floor at 2.35, so the
@@ -74,5 +74,5 @@ jobs:
         run: packaging/appimage.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: Pylune-AppImage
+          name: Pailune-AppImage
           path: target/appimage/*.AppImage

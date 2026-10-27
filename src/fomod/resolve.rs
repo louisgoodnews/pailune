@@ -11,7 +11,7 @@ use walkdir::WalkDir;
 pub type Flags = HashMap<String, String>;
 
 /// Whether `condition` holds. Game-file and version conditions count as met:
-/// Pylune cannot know other managers' plugin states.
+/// Pailune cannot know other managers' plugin states.
 pub fn holds(condition: &Condition, flags: &Flags) -> bool {
     match condition {
         Condition::All(items) => items.iter().all(|c| holds(c, flags)),

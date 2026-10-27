@@ -8,7 +8,7 @@ mod system;
 
 use super::clicked;
 use crate::ui::theme::{self, accent, muted, warning};
-use crate::ui::{Action, PyluneApp, SettingsDraft, SettingsPage};
+use crate::ui::{Action, PailuneApp, SettingsDraft, SettingsPage};
 use eframe::egui::{self, RichText};
 
 /// Categories in display order, with their label and one-line purpose.
@@ -34,7 +34,7 @@ const PAGES: [(SettingsPage, &str, &str); 8] = [
         "🌐 Nexus Mods",
         "Downloads and updates",
     ),
-    (SettingsPage::Backups, "🗄 Backups", "Pylune's own state"),
+    (SettingsPage::Backups, "🗄 Backups", "Pailune's own state"),
     (SettingsPage::Advanced, "🔧 Advanced", "Jobs and logs"),
     (
         SettingsPage::Diagnostics,
@@ -65,7 +65,7 @@ fn category_list(ui: &mut egui::Ui, draft: &mut SettingsDraft) {
 }
 
 /// "Unsaved changes" bar with the primary Save and a quieter Discard.
-fn save_bar(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+fn save_bar(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     if !app.draft.is_changed(&app.config) {
         return Vec::new();
     }
@@ -83,7 +83,7 @@ fn save_bar(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
 }
 
 /// Heading, options and reset button of the selected category.
-fn page(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+fn page(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     let page = app.draft.page;
     let (_, title, purpose) = PAGES
         .iter()
@@ -116,7 +116,7 @@ fn page(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
 }
 
 /// Renders the settings page and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     let mut actions = save_bar(ui, app);
     ui.horizontal_top(|ui| {
         category_list(ui, &mut app.draft);

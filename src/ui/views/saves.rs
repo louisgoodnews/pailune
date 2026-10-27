@@ -1,11 +1,11 @@
 //! Saves tab: the player's slots and save backups on the left, the open
 //! save (viewer and editor, B-07) on the right.
 
-use crate::ui::{Action, PyluneApp};
+use crate::ui::{Action, PailuneApp};
 use eframe::egui;
 
 /// Renders the tab and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     let mut actions = Vec::new();
     egui::Panel::left("saves_list")
         .resizable(true)

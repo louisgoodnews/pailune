@@ -61,7 +61,7 @@ fn game_entries(info: &SteamInfo) -> Vec<PathBuf> {
     entries
 }
 
-/// Real archive folders above [`VANILLA_LAST_ARCHIVE`] not created by Pylune.
+/// Real archive folders above [`VANILLA_LAST_ARCHIVE`] not created by Pailune.
 pub fn foreign_overlays(info: &SteamInfo, manifest: &Manifest) -> Vec<PathBuf> {
     game_entries(info)
         .into_iter()

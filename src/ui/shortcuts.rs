@@ -1,16 +1,16 @@
 //! Keyboard shortcuts and drag-and-drop import.
 
 use super::guide::{GuideAction, GuidePage};
-use super::{Action, Confirm, DeployAction, ModAction, PyluneApp, Tab};
+use super::{Action, Confirm, DeployAction, ModAction, PailuneApp, Tab};
 use eframe::egui::{self, Key, Modifiers};
 
 /// Id of the mod-list search box (focused by Ctrl+F).
 pub fn search_id() -> egui::Id {
-    egui::Id::unique("pylune_mod_search")
+    egui::Id::unique("pailune_mod_search")
 }
 
 /// Reads shortcuts and dropped files for this frame.
-pub fn collect(ctx: &egui::Context, app: &PyluneApp) -> Vec<Action> {
+pub fn collect(ctx: &egui::Context, app: &PailuneApp) -> Vec<Action> {
     let typing = ctx.memory(|m| m.focused().is_some());
     let (search, rescan, apply, import, delete, help, quit) = ctx.input_mut(|i| {
         (
@@ -66,7 +66,7 @@ pub fn drop_hint(ctx: &egui::Context) {
     if ctx.input(|i| i.raw.hovered_files.is_empty()) {
         return;
     }
-    egui::Area::new(egui::Id::unique("pylune_drop_hint"))
+    egui::Area::new(egui::Id::unique("pailune_drop_hint"))
         .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
         .show(ctx, |ui| {
             egui::Frame::popup(ui.style()).show(ui, |ui| {

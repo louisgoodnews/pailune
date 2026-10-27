@@ -2,7 +2,7 @@
 //! metadata and can be restored until the trash is pruned.
 
 use super::model::{ModEntry, NexusRef};
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use serde_json::{Value, json};
 use std::fs;
 use std::path::Path;
@@ -69,7 +69,7 @@ pub fn move_to_trash(
     let from = staging.join(&entry.name);
     fs::rename(&from, dir.join("mod")).at(&from)?;
     fs::write(dir.join("entry.json"), metadata(entry, now).to_string()).at(&dir)?;
-    read_item(&dir).ok_or_else(|| PyluneError::Invalid("trash entry unreadable".into()))
+    read_item(&dir).ok_or_else(|| PailuneError::Invalid("trash entry unreadable".into()))
 }
 
 /// Trash entries, newest first.
@@ -91,7 +91,7 @@ pub fn list(trash: &Path) -> Vec<TrashItem> {
 pub fn restore(trash: &Path, staging: &Path, id: &str) -> Result<(String, TrashItem)> {
     let dir = trash.join(id);
     let item = read_item(&dir)
-        .ok_or_else(|| PyluneError::Invalid(format!("nothing to restore for {id}")))?;
+        .ok_or_else(|| PailuneError::Invalid(format!("nothing to restore for {id}")))?;
     let name = (1..)
         .map(|i| match i {
             1 => item.name.clone(),

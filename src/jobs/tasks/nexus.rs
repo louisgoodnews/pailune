@@ -2,7 +2,7 @@
 
 use super::staging::register;
 use crate::db;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::jobs::JobOutput;
 use crate::jobs::context::JobContext;
 use crate::logging::{Event, EventKind, Severity};
@@ -32,7 +32,7 @@ fn nexus_client(ctx: &JobContext, key: &str) -> Client {
 fn client(ctx: &JobContext) -> Result<Client> {
     key::load(&ctx.paths.nexus_key)
         .map(|k| nexus_client(ctx, &k))
-        .ok_or_else(|| PyluneError::Invalid("set a Nexus API key first".into()))
+        .ok_or_else(|| PailuneError::Invalid("set a Nexus API key first".into()))
 }
 
 /// Checks the stored API key and returns the account.
@@ -126,7 +126,7 @@ fn check_chunk(
             .iter()
             .map(|(name, origin)| (name.clone(), scope.spawn(|| check_one(client, origin))))
             .collect();
-        let crashed = || Err(PyluneError::Invalid("update check crashed".into()));
+        let crashed = || Err(PailuneError::Invalid("update check crashed".into()));
         handles
             .into_iter()
             .map(|(name, handle)| (name, handle.join().unwrap_or_else(|_| crashed())))

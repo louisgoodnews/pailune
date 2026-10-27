@@ -3,7 +3,7 @@
 use super::{enabled_registry, fixture, write};
 use crate::db;
 use crate::db::links::DbJournal;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::mod_engine::{install, plan};
 use crate::symlink::journal::Journal;
 use crate::symlink::{LinkRecord, Manifest, deploy, undeploy};
@@ -24,7 +24,7 @@ struct Dying<'a> {
 impl Dying<'_> {
     fn spend(&mut self) -> Result<()> {
         match self.budget {
-            0 => Err(PyluneError::Invalid("simulated crash".into())),
+            0 => Err(PailuneError::Invalid("simulated crash".into())),
             _ => {
                 self.budget -= 1;
                 Ok(())

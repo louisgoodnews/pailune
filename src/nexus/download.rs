@@ -2,7 +2,7 @@
 
 use super::api::Client;
 use super::{DownloadLink, NexusFile, NexusMod, NxmLink};
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::mod_engine::install;
 use std::fs;
 use std::io::{self, Read};
@@ -145,7 +145,7 @@ fn verify(client: &Client, archive: &Path, job: &DownloadJob) -> Result<Integrit
     match (hits.is_empty(), hits.contains(&(job.mod_id, job.file_id))) {
         (true, _) => Ok(Integrity::Unverified),
         (false, true) => Ok(Integrity::Verified),
-        (false, false) => Err(PyluneError::Invalid(format!(
+        (false, false) => Err(PailuneError::Invalid(format!(
             "downloaded content belongs to a different Nexus file than {}/{}",
             job.mod_id, job.file_id
         ))),
@@ -159,7 +159,7 @@ fn download_any(
     archive: &Path,
     progress: Progress,
 ) -> Result<()> {
-    let none = Err(PyluneError::Invalid(
+    let none = Err(PailuneError::Invalid(
         "Nexus returned no download mirrors".into(),
     ));
     mirrors.iter().fold(none, |result, link| match result {
@@ -174,7 +174,7 @@ fn download_any(
 fn check_expiry(job: &DownloadJob) -> Result<()> {
     let now = crate::db::now() as u64;
     match job.nxm.as_ref().and_then(|link| link.expires) {
-        Some(expires) if expires < now => Err(PyluneError::Invalid(
+        Some(expires) if expires < now => Err(PailuneError::Invalid(
             "this nxm:// link has expired — click \"Mod Manager Download\" on the website again"
                 .into(),
         )),
@@ -197,7 +197,7 @@ pub fn fetch(
         .into_iter()
         .find(|f| f.file_id == job.file_id)
         .ok_or_else(|| {
-            PyluneError::Invalid(format!(
+            PailuneError::Invalid(format!(
                 "file {} not found on mod {}",
                 job.file_id, job.mod_id
             ))
@@ -216,7 +216,7 @@ pub fn fetch(
     let size = fs::metadata(&archive).at(&archive)?.len();
     if let Some(expected) = file.size_in_bytes.filter(|e| *e != size) {
         let _ = fs::remove_file(&archive);
-        return Err(PyluneError::Invalid(format!(
+        return Err(PailuneError::Invalid(format!(
             "{}: downloaded {size} bytes, Nexus lists {expected}",
             file.file_name
         )));

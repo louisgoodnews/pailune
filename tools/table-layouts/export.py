@@ -40,5 +40,5 @@ for t,(cls,lead,evidence) in PARTIAL.items():
     if t in out or any(len(payload)<need for _,_,payload in recs): continue
     out[t]={"class":cls,"key_size":ks,"records":len(recs),"partial":True,"evidence":evidence,
       "fields":[{"name":f,"shape":sh,"meaning":m,"offset":"proven","name_certain":True} for f,sh,m in lead]}
-json.dump({"format":1,"game_version":"2.3.2","derived":"Pylune table-layout research (docs/research/table-layouts.md)","tables":out},open(sys.argv[1],'w'),indent=1)
+json.dump({"format":1,"game_version":"2.3.2","derived":"Pailune table-layout research (docs/research/table-layouts.md)","tables":out},open(sys.argv[1],'w'),indent=1)
 print(len(out),"tables;",sum(1 for t in out.values() for f in t['fields'] if f['name_certain']),"editable fields;",sum(len(t['fields']) for t in out.values()),"fields")

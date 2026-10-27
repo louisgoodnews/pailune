@@ -1,12 +1,12 @@
 //! Diagnostics page: archive state, Proton hints, metadata backup health and
-//! the locations of Pylune's files.
+//! the locations of Pailune's files.
 
 use crate::backup::MetaBackup;
 use crate::launch::proton;
 use crate::steam::locate::launch_options;
 use crate::ui::theme::{self, danger, muted, success, warning};
 use crate::ui::views::clicked;
-use crate::ui::{Action, DeployAction, PyluneApp};
+use crate::ui::{Action, DeployAction, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// Label and colour of the metadata backup state.
@@ -19,7 +19,7 @@ fn meta_badge(meta: MetaBackup) -> (&'static str, egui::Color32) {
 }
 
 /// Game version, registered pack groups and inactive archive folders.
-fn archive_section(ui: &mut egui::Ui, app: &PyluneApp) {
+fn archive_section(ui: &mut egui::Ui, app: &PailuneApp) {
     ui.heading("Game archives");
     let status = &app.archives;
     let version = status.version.as_deref().unwrap_or("unknown");
@@ -50,7 +50,7 @@ fn archive_section(ui: &mut egui::Ui, app: &PyluneApp) {
 }
 
 /// Archives, Proton prefix and the launch options ASI mods need.
-fn proton_section(ui: &mut egui::Ui, app: &PyluneApp) {
+fn proton_section(ui: &mut egui::Ui, app: &PailuneApp) {
     archive_section(ui, app);
     ui.separator();
     ui.heading("Proton");
@@ -92,7 +92,7 @@ fn proton_section(ui: &mut egui::Ui, app: &PyluneApp) {
 }
 
 /// Metadata backup state and set-aside archive folders.
-fn backup_section(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+fn backup_section(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     ui.heading("Game metadata backup");
     let (text, color) = meta_badge(app.backup.meta);
     theme::badge(ui, text, color);
@@ -132,7 +132,7 @@ fn backup_section(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
 }
 
 /// ASI plugins in the game folder and who installed them (D-12).
-fn plugin_section(ui: &mut egui::Ui, app: &PyluneApp) {
+fn plugin_section(ui: &mut egui::Ui, app: &PailuneApp) {
     ui.heading("ASI plugins");
     if app.plugins.is_empty() {
         ui.label(RichText::new("No .asi plugins in bin64/, scripts/ or plugins/.").color(muted()));
@@ -147,7 +147,7 @@ fn plugin_section(ui: &mut egui::Ui, app: &PyluneApp) {
                 match &p.owner {
                     Some(owner) => drop(ui.label(format!("from {owner}"))),
                     None => {
-                        drop(ui.label(RichText::new("not installed by Pylune").color(warning())))
+                        drop(ui.label(RichText::new("not installed by Pailune").color(warning())))
                     }
                 }
                 ui.label(
@@ -168,7 +168,7 @@ fn plugin_section(ui: &mut egui::Ui, app: &PyluneApp) {
 }
 
 /// Renders the diagnostics page: archives, Proton, metadata backup, paths.
-pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     proton_section(ui, app);
     ui.separator();
     plugin_section(ui, app);

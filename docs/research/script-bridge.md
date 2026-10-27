@@ -1,6 +1,6 @@
 # Research: a script bridge into the running game (B-13)
 
-Question: can Pylune let mods inject scripts into the running game, and how?
+Question: can Pailune let mods inject scripts into the running game, and how?
 Status 2026-10-26: research done; **no code**; decision proposed as D-12.
 
 ## Findings
@@ -8,7 +8,7 @@ Status 2026-10-26: research done; **no code**; decision proposed as D-12.
 1. **The engine has no exposed scripting layer.** A read-only scan of all 2 052 523 files in the
    game's archives (build 2.3.2) found no script files — no `.lua`, `.luac`, `.py`, `.js`, `.as`,
    `.cs` or similar. Behaviour is data-driven: sequences (`.paseq`, `.paseqc`), schedules
-   (`.paschedule`), gimmicks (`.binarygimmick`), stages, levels and XML. Pylune already patches
+   (`.paschedule`), gimmicks (`.binarygimmick`), stages, levels and XML. Pailune already patches
    such data through its overlay (JSON byte patches, CSS; XML patches are on the roadmap).
 2. **Native code runs through ASI plugins.** The community uses the Ultimate ASI Loader (a proxy
    DLL such as `winmm.dll` or `version.dll` in `bin64/`; it is installed on the reference
@@ -30,11 +30,11 @@ anti-cheat, but that should be confirmed before any work.
 
 ## Recommendation
 
-- Pylune should **not** build a script runtime. It should be the best **installer and manager**
+- Pailune should **not** build a script runtime. It should be the best **installer and manager**
   for native plugins: detect/install the ASI loader, show which plugins are active, warn after a
-  game update that hook-based plugins may break (Pylune already detects game updates), and keep
+  game update that hook-based plugins may break (Pailune already detects game updates), and keep
   per-plugin INI settings editable.
-- If a community script bridge appears later, Pylune installs it like any ASI mod and can manage
+- If a community script bridge appears later, Pailune installs it like any ASI mod and can manage
   its script folder.
 - Data-driven changes (the game's actual "scripts") are better served by extending the overlay:
   XML patches (A-01) and table edits.

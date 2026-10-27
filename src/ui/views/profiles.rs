@@ -3,7 +3,7 @@
 use super::clicked;
 use crate::profiles::Profile;
 use crate::ui::theme::{self, accent, muted};
-use crate::ui::{Action, Confirm, ModListAction, ProfileAction, PyluneApp};
+use crate::ui::{Action, Confirm, ModListAction, PailuneApp, ProfileAction};
 use eframe::egui::{self, RichText};
 
 /// One profile card.
@@ -81,7 +81,7 @@ fn card(ui: &mut egui::Ui, profile: &Profile, active: bool, draft: &mut String) 
 }
 
 /// Renders the profiles page and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     ui.heading("Profiles");
     ui.label(
         RichText::new(

@@ -2,7 +2,7 @@
 
 use super::RestoreReport;
 use crate::config::paths::DataPaths;
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::mod_engine::install::unique_suffix;
 use rusqlite::{Connection, MAIN_DB};
 use std::fs;
@@ -26,9 +26,9 @@ pub fn restore(
     fs::create_dir_all(&work).at(&work)?;
     let result = (|| {
         zip::ZipArchive::new(fs::File::open(archive).at(archive)?)?.extract(&work)?;
-        let database = work.join("pylune.sqlite3");
+        let database = work.join("pailune.sqlite3");
         if !database.is_file() {
-            return Err(PyluneError::Invalid("the backup has no database".into()));
+            return Err(PailuneError::Invalid("the backup has no database".into()));
         }
         conn.restore(MAIN_DB, &database, None::<fn(rusqlite::backup::Progress)>)?;
         crate::db::schema_upgrade(conn)?;

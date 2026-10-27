@@ -1,7 +1,7 @@
 //! Bottom panel listing running and recently finished background jobs.
 
 use crate::ui::theme::{danger, muted, success};
-use crate::ui::{JobState, JobView, PyluneApp};
+use crate::ui::{JobState, JobView, PailuneApp};
 use eframe::egui::{self, RichText};
 
 /// One job: state, title and progress.
@@ -37,7 +37,7 @@ fn mib(bytes: u64) -> f32 {
 }
 
 /// Renders the jobs list (only shown while jobs exist).
-pub fn show(ui: &mut egui::Ui, app: &PyluneApp) {
+pub fn show(ui: &mut egui::Ui, app: &PailuneApp) {
     let running = app
         .jobs
         .iter()

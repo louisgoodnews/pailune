@@ -1,9 +1,9 @@
-# Crimson Desert archive formats and community mod formats: implementation spec for Pylune
+# Crimson Desert archive formats and community mod formats: implementation spec for Pailune
 
 Status: research document, written 2026-10-25 against the user's install
 (`/mnt/nvme0n1/nvme0n1p1/louisgoodnews/steamapps/common/Crimson Desert`,
 `meta/0.paver` = version **2.3.2**). It is meant to be enough to implement
-Pylune's own overlay archive group, so mods stop depending on loose files.
+Pailune's own overlay archive group, so mods stop depending on loose files.
 The game ignores loose files.
 
 Legend:
@@ -37,7 +37,7 @@ in bytes from the start of the structure named.
    plus one new PAPGT entry. JSON Mod Manager (JMM) and CDUMM insert it as
    entry **index 0** of the PAPGT ("first match wins"). The shadowed vanilla
    group's PAMT is **not** modified (CDUMM even restores it to vanilla).
-   **VERIFIED IN GAME (2026-10-25, build 2.3.2):** Pylune's overlay group `0100`,
+   **VERIFIED IN GAME (2026-10-25, build 2.3.2):** Pailune's overlay group `0100`,
    listed first in a rebuilt PAPGT, replaced `ui/xml/gamemain/title/titleview.css`
    (flags 0x32) on the title screen.
 4. File entries in a PAZ are aligned to 16 bytes and zero padded, and the PAZ
@@ -158,7 +158,7 @@ State of the user's install (VERIFIED):
 | 4   | u16  | patch     | 2 |
 | 6   | u32  | checksum  | `pa_hash(bytes[0..6])` = `0xCB19CCE3` |
 
-Pylune should **read it, never write it**. Use `(major, minor, patch,
+Pailune should **read it, never write it**. Use `(major, minor, patch,
 checksum)` as the "game build fingerprint" for invalidating caches and
 vanilla snapshots after game updates. DMM's log showed `01000f000000e188846a`
 for the July build (1.15.0).
@@ -197,7 +197,7 @@ JPN=1<<2, RUS=1<<3, TUR=1<<4, SPA_ES=1<<5, SPA_MX=1<<6, FRE=1<<7, GER=1<<8,
 ITA=1<<9, POL=1<<10, POR_BR=1<<11, ZHO_TW=1<<12, ZHO_CN=1<<13. Build 2.3.2
 adds bit 14 (group `0033`, lang `0x4000`), so "all" is now **0x7FFF**. The
 tools' default for new entries is still 0x3FFF, which leaves out bit 14.
-Pylune should copy the mask of a vanilla all-language entry such as `0000`.
+Pailune should copy the mask of a vanilla all-language entry such as `0000`.
 UNVERIFIED: whether the game drops a group whose mask misses the user's
 language bit (that is the likely meaning).
 
@@ -254,10 +254,10 @@ foreign_dropped=0 dmm_added=1`, `[PAPGT_DMM_ADDED] dmmsa (CRC=0x14F04663)`.
 ### 4.4 Registering a new group (algorithm)
 
 ```
-read vanilla papgt (from Pylune's snapshot, not the live file if it may be dirty)
-entries = parse(); remove any previous Pylune entry
+read vanilla papgt (from Pailune's snapshot, not the live file if it may be dirty)
+entries = parse(); remove any previous Pailune entry
 new = { is_optional: 0, lang_mask: entries["0000"].lang_mask (0x7FFF), zero: 0,
-        name: "<pylune group>", pamt_crc: le32(new_pamt[0..4]) }
+        name: "<pailune group>", pamt_crc: le32(new_pamt[0..4]) }
 entries.insert(0, new)                     # JMM + CDUMM: index 0 = highest priority
 rebuild string table: for each entry in order, name_offset = len(table); table += name + "\0"
 out = unknown0 | 0 | u8(len(entries)) | unknown1 | zero
@@ -266,7 +266,7 @@ out[4..8] = le32(pa_hash(out[12..]))
 write atomically (write temp + rename) after backing up the vanilla file
 ```
 
-Also refresh `pamt_crc` for any group whose PAMT you changed. Pylune's design
+Also refresh `pamt_crc` for any group whose PAMT you changed. Pailune's design
 should never change vanilla PAMTs.
 
 ---
@@ -354,7 +354,7 @@ segment (`"ui"`, `"/texture"`, …) and one flat node per file name
   `folder_hash = 0xDEBA1DCD` (see `0016`).
 * PAZ offsets are always multiples of 16.
 
-Pylune's writer should follow the vanilla conventions anyway (sorted
+Pailune's writer should follow the vanilla conventions anyway (sorted
 folders, sorted names, contiguous ranges). It costs nothing. Whether to
 include intermediate folders is optional.
 
@@ -472,7 +472,7 @@ rewrite header counts; serialize; no checksum to fix
 ```
 
 Keep the vanilla PATHC as the base for every rebuild and re-apply all of
-Pylune's textures. Never edit incrementally on top of an unknown live file.
+Pailune's textures. Never edit incrementally on top of an unknown live file.
 
 ---
 
@@ -549,7 +549,7 @@ is `orig_size` from the PAMT. `lz4_flex::block::decompress(buf, orig_size)`
 works. Re-compressing with `lz4_flex::block::compress` gives different
 (slightly larger) output than the game's encoder (3 881 vs 3 846 bytes for
 `paconfig.txt`). That is irrelevant for an overlay, where sizes are free,
-and fatal for "same-size in-place" patching, which Pylune should not do.
+and fatal for "same-size in-place" patching, which Pailune should not do.
 
 ### 7.4 Compression type 1: DDS "partial" (VERIFIED on 1 600 sampled vanilla textures)
 
@@ -579,7 +579,7 @@ block_bytes`, with block_bytes 8 for DXT1/BC1/BC4/ATI1, 16 for
 DXT3/DXT5/BC2/BC3/BC5/ATI2/BC6H/BC7 (DXGI 70–84, 94–99). Non-block formats
 (FourCC 0, uncompressed) also exist with type 1 (raw chunk sizes).
 
-**Simplest correct writer (recommended for Pylune):** write every chunk
+**Simplest correct writer (recommended for Pailune):** write every chunk
 *raw* (`m_i = raw_size(mip_i)`, `stored_size = orig_size`). That is what
 about 90 % of vanilla textures do. Then for a same-format, same-dimension
 replacement, `m1..m4` and the header template are **identical to the vanilla
@@ -596,7 +596,7 @@ them are stored uncompressed (`stored_size == orig_size`), and their bytes are t
 (magic `PAR `, then a small header of section sizes). Two meshes are stored with flags `0x0000`
 (`6_object/tools/cd_t0000_carddeck_0001.pac`, `…/cd_t9999_knowledgeimage_background_texture.pac`),
 so the game's mesh loader accepts plain storage. The compressed variant (2 914 meshes) is not
-decoded yet. Pylune therefore stores new or replaced non-texture files whose siblings use type 1
+decoded yet. Pailune therefore stores new or replaced non-texture files whose siblings use type 1
 **plain** (flags with compression 0, encryption kept), and reads uncompressed type-1 meshes as
 they are. **UNVERIFIED in game** (first user: *Character Creator*, 69 new head meshes).
 
@@ -609,7 +609,7 @@ unknown (possibly a key or signature). **Never modify.**
 
 ---
 
-## 9. Building a Pylune overlay group
+## 9. Building a Pailune overlay group
 
 ### 9.1 What the existing managers do
 
@@ -626,7 +626,7 @@ replace vanilla files by putting the overlay first in the PAPGT and leaving
 vanilla PAMTs alone. DMM's in-place route for replacements is a design
 choice (comments mention streaming and voice-mirror concerns), not evidence
 that overlays cannot override. **UNVERIFIED in game by this research.** The
-first Pylune milestone that writes anything must include a manual in-game
+first Pailune milestone that writes anything must include a manual in-game
 test (§11.4).
 
 DMM log hints at per-type caveats (SOURCE, UNVERIFIED):
@@ -639,21 +639,21 @@ DMM log hints at per-type caveats (SOURCE, UNVERIFIED):
 **VERIFIED IN GAME (2026-10-26, build 2.03.02): data tables work through an overlay when each
 table (body + header) has a group of its own, registered first with language mask `0x3FFF` and
 the header stored uncompressed — DMM's layout (`research/dmm-analysis.md`).** The arrow stack
-test went past 100. With all tables in Pylune's single group (mask `0x7FFF`) they had no effect,
+test went past 100. With all tables in Pailune's single group (mask `0x7FFF`) they had no effect,
 although that group did serve other files (Character Creator's part table).
 
 **Data tables need their header in the overlay (2026-10-26).** Test batch 1 packed only the
 patched `*.staticinfobody` files: the overlay held exactly the intended bytes, listed first in
 the PAPGT, yet none of the three tests had an effect in game. CDUMM packs the companion
 `.staticinfoheader`/`.pabgh` with every modified body; the likely reason is that the game reads a
-table's body from the group where it found the header. Pylune now packs the (unchanged) header
+table's body from the group where it found the header. Pailune now packs the (unchanged) header
 with every patched body. **UNVERIFIED in game** until test batch 1 is repeated.
 
-### 9.2 Recommended Pylune procedure
+### 9.2 Recommended Pailune procedure
 
 Naming: use a **numeric** name above every number in the vanilla PAPGT and
-every existing directory, for example `0050`, and remember it in Pylune's
-DB. Mark it with a `.pylune_owned` file. Non-numeric names (`dmmsa`) are
+every existing directory, for example `0050`, and remember it in Pailune's
+DB. Mark it with a `.pailune_owned` file. Non-numeric names (`dmmsa`) are
 representable, but CDUMM's rescan logic only recognises 4-digit names, and
 other tools may delete unknown directories. Never reuse 0036–0040.
 
@@ -710,7 +710,7 @@ not checked against real mods, because the user's `~/.local/share/DMM/mods`
 holds only empty `_lang`/`_language` folders. All formats that change
 existing game data operate on the **decrypted and decompressed plaintext of
 one PAMT entry**, identified by its virtual path. All of them end up as
-overlay entries in Pylune (§9).
+overlay entries in Pailune (§9).
 
 ### 10.1 Byte-patch JSON ("JSON mod", JMM v1/v2, "format": 2)
 
@@ -779,12 +779,12 @@ overlay entries in Pylune (§9).
      `allow_partial_apply`.
   6. Inserts into a table body require shifting every index offset at or
      after the insert position (`fixup_pabgh_after_inserts`). UJMM refuses
-     these; Pylune can too, at first.
+     these; Pailune can too, at first.
   CDUMM adds many drift heuristics (signature retry, fallback offsets,
   pattern scan). Skip them.
 * Conflicts: apply all enabled mods to the same vanilla buffer in priority
   order. The later mod wins on overlapping bytes. Report overlaps.
-* Write-back in Pylune: the patched plaintext becomes an overlay entry,
+* Write-back in Pailune: the patched plaintext becomes an overlay entry,
   re-compressed and re-encrypted per the vanilla flags. CDUMM also ships
   the matching header file whenever a body is touched.
 
@@ -842,7 +842,7 @@ part:
 * Conversion: intents → v2 changes `{entry, rel_offset, original,
   patched}` against vanilla bytes, then the §10.1 engine.
 
-Pylune plan: support `set` and raw `old/new` for tables with a
+Pailune plan: support `set` and raw `old/new` for tables with a
 field_schema-style layout, and refuse everything else with a clear message.
 Complexity: **S/M** for that subset, **L** for CDUMM parity.
 
@@ -882,7 +882,7 @@ Compiled group mods (a mod ships `NNNN/0.pamt` + `NNNN/*.paz`):
   it at PAPGT index 0. The risk is landing on 0036–0040.
 * MacJMM always uses `0036`, which **collides with the 2.x reserved
   slot**.
-* Pylune: decompose into entries (read with `paz::pamt`) and merge them into
+* Pailune: decompose into entries (read with `paz::pamt`) and merge them into
   its single overlay. That avoids multiple groups and slot fights.
 
 Complexity: **M** (detection + VFS resolution + overlay writer).
@@ -945,9 +945,9 @@ Complexity: XML **M** (needs an XML DOM with XPath), HTML **M/L**
 (lenient parser), CSS **S**. These are ports of JMM (MPL-2.0) behaviour:
 re-implement them from this description, not by translating code.
 
-### 10.6 What Pylune needs, by format
+### 10.6 What Pailune needs, by format
 
-| format | Pylune needs | complexity |
+| format | Pailune needs | complexity |
 |--------|--------------|------------|
 | RAW / browser folders (non-DDS) | layout detection, VFS resolve, overlay | M (first) |
 | Byte-patch JSON | vfs extract, table index, apply engine, overlay | M |
@@ -957,7 +957,7 @@ re-implement them from this description, not by translating code.
 
 ---
 
-## 11. Implementation plan for Pylune
+## 11. Implementation plan for Pailune
 
 ### 11.1 Module breakdown (new crate or `src/paz/`, `src/patch/`)
 
@@ -980,7 +980,7 @@ re-implement them from this description, not by translating code.
 Crates: `lz4_flex` (0.11, pure Rust, verified), `chacha20` (0.10 with
 `legacy` feature, verified), `memmap2` (optional, for reading PAZ ranges;
 plain `File::seek` + `read_exact` is fine), `tempfile` (already a dev
-dependency). lookup3 should be self-written (about 40 lines). Pylune's
+dependency). lookup3 should be self-written (about 40 lines). Pailune's
 existing `serde_json` covers the JSON formats.
 
 ### 11.2 Test strategy
@@ -996,7 +996,7 @@ existing `serde_json` covers the JSON formats.
   2. PAPGT: parse, then `pa_hash(file[12..]) == header.crc`; serialize(parse(x)) == x for both builds.
   3. PAMT: for every fixture, `pamt_crc` verifies and the parse consumes
      exactly EOF. serialize(parse(dmmsa.pamt)) == bytes (keep the original trie).
-     Also rebuild dmmsa with Pylune's own trie writer and check it re-parses to the same entry list.
+     Also rebuild dmmsa with Pailune's own trie writer and check it re-parses to the same entry list.
   4. PATHC: serialize(parse(x)) == x; hashes sorted; collision selectors decode; known path present.
   5. Crypto: decrypt `0016/0.paz[0..3846]` (`paconfig.txt`, flags 0x32) → LZ4 → 6 422 bytes that
      start with `// ` and contain `gv_appIdentifier=pearlabyss.crimsondesert`. Keep a 3.8 KB fixture.
@@ -1033,14 +1033,14 @@ existing `serde_json` covers the JSON formats.
 6. Table renames across game updates (`.pabgb/.pabgh` →
    `.staticinfobody/.staticinfoheader` on 2026-09-04): mods target the old
    names, so alias them.
-7. Game updates rewrite `meta/*`, so Pylune must detect and re-apply. Never
+7. Game updates rewrite `meta/*`, so Pailune must detect and re-apply. Never
    take a "vanilla snapshot" from a PAPGT that contains foreign entries.
 
 ### 11.4 Recommended first milestone
 
 **M1 "read-only VFS" (no writes to the game dir):** `paz::{hash, crypto,
 lz4, papgt, pamt, pathc, vfs}` plus the golden tests above, and a debug
-command `pylune vfs extract <vpath>` / `pylune vfs ls <prefix>`. This
+command `pailune vfs extract <vpath>` / `pailune vfs ls <prefix>`. This
 validates every format against the real install with zero risk, and it is a
 prerequisite for JSON patches anyway (they patch extracted bytes).
 
@@ -1093,7 +1093,7 @@ texture loading, lang gating, runtime PAZ CRC checks).
 ## 13. Sources and licenses
 
 Only facts (formats, constants, algorithms) were taken. No code was copied
-into Pylune. Format documentation is fine regardless of license; reusing
+into Pailune. Format documentation is fine regardless of license; reusing
 code would need the license terms (MIT requires keeping the copyright
 notice).
 
@@ -1110,7 +1110,7 @@ notice).
 | DMM 1.5.5.3 logs/backups on the user's machine | closed source | Observed behaviour: `dmmsa` overlay, PATHC +1 record/+399 hashes, in-place injections |
 | User's game files (2.3.2) | game data, Pearl Abyss | All VERIFIED facts. Fixtures must stay local (do not commit game files to a public repo) |
 
-Pylune itself declares no license file at the time of writing. If Pylune
+Pailune itself declares no license file at the time of writing. If Pailune
 later reuses MIT code (for example CDUMM's `native/src/*.rs`), keep the MIT
 notice. MPL-2.0 material requires file-level source availability for the
 copied files.

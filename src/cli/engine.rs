@@ -1,17 +1,17 @@
-//! Running changing operations headlessly: a `PyluneApp` without a window,
+//! Running changing operations headlessly: a `PailuneApp` without a window,
 //! driven through the same actions and jobs as the buttons, so validation
 //! and safety rules are identical.
 
 use super::ops::{Op, Report};
 use crate::config::Config;
 use crate::config::paths::DataPaths;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::instance::{self, InstanceLock};
 use crate::mod_engine::model::MoveTo;
 use crate::modlist;
 use crate::ui::StatusLine;
 use crate::ui::{Action, BackupAction, DeployAction, JobState, Level, ModAction, NexusAction};
-use crate::ui::{ProfileAction, PyluneApp};
+use crate::ui::{PailuneApp, ProfileAction};
 use std::time::{Duration, Instant};
 
 /// Longest wait for background jobs of one operation.
@@ -19,7 +19,7 @@ const JOB_TIMEOUT: Duration = Duration::from_secs(3600);
 
 /// A headless application holding the instance lock.
 pub struct Engine {
-    app: PyluneApp,
+    app: PailuneApp,
     _lock: InstanceLock,
 }
 
@@ -28,13 +28,13 @@ impl Engine {
     pub fn open(paths: DataPaths, config: Config) -> Result<Self> {
         let lock =
             instance::try_lock_for(&paths, Duration::from_millis(500))?.ok_or_else(|| {
-                PyluneError::Invalid(
-                    "the Pylune window is open — make changes there, or close it first".into(),
+                PailuneError::Invalid(
+                    "the Pailune window is open — make changes there, or close it first".into(),
                 )
             })?;
         let conn = crate::db::open(&paths.database)?;
         let ctx = eframe::egui::Context::default();
-        let mut app = PyluneApp::build(ctx, paths, config, conn, None);
+        let mut app = PailuneApp::build(ctx, paths, config, conn, None);
         app.guide.open = false;
         app.headless = true;
         settle(&mut app);
@@ -53,7 +53,7 @@ impl Engine {
             _ => Vec::new(),
         };
         if let Some(name) = unknown.first() {
-            return Err(PyluneError::Invalid(format!("no mod named '{name}'")));
+            return Err(PailuneError::Invalid(format!("no mod named '{name}'")));
         }
         match op {
             Op::ExportList { path } => return export(app, path),
@@ -71,8 +71,8 @@ impl Engine {
             failures.is_empty(),
             app.status.text.is_empty(),
         ) {
-            (Level::Error, _, _) => Err(PyluneError::Invalid(app.status.text.clone())),
-            (_, false, _) => Err(PyluneError::Invalid(failures.join("; "))),
+            (Level::Error, _, _) => Err(PailuneError::Invalid(app.status.text.clone())),
+            (_, false, _) => Err(PailuneError::Invalid(failures.join("; "))),
             (_, true, true) => Ok(Report::text("nothing to do")),
             _ => Ok(Report::text(app.status.text.clone())),
         }
@@ -107,7 +107,7 @@ fn actions(op: &Op) -> Vec<Action> {
 }
 
 /// Polls until no job is queued or running (or the timeout passes).
-fn settle(app: &mut PyluneApp) {
+fn settle(app: &mut PailuneApp) {
     let start = Instant::now();
     loop {
         app.poll();
@@ -123,7 +123,7 @@ fn settle(app: &mut PyluneApp) {
 }
 
 /// Writes the mod list to `path`.
-fn export(app: &PyluneApp, path: &std::path::Path) -> Result<Report> {
+fn export(app: &PailuneApp, path: &std::path::Path) -> Result<Report> {
     let list = modlist::capture(
         &app.registry,
         &app.nexus.collections,
@@ -139,7 +139,7 @@ fn export(app: &PyluneApp, path: &std::path::Path) -> Result<Report> {
 }
 
 /// Applies a mod list; missing mods are reported in the data.
-fn import(app: &mut PyluneApp, path: &std::path::Path) -> Result<Report> {
+fn import(app: &mut PailuneApp, path: &std::path::Path) -> Result<Report> {
     let list = modlist::read(path, &app.config.nexus.domain)?;
     let line = app.apply_list(list)?;
     let missing: Vec<serde_json::Value> = app

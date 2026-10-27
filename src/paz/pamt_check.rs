@@ -1,7 +1,7 @@
 //! Strict checks of a group index (`0.pamt`) against the invariants the
 //! game's own indexes keep (`docs/paz-format.md` §5): folder hashes, sorted
 //! folders and names, contiguous file ranges, archive checksums and sizes,
-//! aligned offsets. Every vanilla group passes; Pylune checks its own
+//! aligned offsets. Every vanilla group passes; Pailune checks its own
 //! overlay with it before deploying.
 
 use super::hash::pa_hash;

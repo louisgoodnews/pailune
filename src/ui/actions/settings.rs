@@ -2,13 +2,13 @@
 
 use crate::backup::snapshot;
 use crate::config::file;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::logging::{Event, EventKind, Severity};
 use crate::steam::{GameStatus, library};
-use crate::ui::{Level, PyluneApp, SetupAction, StatusLine};
+use crate::ui::{Level, PailuneApp, SetupAction, StatusLine};
 use std::path::Path;
 
-impl PyluneApp {
+impl PailuneApp {
     /// Lets the user pick the game folder for the settings draft.
     pub(super) fn browse_game_dir(&mut self) -> StatusLine {
         let start = Path::new(&self.draft.game_dir);
@@ -31,7 +31,7 @@ impl PyluneApp {
         if next.game.dir != self.config.game.dir
             && (self.deployed_links > 0 || self.game_job_active())
         {
-            return Err(PyluneError::Invalid(
+            return Err(PailuneError::Invalid(
                 "unlink all mods and wait for running jobs before changing the game directory"
                     .into(),
             ));
@@ -50,14 +50,14 @@ impl PyluneApp {
         Ok(match restart {
             true => StatusLine::new(
                 Level::Warning,
-                "Settings saved — restart Pylune to apply job/log changes",
+                "Settings saved — restart Pailune to apply job/log changes",
             ),
             false => StatusLine::new(Level::Success, "Settings saved"),
         })
     }
 }
 
-impl PyluneApp {
+impl PailuneApp {
     /// Handles the first-run dialog.
     pub(super) fn setup_action(&mut self, action: SetupAction) -> Result<Option<StatusLine>> {
         match action {
@@ -76,7 +76,7 @@ impl PyluneApp {
                         "Found it — press \"Use this folder\"",
                     )))
                 }
-                None => Err(PyluneError::Invalid(
+                None => Err(PailuneError::Invalid(
                     "Crimson Desert is not in any Steam library".into(),
                 )),
             },
@@ -90,7 +90,7 @@ impl PyluneApp {
                         snapshot::ensure_meta_backup(&self.info)?;
                         Ok(Some(line))
                     }
-                    _ => Err(PyluneError::Invalid(
+                    _ => Err(PailuneError::Invalid(
                         "that folder does not contain bin64/CrimsonDesert.exe and meta/0.papgt"
                             .into(),
                     )),

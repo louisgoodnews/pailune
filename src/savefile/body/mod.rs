@@ -3,12 +3,12 @@
 //! top-level objects, and the objects themselves.
 //!
 //! Layout as documented by the community library `crimson-rs` (MIT); this
-//! is Pylune's own read-only implementation, accepting an object only when
+//! is Pailune's own read-only implementation, accepting an object only when
 //! the engine's layout accounts for every byte of it ([`walk`]).
 
 pub mod walk;
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 
 /// The body starts with these bytes.
 pub const MAGIC: [u8; 4] = [0xFF, 0xFF, 0x04, 0x00];
@@ -57,7 +57,7 @@ pub(crate) struct Cursor<'a> {
 impl Cursor<'_> {
     pub fn take(&mut self, n: usize) -> Result<&[u8]> {
         let end = self.pos.checked_add(n).filter(|e| *e <= self.data.len());
-        let end = end.ok_or_else(|| PyluneError::Invalid("save body is truncated".into()))?;
+        let end = end.ok_or_else(|| PailuneError::Invalid("save body is truncated".into()))?;
         let bytes = &self.data[self.pos..end];
         self.pos = end;
         Ok(bytes)
@@ -79,7 +79,7 @@ impl Cursor<'_> {
 /// Reads the schema and the table of contents.
 pub fn parse(body: &[u8]) -> Result<Body> {
     if !body.starts_with(&MAGIC) {
-        return Err(PyluneError::Invalid("not a save body".into()));
+        return Err(PailuneError::Invalid("not a save body".into()));
     }
     let mut c = Cursor {
         data: body,

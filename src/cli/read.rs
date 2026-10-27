@@ -161,7 +161,7 @@ fn backups(paths: &DataPaths) -> Report {
         .iter()
         .map(|b| {
             format!(
-                "{} pylune {} {} {}",
+                "{} pailune {} {} {}",
                 crate::logging::timestamp(b.created_at),
                 b.kind.as_str(),
                 b.label,
@@ -179,7 +179,7 @@ fn backups(paths: &DataPaths) -> Report {
     Report {
         text: lines.collect::<Vec<_>>().join("\n"),
         data: json!({
-            "pylune": own.iter().map(|b| json!({"path": b.path, "created_at": b.created_at, "kind": b.kind.as_str(), "label": b.label, "mods": b.mods})).collect::<Vec<_>>(),
+            "pailune": own.iter().map(|b| json!({"path": b.path, "created_at": b.created_at, "kind": b.kind.as_str(), "label": b.label, "mods": b.mods})).collect::<Vec<_>>(),
             "saves": saves.iter().map(|b| json!({"path": b.path, "created_at": b.created_at, "label": b.label, "files": b.files})).collect::<Vec<_>>(),
         }),
     }

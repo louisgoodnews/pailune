@@ -10,7 +10,7 @@ mod restore;
 pub use restore::{recover, restore};
 
 use crate::app_backup::create::add_file;
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::mod_engine::install::unique_suffix;
 use serde_json::{Value, json};
 use std::fs;
@@ -59,7 +59,7 @@ pub(crate) fn save_files(dir: &Path) -> Vec<PathBuf> {
 pub fn create(saves: &Path, dest: &Path, label: &str, now: i64) -> Result<SaveBackup> {
     let files = save_files(saves);
     if files.is_empty() {
-        return Err(PyluneError::Invalid(format!(
+        return Err(PailuneError::Invalid(format!(
             "no save files found in {}",
             saves.display()
         )));
@@ -86,7 +86,7 @@ pub fn create(saves: &Path, dest: &Path, label: &str, now: i64) -> Result<SaveBa
         let _ = fs::remove_file(&part);
     }
     written?;
-    read_info(&target).ok_or_else(|| PyluneError::Invalid("save backup unreadable".into()))
+    read_info(&target).ok_or_else(|| PailuneError::Invalid("save backup unreadable".into()))
 }
 
 /// Describes a save backup archive, if it is one.

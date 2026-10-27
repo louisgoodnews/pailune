@@ -49,8 +49,8 @@ fn interrupted_restores_are_recovered_and_empty_folders_do_not_block() {
     let backup = create(&saves, &dest, "manual", 1).unwrap();
     // A crash between the two renames left the saves set aside.
     let parent = saves.parent().unwrap();
-    fs::rename(&saves, parent.join(".pylune-old-saves-7")).unwrap();
-    fs::create_dir_all(parent.join(".pylune-restore-7")).unwrap();
+    fs::rename(&saves, parent.join(".pailune-old-saves-7")).unwrap();
+    fs::create_dir_all(parent.join(".pailune-restore-7")).unwrap();
     recover(&saves).unwrap();
     assert_eq!(
         fs::read_to_string(saves.join("42/slot1/save.save")).unwrap(),

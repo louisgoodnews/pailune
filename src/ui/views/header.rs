@@ -5,7 +5,7 @@ use crate::launch::GameProcess;
 use crate::steam::{AsiLoader, GameStatus};
 use crate::ui::guide::{GuideAction, GuidePage};
 use crate::ui::theme::{self, accent, danger, muted, success, warning};
-use crate::ui::{Action, Confirm, DeployAction, PyluneApp, Tab};
+use crate::ui::{Action, Confirm, DeployAction, PailuneApp, Tab};
 use eframe::egui::{self, Color32, RichText};
 
 const TABS: [(Tab, &str); 6] = [
@@ -38,11 +38,11 @@ fn loader_badge(loader: AsiLoader) -> (&'static str, Color32) {
 }
 
 /// Renders the header and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     let mut actions = Vec::new();
     ui.add_space(6.0);
     ui.horizontal(|ui| {
-        ui.label(RichText::new("Pylune").size(24.0).strong().color(accent()));
+        ui.label(RichText::new("Pailune").size(24.0).strong().color(accent()));
         ui.label(RichText::new("Crimson Desert mod manager").color(muted()));
         ui.add_space(12.0);
         let (text, color) = game_badge(app.game, app.process);
@@ -130,8 +130,8 @@ pub fn show(ui: &mut egui::Ui, app: &PyluneApp) -> Vec<Action> {
                     .clicked();
                 ui.separator();
                 let quit = ui
-                    .button("✖ Quit Pylune")
-                    .on_hover_text("Close Pylune (Ctrl+Q); mods stay applied")
+                    .button("✖ Quit Pailune")
+                    .on_hover_text("Close Pailune (Ctrl+Q); mods stay applied")
                     .clicked();
                 (reset, quit)
             });

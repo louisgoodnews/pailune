@@ -51,7 +51,7 @@ fn concurrent_same_name_imports_never_clobber() {
     let leftovers = fs::read_dir(&fx.staging)
         .unwrap()
         .filter_map(|e| e.ok())
-        .filter(|e| e.file_name().to_string_lossy().starts_with(".pylune"))
+        .filter(|e| e.file_name().to_string_lossy().starts_with(".pailune"))
         .count();
     assert_eq!(leftovers, 0, "no temp folders left behind");
 }

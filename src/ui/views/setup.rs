@@ -2,17 +2,17 @@
 
 use super::clicked;
 use crate::ui::theme::{self, accent, muted};
-use crate::ui::{Action, PyluneApp, SetupAction};
+use crate::ui::{Action, PailuneApp, SetupAction};
 use eframe::egui::{self, RichText};
 
 /// Renders the setup dialog and returns triggered actions.
-pub fn show(ctx: &egui::Context, app: &mut PyluneApp) -> Vec<Action> {
-    egui::Modal::new(egui::Id::unique("pylune_setup"))
+pub fn show(ctx: &egui::Context, app: &mut PailuneApp) -> Vec<Action> {
+    egui::Modal::new(egui::Id::unique("pailune_setup"))
         .show(ctx, |ui| {
             ui.set_max_width(520.0);
-            ui.heading(RichText::new("Welcome to Pylune").color(accent()));
+            ui.heading(RichText::new("Welcome to Pailune").color(accent()));
             ui.label(
-                "Pylune could not find Crimson Desert in your Steam libraries. Choose the \
+                "Pailune could not find Crimson Desert in your Steam libraries. Choose the \
                  game folder — the one containing bin64/ and meta/.",
             );
             ui.add_space(8.0);

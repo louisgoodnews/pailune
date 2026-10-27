@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in Pylune does not work as expected.
+description: Something in Pailune does not work as expected.
 labels: [bug]
 body:
   - type: markdown
@@ -32,7 +32,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: Pylune version
+      label: Pailune version
       placeholder: "0.1.0 (AppImage / built from source at commit …)"
     validations:
       required: true

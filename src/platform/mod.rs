@@ -1,7 +1,7 @@
 //! Everything that differs between operating systems (board item B-08).
 //!
 //! One module per platform, chosen at compile time, each providing the same
-//! functions. The rest of Pylune calls only these, so a port means filling in
+//! functions. The rest of Pailune calls only these, so a port means filling in
 //! one file. Linux is the reference; the Windows and macOS versions are
 //! checked by CI and not yet tested with the game.
 //!
@@ -36,7 +36,7 @@ pub use macos::*;
 use std::path::PathBuf;
 
 /// A command for a helper program (`tasklist`, `reg`): on Windows it runs
-/// without flashing a console window over Pylune.
+/// without flashing a console window over Pailune.
 pub fn background(program: &str) -> std::process::Command {
     #[allow(unused_mut)]
     let mut command = std::process::Command::new(program);

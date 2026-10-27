@@ -66,7 +66,7 @@ pub fn mod_detail(mod_logs: &Path, mod_name: &str, title: &str, lines: &[String]
         .append(true)
         .open(&path)
         .and_then(|mut file| file.write_all(format!("{title}\n{body}").as_bytes()))
-        .map_err(|source| crate::error::PyluneError::Io { path, source })
+        .map_err(|source| crate::error::PailuneError::Io { path, source })
 }
 
 /// Renames a deleted mod's log to `<mod>.<timestamp>.removed.log`, so a

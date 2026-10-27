@@ -1,12 +1,12 @@
 //! Profile page actions.
 
 use crate::db;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::logging::{Event, EventKind, Severity};
 use crate::profiles::{Profile, ops};
-use crate::ui::{Level, ProfileAction, PyluneApp, StatusLine};
+use crate::ui::{Level, PailuneApp, ProfileAction, StatusLine};
 
-impl PyluneApp {
+impl PailuneApp {
     /// Handles profile page actions.
     pub(super) fn profile_action(&mut self, action: ProfileAction) -> Result<StatusLine> {
         let line = match action {
@@ -51,7 +51,7 @@ impl PyluneApp {
     /// Saves the current selection as a profile (overwriting keeps its options).
     fn save_profile(&mut self, name: &str) -> Result<StatusLine> {
         if name.is_empty() {
-            return Err(PyluneError::Invalid(
+            return Err(PailuneError::Invalid(
                 "profile name must not be empty".into(),
             ));
         }
@@ -111,13 +111,13 @@ impl PyluneApp {
     fn export_profile(&mut self, name: &str) -> Result<StatusLine> {
         let profile = self.find(name)?;
         let Some(path) = rfd::FileDialog::new()
-            .set_file_name(format!("{name}.pylune-profile.json"))
+            .set_file_name(format!("{name}.pailune-profile.json"))
             .save_file()
         else {
             return Ok(StatusLine::new(Level::Info, "Export cancelled"));
         };
         let text = serde_json::to_string_pretty(&profile)?;
-        std::fs::write(&path, text).map_err(|source| crate::error::PyluneError::Io {
+        std::fs::write(&path, text).map_err(|source| crate::error::PailuneError::Io {
             path: path.clone(),
             source,
         })?;
@@ -130,13 +130,13 @@ impl PyluneApp {
     /// Reads a profile file; a name clash gets a numbered suffix.
     fn import_profile(&mut self) -> Result<StatusLine> {
         let Some(path) = rfd::FileDialog::new()
-            .add_filter("Pylune profile", &["json"])
+            .add_filter("Pailune profile", &["json"])
             .pick_file()
         else {
             return Ok(StatusLine::new(Level::Info, "Import cancelled"));
         };
         let text =
-            std::fs::read_to_string(&path).map_err(|source| crate::error::PyluneError::Io {
+            std::fs::read_to_string(&path).map_err(|source| crate::error::PailuneError::Io {
                 path: path.clone(),
                 source,
             })?;

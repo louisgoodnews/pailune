@@ -47,7 +47,7 @@ pub fn save(path: &Path, config: &Config) -> Result<()> {
         fs::create_dir_all(dir).at(dir)?;
     }
     let text = format!(
-        "# Pylune configuration\n\n{}",
+        "# Pailune configuration\n\n{}",
         toml::to_string_pretty(config)?
     );
     let tmp = path.with_extension("toml.tmp");

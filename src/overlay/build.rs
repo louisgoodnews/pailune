@@ -1,7 +1,7 @@
-//! Building Pylune's group and the rebuilt `0.papgt` in the data folder.
+//! Building Pailune's group and the rebuilt `0.papgt` in the data folder.
 
 use super::{OverlayInput, OverlayPlan};
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::mod_engine::plan::LinkOp;
 use crate::paz::pathc::{self, Pathc};
 use crate::paz::write::Packed;
@@ -75,11 +75,11 @@ fn is_texture(vpath: &str) -> bool {
 fn snapshot(info: &SteamInfo, name: &str) -> Result<Vec<u8>> {
     let path = bak_path(&info.meta_dir.join(name));
     fs::read(&path).map_err(|_| {
-        PyluneError::Invalid(format!("no vanilla metadata backup (meta/{name}.bak) yet"))
+        PailuneError::Invalid(format!("no vanilla metadata backup (meta/{name}.bak) yet"))
     })
 }
 
-/// The vanilla `0.papgt`: the snapshot once Pylune has deployed, else the
+/// The vanilla `0.papgt`: the snapshot once Pailune has deployed, else the
 /// live file (still untouched then).
 pub(crate) fn vanilla_papgt(info: &SteamInfo) -> Result<Vec<u8>> {
     snapshot(info, "0.papgt").or_else(|_| {
@@ -101,7 +101,7 @@ fn prebuilt_crc(group: &Path) -> Result<u32> {
     let path = group.join("0.pamt");
     pamt::parse(&fs::read(&path).at(&path)?)
         .map(|index| index.crc)
-        .map_err(|err| PyluneError::Invalid(format!("{}: {err}", group.display())))
+        .map_err(|err| PailuneError::Invalid(format!("{}: {err}", group.display())))
 }
 
 /// Builds the overlay into `out_dir` and returns the links that deploy it.
@@ -186,7 +186,7 @@ pub fn build_from(
         .zip(names)
         .try_for_each(|(folder, name)| {
             groups.push((name, prebuilt_crc(folder)?, folder.clone()));
-            Ok::<(), PyluneError>(())
+            Ok::<(), PailuneError>(())
         })?;
     let entries: Vec<(String, u32)> = groups.iter().map(|(n, c, _)| (n.clone(), *c)).collect();
     let table = papgt::serialize(&vanilla::register(&base.papgt, &entries))?;

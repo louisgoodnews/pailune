@@ -40,17 +40,17 @@ def main(out):
         return [change(drops, drop, o + RATE, 4, 1000000, f"{drop} {item} rate -> 100%")]
 
     batch = {
-        "Pylune Test 1 - Arrow Stacks": (ITEM, [change(items, n, 1, 8, 999, f"{n} max stack -> 999") for n in ("Arrow", "Pyeonjeon_Arrow")]),
-        "Pylune Test 2 - Hunting Amounts": (DROP, sum([amounts(d, m, 30, 30) + amounts(d, l, 20, 20) + amounts(d, "Animal_Bone", 6, 12)
+        "Pailune Test 1 - Arrow Stacks": (ITEM, [change(items, n, 1, 8, 999, f"{n} max stack -> 999") for n in ("Arrow", "Pyeonjeon_Arrow")]),
+        "Pailune Test 2 - Hunting Amounts": (DROP, sum([amounts(d, m, 30, 30) + amounts(d, l, 20, 20) + amounts(d, "Animal_Bone", 6, 12)
             for d, m, l in (("DropSet_Middle_Animal_Common", "Meat_II", "Deer_Leather"), ("DropSet_Small_Animal_Common", "Meat_I", "Leather"))], [])),
-        "Pylune Test 3 - Drop Rates": (DROP, rate("DropSet_Normal_Animal_Fish_Common", "Money_Copper") + rate("DropSet_Animal_Bear", "Honey")),
+        "Pailune Test 3 - Drop Rates": (DROP, rate("DropSet_Normal_Animal_Fish_Common", "Money_Copper") + rate("DropSet_Animal_Bear", "Honey")),
         # Every crate, barrel and pot gives exactly 100 copper (vanilla: 10-15 % for 1-2).
-        "Pylune Test 4 - Coin Pouch": (DROP, sum([rate(d, "Money_Copper") + amounts(d, "Money_Copper", 100, 100)
+        "Pailune Test 4 - Coin Pouch": (DROP, sum([rate(d, "Money_Copper") + amounts(d, "Money_Copper", 100, 100)
             for d in ("DropSet_BoxBarrel_01", "DropSet_BoxBarrel_02", "DropSet_Pot_01")], [])),
     }
     for name, (game_file, changes) in batch.items():
         os.makedirs(f"{out}/{name}", exist_ok=True)
-        mod = {"modinfo": {"title": name, "version": "1", "author": "Pylune"},
+        mod = {"modinfo": {"title": name, "version": "1", "author": "Pailune"},
                "patches": [{"game_file": game_file, "changes": changes}]}
         json.dump(mod, open(f"{out}/{name}/{name.split(' - ')[1].lower().replace(' ', '_')}.json", "w"), indent=2)
 

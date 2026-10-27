@@ -16,7 +16,7 @@ fn save_values_are_edited_after_a_backup() {
     std::fs::create_dir_all(&slot).unwrap();
     std::fs::write(slot.join("save.save"), pouch_save()).unwrap();
     app.dispatch(Action::Backup(BackupAction::InspectSave(slot.clone())));
-    let money = |app: &crate::ui::PyluneApp| {
+    let money = |app: &crate::ui::PailuneApp| {
         let view = app.save_view.as_ref().unwrap();
         view.tree[0].children[0].edit.clone().unwrap()
     };

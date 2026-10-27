@@ -1,26 +1,28 @@
 //! Nexus collections: preview, install, update, enable, uninstall.
 
 use crate::db;
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use crate::jobs::JobKind;
 use crate::mod_engine::registry;
 use crate::nexus::NxmLink;
 use crate::nexus::collection::{self, Collection, Member};
 use crate::nexus::download::DownloadJob;
-use crate::ui::{Level, NexusAction, PyluneApp, StatusLine};
+use crate::ui::{Level, NexusAction, PailuneApp, StatusLine};
 
 /// An informational status line.
 fn info(text: impl Into<String>) -> Result<Option<StatusLine>> {
     Ok(Some(StatusLine::new(Level::Info, text)))
 }
 
-impl PyluneApp {
+impl PailuneApp {
     /// Handles the collection-related Nexus actions.
     pub(super) fn collection_action(&mut self, action: NexusAction) -> Result<Option<StatusLine>> {
         match action {
             NexusAction::FetchCollection => {
-                let slug = collection::parse_slug(&self.nexus.collection_draft)
-                    .ok_or_else(|| PyluneError::Invalid("enter a collection slug or URL".into()))?;
+                let slug =
+                    collection::parse_slug(&self.nexus.collection_draft).ok_or_else(|| {
+                        PailuneError::Invalid("enter a collection slug or URL".into())
+                    })?;
                 self.submit(JobKind::FetchCollection {
                     slug,
                     revision: None,
@@ -71,7 +73,7 @@ impl PyluneApp {
                 );
                 self.open_path(std::path::Path::new(&url))?;
                 info(
-                    "Click \"Mod Manager Download\" on the page; Pylune picks the file up automatically",
+                    "Click \"Mod Manager Download\" on the page; Pailune picks the file up automatically",
                 )
             }
             _ => Ok(None),
@@ -116,7 +118,7 @@ impl PyluneApp {
             .nexus
             .preview
             .take()
-            .ok_or_else(|| PyluneError::Invalid("no collection selected".into()))?;
+            .ok_or_else(|| PailuneError::Invalid("no collection selected".into()))?;
         let others: Vec<Collection> = self
             .nexus
             .collections
@@ -192,7 +194,7 @@ impl PyluneApp {
         let target = self
             .installed(slug)
             .cloned()
-            .ok_or_else(|| PyluneError::Invalid(format!("no collection {slug}")))?;
+            .ok_or_else(|| PailuneError::Invalid(format!("no collection {slug}")))?;
         let remove = collection::exclusive_mods(&target, &self.nexus.collections);
         remove.iter().for_each(|name| {
             self.submit(JobKind::Remove(name.clone()));

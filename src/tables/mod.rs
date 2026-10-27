@@ -12,12 +12,12 @@ pub mod format3;
 mod format3_read;
 pub mod value;
 
-use crate::error::{PyluneError, Result};
+use crate::error::{PailuneError, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
-/// The derived layouts shipped with Pylune.
+/// The derived layouts shipped with Pailune.
 const DATA: &str = include_str!("../../data/table-layouts.json");
 
 /// The layout file.
@@ -140,7 +140,7 @@ pub struct Record {
 /// The records of a table, in body order.
 pub fn records(header: &[u8], body: &[u8]) -> Result<Vec<Record>> {
     let index = crate::patch::table::parse_index(header)
-        .ok_or_else(|| PyluneError::Invalid("unreadable table index".into()))?;
+        .ok_or_else(|| PailuneError::Invalid("unreadable table index".into()))?;
     let mut starts: Vec<usize> = index.offsets.iter().map(|o| *o as usize).collect();
     starts.sort_unstable();
     let ends = starts
@@ -155,11 +155,11 @@ pub fn records(header: &[u8], body: &[u8]) -> Result<Vec<Record>> {
             let ks = index.key_size;
             let key_bytes = body
                 .get(start..start + ks)
-                .ok_or_else(|| PyluneError::Invalid("record outside the table".into()))?;
+                .ok_or_else(|| PailuneError::Invalid("record outside the table".into()))?;
             let mut key = [0u8; 8];
             key[..ks.min(8)].copy_from_slice(&key_bytes[..ks.min(8)]);
             let name_len = u32_at(body, start + ks)
-                .ok_or_else(|| PyluneError::Invalid("record name".into()))?;
+                .ok_or_else(|| PailuneError::Invalid("record name".into()))?;
             let payload = start + ks + 4 + name_len;
             let name = body
                 .get(start + ks + 4..payload)
@@ -173,7 +173,7 @@ pub fn records(header: &[u8], body: &[u8]) -> Result<Vec<Record>> {
                     payload,
                     end,
                 }),
-                false => Err(PyluneError::Invalid(
+                false => Err(PailuneError::Invalid(
                     "record name runs past the record".into(),
                 )),
             }
@@ -185,7 +185,7 @@ pub fn records(header: &[u8], body: &[u8]) -> Result<Vec<Record>> {
 pub fn verify(table: &Table, header: &[u8], body: &[u8]) -> Result<()> {
     let key_size = crate::patch::table::parse_index(header).map(|i| i.key_size);
     if key_size != Some(table.key_size) {
-        return Err(PyluneError::Invalid(format!(
+        return Err(PailuneError::Invalid(format!(
             "the index of {} changed in this game build; format-3 changes to it are disabled",
             table.class
         )));
@@ -197,7 +197,7 @@ pub fn verify(table: &Table, header: &[u8], body: &[u8]) -> Result<()> {
         .count();
     match bad {
         0 => Ok(()),
-        n => Err(PyluneError::Invalid(format!(
+        n => Err(PailuneError::Invalid(format!(
             "the layout of {} (derived from game {}, {} records) does not match this game \
              build ({n} of {} records); format-3 changes to it are disabled",
             table.class,

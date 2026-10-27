@@ -1,4 +1,4 @@
-# Extending Pylune
+# Extending Pailune
 
 Recipes for the changes contributors make most often, and the conventions every change follows.
 Read [architecture.md](architecture.md) first.
@@ -38,7 +38,7 @@ Read [architecture.md](architecture.md) first.
 1. Add a variant to the matching intent enum in `src/ui/intent.rs` (or a new enum plus a variant
    of `Action`).
 2. Handle it in `src/ui/actions/<feature>.rs`, returning `Result<Option<StatusLine>>`, and route it
-   in `PyluneApp::dispatch` (`ui/actions/mod.rs`).
+   in `PailuneApp::dispatch` (`ui/actions/mod.rs`).
 3. Emit it from a view: views return `Vec<Action>`, typically via `clicked([(button, action)])`.
 4. Destructive and not undoable? Add a `Confirm` variant and its text in `ui/views/confirm.rs`
    (button named after the action). Undoable? Prefer undo over a dialog.
@@ -47,7 +47,7 @@ Read [architecture.md](architecture.md) first.
 ## Add a background job
 
 1. Add a `JobKind` variant (`src/jobs/mod.rs`) with a title, and decide its `access()`:
-   `Exclusive` if it touches the game folder or Pylune's state as a whole, else `Shared`.
+   `Exclusive` if it touches the game folder or Pailune's state as a whole, else `Shared`.
 2. Implement it in `src/jobs/tasks/<area>.rs` as `fn(ctx: &JobContext, …) -> Result<JobOutput>`;
    use `ctx.db()`, `ctx.progress(done, total)`, `ctx.journal(conn, Event::…)`.
 3. Route it in `jobs/tasks/mod.rs`. Follow-ups after success go into `after_done` in

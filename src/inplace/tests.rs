@@ -41,7 +41,7 @@ fn base_and_versions_restore_exactly_and_the_live_state_is_known() {
     assert!(again.is_err(), "one base per build");
     assert_eq!(store.live_state(game.path()).unwrap(), Some(0));
 
-    let hash = store.put_archive(b"pylune entries").unwrap();
+    let hash = store.put_archive(b"pailune entries").unwrap();
     let link = Stored {
         rel: "0008/1.paz".into(),
         sha256: hash.clone(),
@@ -59,7 +59,7 @@ fn base_and_versions_restore_exactly_and_the_live_state_is_known() {
     assert_eq!(store.live_state(game.path()).unwrap(), Some(2));
     assert_eq!(
         std::fs::read(store.archive_path(&hash)).unwrap(),
-        b"pylune entries"
+        b"pailune entries"
     );
 
     store.restore(1, game.path()).unwrap();

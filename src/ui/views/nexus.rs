@@ -2,7 +2,7 @@
 
 use crate::nexus::{NexusFile, NexusMod};
 use crate::ui::theme::{self, accent, muted, success, warning};
-use crate::ui::{Action, NexusAction, PyluneApp};
+use crate::ui::{Action, NexusAction, PailuneApp};
 use eframe::egui::{self, RichText};
 
 const KEY_URL: &str = "https://www.nexusmods.com/users/myaccount?tab=api";
@@ -17,7 +17,7 @@ fn pick(pairs: impl IntoIterator<Item = (bool, NexusAction)>) -> Vec<Action> {
 }
 
 /// API key, account state and the nxm:// handler.
-fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+fn account(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     let (text, color) = match &app.nexus.user {
         Some(user) if user.is_premium => (format!("{} · PREMIUM", user.name), success()),
         Some(user) => (
@@ -54,7 +54,7 @@ fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         true => drop(
             ui.label(
                 RichText::new(
-                    "✔ \"Mod manager download\" buttons on nexusmods.com send files to Pylune",
+                    "✔ \"Mod manager download\" buttons on nexusmods.com send files to Pailune",
                 )
                 .color(success()),
             ),
@@ -62,7 +62,7 @@ fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
         false => drop(
             ui.label(
                 RichText::new(
-                    "\"Mod manager download\" buttons on nexusmods.com do not reach Pylune yet",
+                    "\"Mod manager download\" buttons on nexusmods.com do not reach Pailune yet",
                 )
                 .color(muted()),
             ),
@@ -70,9 +70,9 @@ fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
     }
     let register = !app.nexus.handler_registered
         && ui
-            .button("Make Pylune the nxm:// handler")
+            .button("Make Pailune the nxm:// handler")
             .on_hover_text(
-                "Lets the website's \"Mod Manager Download\" button send files to Pylune",
+                "Lets the website's \"Mod Manager Download\" button send files to Pailune",
             )
             .clicked();
     pick([
@@ -83,7 +83,7 @@ fn account(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
 }
 
 /// Mod number or address field with Fetch, Open and Check updates.
-fn lookup(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+fn lookup(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     ui.horizontal(|ui| {
         ui.add(
             egui::TextEdit::singleline(&mut app.nexus.mod_id_draft)
@@ -120,7 +120,7 @@ fn details(
     ui: &mut egui::Ui,
     info: &NexusMod,
     files: &[NexusFile],
-    app: &PyluneApp,
+    app: &PailuneApp,
 ) -> Vec<Action> {
     ui.label(
         RichText::new(&info.name)
@@ -154,7 +154,7 @@ fn details(
 }
 
 /// Renders the Nexus page and returns triggered actions.
-pub fn show(ui: &mut egui::Ui, app: &mut PyluneApp) -> Vec<Action> {
+pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     ui.heading("Nexus Mods");
     ui.label(
         RichText::new(format!("Game: nexusmods.com/{}", app.config.nexus.domain))

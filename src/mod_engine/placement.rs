@@ -2,7 +2,7 @@
 
 use std::path::{Component, Path};
 
-/// Mod content Pylune cannot deploy yet.
+/// Mod content Pailune cannot deploy yet.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PazFormat {
     /// Game files whose location inside the archives is unknown.
@@ -16,7 +16,7 @@ pub enum Placement {
     Mirror,
     /// Flattened into `bin64/` (ASI plugins, DLLs, their INIs).
     Bin64,
-    /// Packed into Pylune's archive group at its virtual path.
+    /// Packed into Pailune's archive group at its virtual path.
     Pack,
     /// Part of a prebuilt archive group (`NNNN/*.pamt`, `*.paz`) shipped by the mod.
     PrebuiltGroup,
@@ -35,9 +35,9 @@ impl Placement {
     pub fn note(self) -> &'static str {
         match self {
             Placement::Mirror | Placement::Bin64 => "linked",
-            Placement::Pack => "packed into Pylune's archive group",
-            Placement::PrebuiltGroup => "prebuilt archive group, registered by Pylune",
-            Placement::JsonPatch => "JSON patch, applied into Pylune's archive group",
+            Placement::Pack => "packed into Pailune's archive group",
+            Placement::PrebuiltGroup => "prebuilt archive group, registered by Pailune",
+            Placement::JsonPatch => "JSON patch, applied into Pailune's archive group",
             Placement::TextPatch => "CSS/XML patch, merged into the game's file",
             Placement::NeedsPaz(PazFormat::Unplaced) => {
                 "game file with unknown location — not deployed"
@@ -112,7 +112,7 @@ pub fn placement(rel: &Path) -> Placement {
         .unwrap_or_default();
     match (first.as_str(), ext.as_str(), virtual_path(rel)) {
         ("bin64", _, _) => Placement::Mirror,
-        // Game metadata is build-specific; Pylune generates it.
+        // Game metadata is build-specific; Pailune generates it.
         ("meta", _, _) => Placement::Skip,
         (dir, "paz" | "pamt", _) if is_archive_dir(dir) && parts.len() == 2 => {
             Placement::PrebuiltGroup

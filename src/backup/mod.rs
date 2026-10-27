@@ -33,7 +33,7 @@ pub enum MetaBackup {
 pub struct BackupStatus {
     /// Metadata snapshot health.
     pub meta: MetaBackup,
-    /// Non-vanilla archive folders (> 35) not created by Pylune.
+    /// Non-vanilla archive folders (> 35) not created by Pailune.
     pub foreign_overlays: Vec<PathBuf>,
     /// Archive folders previously set aside as `NNNN.bak`.
     pub archived_overlays: Vec<PathBuf>,

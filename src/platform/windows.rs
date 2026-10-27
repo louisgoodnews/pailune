@@ -62,7 +62,7 @@ pub fn game_running(exe: &str) -> bool {
 pub fn make_private(_options: &mut OpenOptions) {}
 
 /// A GUI-subsystem program has no console; for command-line use, write to
-/// the terminal that started Pylune (if any).
+/// the terminal that started Pailune (if any).
 pub fn attach_console() {
     use windows_sys::Win32::System::Console::{ATTACH_PARENT_PROCESS, AttachConsole};
     // SAFETY: plain Win32 call without pointers; failure (no parent console,

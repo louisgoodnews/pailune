@@ -1,9 +1,9 @@
 //! The backup store of the in-place route (D-14): one **base** (the vanilla
 //! index files of the game build) and numbered **versions** (the index
-//! files Pylune wrote at each Apply). Restoring either puts exactly those
+//! files Pailune wrote at each Apply). Restoring either puts exactly those
 //! bytes back; hashes in every manifest prove what was stored.
 
-use crate::error::{IoContext, PyluneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -38,7 +38,7 @@ pub struct Manifest {
     /// Base only: the vanilla archives of the covered groups.
     #[serde(default)]
     pub archives: Vec<Fingerprint>,
-    /// Versions only: Pylune's added archives, game-relative path → content
+    /// Versions only: Pailune's added archives, game-relative path → content
     /// hash in the store's `archives/` folder (linked into the game).
     #[serde(default)]
     pub links: Vec<Stored>,
@@ -72,7 +72,7 @@ pub fn write_atomic(path: &Path, bytes: &[u8]) -> Result<()> {
     if let Some(dir) = path.parent() {
         fs::create_dir_all(dir).at(dir)?;
     }
-    let temp = path.with_extension("pylune-tmp");
+    let temp = path.with_extension("pailune-tmp");
     fs::write(&temp, bytes).at(&temp)?;
     fs::rename(&temp, path).at(path)
 }
@@ -136,7 +136,7 @@ impl Store {
         };
         let folder = self.folder(number);
         if base && folder.join("manifest.json").exists() {
-            return Err(PyluneError::Invalid("a base backup already exists".into()));
+            return Err(PailuneError::Invalid("a base backup already exists".into()));
         }
         files
             .iter()
@@ -164,7 +164,7 @@ impl Store {
         Ok(manifest)
     }
 
-    /// Stores one of Pylune's archives by content; returns its hash.
+    /// Stores one of Pailune's archives by content; returns its hash.
     pub fn put_archive(&self, bytes: &[u8]) -> Result<String> {
         let hash = sha256(bytes);
         let path = self.archive_path(&hash);
@@ -185,12 +185,12 @@ impl Store {
             .files
             .iter()
             .find(|f| f.rel == rel)
-            .ok_or_else(|| PyluneError::Invalid(format!("{rel} is not in this backup")))?;
+            .ok_or_else(|| PailuneError::Invalid(format!("{rel} is not in this backup")))?;
         let path = self.folder(manifest.number).join("files").join(rel);
         let bytes = fs::read(&path).at(&path)?;
         match sha256(&bytes) == stored.sha256 {
             true => Ok(bytes),
-            false => Err(PyluneError::Invalid(format!(
+            false => Err(PailuneError::Invalid(format!(
                 "backup copy of {rel} is damaged"
             ))),
         }
