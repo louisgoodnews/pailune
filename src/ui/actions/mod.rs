@@ -2,6 +2,7 @@
 
 mod backups;
 mod collections;
+mod data_browser;
 mod deploy;
 mod guide;
 mod modlist;
@@ -46,11 +47,16 @@ impl PailuneApp {
             Action::Guide(action) => self.guide_action(action),
             Action::Notice(action) => self.notice_action(action),
             Action::ModList(action) => self.modlist_action(action),
+            Action::DataBrowser(action) => self.data_browser_action(action),
             Action::SwitchTab(tab) => {
                 self.tab = tab;
                 // The game writes saves while Pailune runs: read them fresh.
                 let fresh = match tab {
                     super::Tab::Saves => self.reload(),
+                    super::Tab::DataBrowser if !self.data_browser.loaded => {
+                        self.load_data_browser_tables();
+                        Ok(())
+                    }
                     _ => Ok(()),
                 };
                 fresh.and_then(|()| self.refresh_log()).map(|()| None)

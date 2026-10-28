@@ -153,3 +153,18 @@ pub struct LogState {
     /// Show only events of the selected mod.
     pub only_selected: bool,
 }
+
+/// Data Browser page state.
+#[derive(Debug, Clone, Default)]
+pub struct DataBrowserState {
+    pub tables: Vec<crate::tables::browser::TableSummary>,
+    pub table_filter: String,
+    pub selected_table: Option<String>,
+    pub record_filter: String,
+    pub records: Vec<crate::tables::Record>,
+    pub body: Vec<u8>,
+    pub selected_record: Option<u64>,
+    pub inspected: Option<crate::tables::browser::InspectedRecord>,
+    pub error: Option<String>,
+    pub loaded: bool,
+}

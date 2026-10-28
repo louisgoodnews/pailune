@@ -8,6 +8,7 @@
 //! offset is proven (every exact fit agrees) and whether its name is certain
 //! (no other field of the class has the same shape, so names cannot swap).
 
+pub mod browser;
 pub mod format3;
 mod format3_read;
 pub mod value;

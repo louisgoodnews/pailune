@@ -240,3 +240,50 @@ fn creates_new_json_mod_with_metadata_and_opens_it() {
     let json = crate::patch::document::check(&text).expect("valid json mod");
     assert_eq!(json.title, "Carry Capacity 500");
 }
+
+#[test]
+fn data_browser_tab_and_record_inspection() {
+    use crate::ui::DataBrowserAction;
+
+    let fx = fixture();
+    let mut app = app(&fx);
+
+    // 1. Switch to Data Browser tab
+    app.dispatch(Action::SwitchTab(crate::ui::Tab::DataBrowser));
+    assert_eq!(app.tab, crate::ui::Tab::DataBrowser);
+
+    // 2. Mock a loaded table and records in browser state
+    let key = 0x0601u16;
+    let price = 1500u64;
+    let mut body = Vec::new();
+    body.extend_from_slice(&key.to_le_bytes());
+    body.extend_from_slice(&0u32.to_le_bytes());
+    let payload = body.len();
+    body.push(0); // _isBlocked (false)
+    body.extend_from_slice(&price.to_le_bytes()); // _increasePrice
+    body.push(1);
+    let end = body.len();
+
+    app.data_browser.selected_table = Some("wantedinfo".into());
+    app.data_browser.records = vec![crate::tables::Record {
+        start: 0,
+        key: key as u64,
+        name: "target_01".into(),
+        payload,
+        end,
+    }];
+    app.data_browser.body = body;
+
+    // 3. Select record
+    app.dispatch(Action::DataBrowser(DataBrowserAction::SelectRecord(key as u64)));
+    assert_eq!(app.data_browser.selected_record, Some(key as u64));
+
+    let inspected = app.data_browser.inspected.as_ref().expect("inspected record");
+    assert_eq!(inspected.name, "target_01");
+    assert_eq!(inspected.key, key as u64);
+    assert_eq!(inspected.fields.len(), 3);
+    assert_eq!(inspected.fields[0].name, "_isBlocked");
+    assert_eq!(inspected.fields[0].value, "false");
+    assert_eq!(inspected.fields[1].name, "_increasePrice");
+    assert_eq!(inspected.fields[1].value, "1500");
+}

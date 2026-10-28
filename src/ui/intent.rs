@@ -10,6 +10,8 @@ pub enum Tab {
     Mods,
     /// Save slots, save backups and the save editor.
     Saves,
+    /// Read-only game data table browser.
+    DataBrowser,
     Profiles,
     Nexus,
     Log,
@@ -163,6 +165,15 @@ pub enum Action {
     Notice(super::notify::NoticeAction),
     Ask(Confirm),
     Dismiss,
+    DataBrowser(DataBrowserAction),
+}
+
+/// Game data browser intents.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DataBrowserAction {
+    SelectTable(String),
+    SelectRecord(u64),
+    RefreshTables,
 }
 
 /// Portable mod list intents (B-12).

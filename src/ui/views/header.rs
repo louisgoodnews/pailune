@@ -8,9 +8,10 @@ use crate::ui::theme::{self, accent, danger, muted, success, warning};
 use crate::ui::{Action, Confirm, DeployAction, PailuneApp, Tab};
 use eframe::egui::{self, Color32, RichText};
 
-const TABS: [(Tab, &str); 6] = [
+const TABS: [(Tab, &str); 7] = [
     (Tab::Mods, "Mods"),
     (Tab::Saves, "Saves"),
+    (Tab::DataBrowser, "Data Browser"),
     (Tab::Profiles, "Profiles"),
     (Tab::Nexus, "Nexus"),
     (Tab::Log, "Log"),

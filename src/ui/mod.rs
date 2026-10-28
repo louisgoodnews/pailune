@@ -16,10 +16,12 @@ mod theme;
 mod views;
 
 pub use intent::{
-    Action, BackupAction, Confirm, DeployAction, ModAction, ModListAction, NexusAction,
-    ProfileAction, SetupAction, Tab,
+    Action, BackupAction, Confirm, DataBrowserAction, DeployAction, ModAction, ModListAction,
+    NexusAction, ProfileAction, SetupAction, Tab,
 };
-pub use state::{Incoming, JobState, JobView, LogState, ModsState, NexusState, ProfilesState};
+pub use state::{
+    DataBrowserState, Incoming, JobState, JobView, LogState, ModsState, NexusState, ProfilesState,
+};
 
 use crate::backup::BackupStatus;
 use crate::config::Config;
@@ -96,6 +98,7 @@ pub struct PailuneApp {
     pub profiles: ProfilesState,
     pub nexus: NexusState,
     pub log: LogState,
+    pub data_browser: DataBrowserState,
     /// An ASI loader is installed but Steam's launch options leave it off.
     pub loader_off: bool,
     /// Toasts and the notification center.

@@ -21,8 +21,8 @@ Move a line between columns when its status changes.
   "Equip All Armor"; needs the full ItemInfo layout first — *L*
 - [ ] A-01 compressed type-1 `.pac` meshes (2 914 in the game): decode for reading and patching — *M*
 
-- [ ] B-16 JSON mod creation (steps 2–6): data browser → change from the browser → check
-  against the game → test loop → package (roadmap phase 15) — *L*
+- [ ] B-16 JSON mod creation (steps 3–6): change from the browser → check against the game →
+  test loop → package (roadmap phase 15) — *L*
 - [ ] B-17 ASI mod creation (D-13), after B-16: research + decision record first, then templates,
   build/deploy, debug loop, packaging — *L*
 
@@ -45,6 +45,10 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-16 JSON mod creation (step 2: game data browser): dedicated *Data Browser* tab with 3-pane
+  layout (tables with layout badges, record search by name or key, field inspector with decoded
+  values and raw hex payload fallback); shortcut button in the JSON editor (`src/tables/browser.rs`,
+  `ui/views/data_browser.rs`, `ui/actions/data_browser.rs`).
 - [x] B-16 JSON mod creation (step 1: new JSON mod wizard): *Create mod* modal asks for title,
   author, version, description; stages an empty format-3 JSON mod with `modinfo`; selects and opens
   it in Pailune's JSON editor (`ui/views/create_mod.rs`, `ui/actions/mods.rs`).

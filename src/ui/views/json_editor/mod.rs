@@ -82,6 +82,13 @@ fn buttons(
             draft.text = parsed.map(|v| document::pretty(&v)).unwrap_or_default();
         }
         ui.separator();
+        if ui
+            .button("🔍 Browse data")
+            .on_hover_text("Open the Game Data Browser to inspect vanilla table records")
+            .clicked()
+        {
+            action = Some(Action::SwitchTab(crate::ui::Tab::DataBrowser));
+        }
         ui.selectable_value(&mut draft.raw, false, "Changes");
         ui.selectable_value(&mut draft.raw, true, "Raw JSON");
     });
