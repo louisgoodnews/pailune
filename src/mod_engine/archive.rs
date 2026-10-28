@@ -50,6 +50,69 @@ pub fn extract(archive: &Path, kind: ArchiveKind, dest: &Path) -> Result<()> {
         ArchiveKind::Zip => extract_zip(archive, dest),
         ArchiveKind::SevenZip => extract_7z(archive, dest),
         ArchiveKind::Rar => extract_rar(archive, dest),
+    }?;
+    sanitize_permissions(dest)
+}
+
+/// Normalises file and directory permissions in `dest` (equivalent to `u+rwX`)
+/// so archives created with broken attribute bits (missing write or traversal bits)
+/// can be read, walked, and cleaned up by the user.
+pub fn sanitize_permissions(dest: &Path) -> Result<()> {
+    sanitize_recursive(dest)
+}
+
+fn sanitize_recursive(dir: &Path) -> Result<()> {
+    ensure_user_perms(dir, true);
+    let entries = match fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(_) => return Ok(()),
+    };
+    for entry in entries.filter_map(std::result::Result::ok) {
+        let path = entry.path();
+        let file_type = match entry.file_type() {
+            Ok(ft) => ft,
+            Err(_) => continue,
+        };
+        if file_type.is_symlink() {
+            continue;
+        }
+        if file_type.is_dir() {
+            sanitize_recursive(&path)?;
+        } else {
+            ensure_user_perms(&path, false);
+        }
+    }
+    Ok(())
+}
+
+fn ensure_user_perms(path: &Path, is_dir: bool) {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if let Ok(meta) = fs::symlink_metadata(path) {
+            let current = meta.permissions().mode();
+            let current_perms = current & 0o7777;
+            // Equivalent to u+rwX: directories or files with any execute bit get u+rwx (0o700);
+            // other files get u+rw (0o600).
+            let desired = if is_dir || (current_perms & 0o111 != 0) {
+                current_perms | 0o700
+            } else {
+                current_perms | 0o600
+            };
+            if current_perms != desired {
+                let _ = fs::set_permissions(path, fs::Permissions::from_mode(desired));
+            }
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        if let Ok(meta) = fs::symlink_metadata(path) {
+            let mut perms = meta.permissions();
+            if perms.readonly() {
+                perms.set_readonly(false);
+                let _ = fs::set_permissions(path, perms);
+            }
+        }
     }
 }
 
@@ -116,6 +179,41 @@ mod tests {
         fs::create_dir_all(&dest).unwrap();
         extract(&archive, ArchiveKind::SevenZip, &dest).unwrap();
         assert_eq!(fs::read_to_string(dest.join("0036/0.paz")).unwrap(), "data");
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn sanitizes_restrictive_permissions() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let tmp = tempfile::tempdir().unwrap();
+        let sub = tmp.path().join("sub");
+        fs::create_dir(&sub).unwrap();
+        let file = sub.join("test.txt");
+        fs::write(&file, "hello").unwrap();
+        let exe = sub.join("script.sh");
+        fs::write(&exe, "#!/bin/sh").unwrap();
+
+        // Simulate broken permissions from archive headers
+        fs::set_permissions(&file, fs::Permissions::from_mode(0o000)).unwrap();
+        fs::set_permissions(&exe, fs::Permissions::from_mode(0o555)).unwrap();
+        fs::set_permissions(&sub, fs::Permissions::from_mode(0o555)).unwrap();
+
+        sanitize_permissions(tmp.path()).unwrap();
+
+        let sub_mode = fs::symlink_metadata(&sub).unwrap().permissions().mode() & 0o7777;
+        let file_mode = fs::symlink_metadata(&file).unwrap().permissions().mode() & 0o7777;
+        let exe_mode = fs::symlink_metadata(&exe).unwrap().permissions().mode() & 0o7777;
+
+        // Subdirectory should have user rwx
+        assert_eq!(sub_mode & 0o700, 0o700);
+        // Regular file should have user rw
+        assert_eq!(file_mode & 0o600, 0o600);
+        // Executable file should have user rwx (keeps execute)
+        assert_eq!(exe_mode & 0o700, 0o700);
+
+        // Verification that directory can be walked and file read
+        assert_eq!(fs::read_to_string(&file).unwrap(), "hello");
     }
 }
 

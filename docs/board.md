@@ -1,6 +1,6 @@
 # Pailune board
 
-Work items from [audit.md](audit.md), scheduled by [roadmap.md](roadmap.md).
+Work items from [audit.md](audit.md), scheduled by [roadmap.md](roadmap.md) and prioritized in [priority-list.md](priority-list.md).
 Move a line between columns when its status changes.
 
 ## In progress
@@ -45,6 +45,9 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] Post-extraction permission sanitization in `mod_engine/archive.rs`: normalizes restrictive
+  archive permissions (`u+rwX`), guaranteeing user traversal/read/write on extracted directories
+  (`0o700`) and files (`0o600`/`0o700`) across zip, 7z, and rar. Prevents OS error 13 walk errors.
 - [x] Saves tab (slots, save backups, embedded editor); strict archive-index check on every Apply
   (`paz::pamt_check`, passes all vanilla groups); JMM compared (`research/jmm-comparison.md`).
 - [x] B-07 (step 3) Save editing (approved 2026-10-26): fixed-size values edited in the viewer,
