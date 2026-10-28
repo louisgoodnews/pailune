@@ -10,8 +10,7 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
-| **P1** | **Visual-1** | **Visual Mod Creator Phase 1: Core Node Graph Engine & Compiler** | **M** | Data structures, graph JSON schema, and compiler targeting format-3 table patches & XML descriptors. |
-| **P2** | **Visual-2** | **Visual Mod Creator Phase 2: Interactive Node Canvas GUI in egui** | **M** | Node graph canvas in egui, draggable nodes, color-coded sockets, bezier wires, live diff preview. |
+| **P1** | **Visual-2** | **Visual Mod Creator Phase 2: Interactive Node Canvas GUI in egui** | **M** | Node graph canvas in egui, draggable nodes, color-coded sockets, bezier wires, live diff preview. |
 | **Owner** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release (Nexus Mods API Acceptable Use Policy). |
 | *Deferred* | *B-08* | *Windows & macOS Target Testing* | *L* | Optional / deferred until dedicated Windows/macOS test hardware is available. |
 
@@ -21,12 +20,6 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 ### Visual Modding Studio (Roadmap Phase 19)
 
-#### Visual-1 — Core Node Graph Engine & Compiler
-* **Size:** *M*.
-* **Rationale:**
-  * Define visual graph models (`Graph`, `Node`, `Socket`, `Connection`), JSON serialization, and deterministic compiler transforming visual rules into verified Format-3.1 table patches (`.field.json`) and XML merge descriptors.
-  * Designed in [`docs/design/visual-mod-creator.md`](file:///home/louisgoodnews/Dokumente/pailune/docs/design/visual-mod-creator.md).
-
 #### Visual-2 — Interactive Node Canvas GUI in egui
 * **Size:** *M*.
 * **Rationale:**
@@ -35,6 +28,20 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 ---
 
 ## Completed Features
+
+### Visual Modding Studio (Roadmap Phase 19)
+
+#### Visual-1 — Core Node Graph Engine & Compiler
+* **Status:** Completed & verified with automated tests.
+* **Size:** *M*.
+* **Implementation Summary:**
+  * Implemented core graph data structures in [`src/visual/graph.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/visual/graph.rs) (`Graph`, `Node`, `Socket`, `Connection`, `NodeType`, `SocketType`, `NodeCategory`).
+  * Enforced socket type compatibility (`ItemRef`, `DropTableRef`, `Number`, `Boolean`, `Text`) and single-input constraints.
+  * Implemented topological sorting with Kahn's algorithm and cycle detection for deterministic rule evaluation.
+  * Implemented deterministic compiler in [`src/visual/compiler.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/visual/compiler.rs) compiling visual source/math/action graphs into verified format-3 table patches (`iteminfo.pabgb`, `dropsetinfo.pabgb`, `wantedinfo.pabgb`).
+  * Created starter templates in [`src/visual/templates.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/visual/templates.rs) (*Mega Stacks*, *Hunting & Animal Yields*, *Crate Coin Rewards*).
+  * Implemented staging pipeline writing `modinfo.json`, `graph.json`, `<name>.field.json`, and generated `README.md`.
+  * Verified with 7 unit tests in [`src/visual/tests.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/visual/tests.rs) (full suite: 184 passed, 0 failed, 26 ignored).
 
 #### Linux Release Packaging (AppImage & Tarball)
 * **Status:** Completed & verified.

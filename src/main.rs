@@ -40,6 +40,7 @@ mod tables;
 #[cfg(test)]
 mod tests;
 mod ui;
+pub mod visual;
 
 /// Runs a command-line command, hands `nxm://` links to a running
 /// instance, or starts the GUI.

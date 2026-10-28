@@ -9,8 +9,7 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] Visual Mod Creator Phase 1: Core node graph engine & compiler (`docs/design/visual-mod-creator.md`, graph serialization, compilation to format-3 table patches and XML merge descriptors) — *M*
-- [ ] Visual Mod Creator Phase 2: Interactive node canvas GUI in egui (pan/zoom, typed sockets, bezier wires, live diff against game data browser) — *M*
+- [ ] Visual Mod Creator Phase 2: Interactive node canvas GUI in egui (pan/zoom, typed sockets, bezier wires, live diff against game data browser, template loader) — *M*
 
 ## Backlog (large)
 
@@ -24,6 +23,11 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] Visual Mod Creator Phase 1: Core node graph engine & compiler (`src/visual/`).
+  Data models (`Graph`, `Node`, `Socket`, `Connection`, `NodeType`), JSON serialization (`graph.json`),
+  topological execution sorting with cycle detection, socket type safety enforcement, deterministic compiler
+  targeting Format-3.1 table patches (`iteminfo.pabgb`, `dropsetinfo.pabgb`, `wantedinfo.pabgb`), MathOp nodes,
+  built-in starter templates (*Mega Stacks*, *Hunting & Animal Yields*, *Crate Coin Rewards*), and direct staging writer.
 - [x] Linux release packaging: automated release distribution pipeline (`packaging/dist.sh`),
   standalone distribution tarball (`pailune-v<version>-x86_64-unknown-linux-gnu.tar.gz`) with stripped release
   binary and SHA256 checksums, AppImage AppDir staging with 256x256 icon conversion (`packaging/appimage.sh`),
