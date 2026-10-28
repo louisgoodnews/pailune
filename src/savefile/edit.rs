@@ -322,6 +322,7 @@ pub fn duplicate_list_item_edits(
 }
 
 /// Generates the edits to append an item with `item_bytes` to the list at `list_at`.
+#[allow(dead_code)]
 pub fn add_list_item_edits(
     body: &[u8],
     list_at: usize,
@@ -363,6 +364,7 @@ pub fn add_list_item_edits(
 }
 
 /// Deletes item `item_index` from the list at `list_at`, returning the rewritten save file bytes.
+#[allow(dead_code)]
 pub fn delete_list_item(bytes: &[u8], list_at: usize, item_index: usize) -> Result<Vec<u8>> {
     let save = decode(bytes)?;
     let edits = delete_list_item_edits(&save.body, list_at, item_index)?;
@@ -370,6 +372,7 @@ pub fn delete_list_item(bytes: &[u8], list_at: usize, item_index: usize) -> Resu
 }
 
 /// Duplicates item `item_index` in the list at `list_at`, returning the rewritten save file bytes.
+#[allow(dead_code)]
 pub fn duplicate_list_item(bytes: &[u8], list_at: usize, item_index: usize) -> Result<Vec<u8>> {
     let save = decode(bytes)?;
     let edits = duplicate_list_item_edits(&save.body, list_at, item_index)?;
@@ -377,6 +380,7 @@ pub fn duplicate_list_item(bytes: &[u8], list_at: usize, item_index: usize) -> R
 }
 
 /// Appends `item_bytes` to the list at `list_at`, returning the rewritten save file bytes.
+#[allow(dead_code)]
 pub fn add_list_item(bytes: &[u8], list_at: usize, item_bytes: &[u8]) -> Result<Vec<u8>> {
     let save = decode(bytes)?;
     let edits = add_list_item_edits(&save.body, list_at, item_bytes)?;

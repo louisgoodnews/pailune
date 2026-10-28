@@ -10,15 +10,26 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
-| **P1** | **Polish** | **Pre-Release Polish: GUI Redesign & Final Code Refactoring** | **M** | Aesthetic redesign, typography, visual hierarchy, and performance/memory optimization pass. |
-| **P2** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
-| **P3** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
+| **P1** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
+| **P2** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
 
 ---
 
 ## Detailed Action Items & Rationales
 
 ### Completed Features
+
+#### Phase 17 — Pre-Release Polish: GUI Redesign & Final Code Refactoring
+* **Status:** Completed & verified with automated tests.
+* **Size:** *M*.
+* **Implementation Summary:**
+  * Modernized visual widget hierarchy, typography, and theme styling in `src/ui/theme.rs`.
+  * Refined badges with subtle tint fill, responsive border, and softened 5px corners while maintaining full WCAG AA contrast compliance (ratio >= 4.5:1).
+  * Added `card_frame` container with palette-aware background and borders, unified across Collections, Profiles, and Data Browser panels.
+  * Cleared all compiler warnings (annotated public API list item editing methods in `src/savefile/edit.rs` and cleaned unused imports).
+  * Updated deployment summary text in `src/jobs/tasks/deploy.rs` to accurately reflect archive overlay and in-place routing rather than falsely claiming files were skipped.
+  * Updated archive file descriptions in `src/ui/views/mod_details.rs`.
+  * 100% test pass rate across 176 automated tests.
 
 #### B-17 — ASI Mod Creation: Research & Templates
 * **Status:** Completed & verified with automated tests.
@@ -82,24 +93,14 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 ---
 
-### Tier 5: Pre-Release Polish (P5)
+### Tier 5: General Release & Distribution (P1–P2)
 
-#### 9. GUI Aesthetic Redesign & Pre-Release Refactoring (Phase 17)
-* **Size:** *M*.
-* **Rationale:**
-  * Complete aesthetic review: unified visual hierarchy, refined typography, responsive pane layout, consistent iconography, and WCAG AA contrast conformance.
-  * Comprehensive pre-release code refactoring, performance profiling, and memory footprint check.
-
----
-
-### Tier 6: General Release & Distribution (P6)
-
-#### 10. B-08 (Step 2) — Windows & macOS Target Verification
+#### 1. B-08 (Step 2) — Windows & macOS Target Verification (P1)
 * **Size:** *L*.
 * **Rationale:**
   * Cross-platform testing on real Windows and macOS machines, code signing, and macOS app bundling.
 
-#### 11. A-21 — Nexus Mods API Registration
+#### 2. A-21 — Nexus Mods API Registration (P2)
 * **Size:** *Admin*.
 * **Rationale:**
   * Formal API agreement with Nexus Mods prior to public general release.

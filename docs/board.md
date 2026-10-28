@@ -12,8 +12,6 @@ Move a line between columns when its status changes.
 
 ## Backlog (large)
 
-- [ ] Pre-release polish (roadmap phase 17): GUI aesthetic redesign and final pre-release
-  code refactoring — *M*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
 - [ ] A-01 format 3, phase 2: names for large tables. Shapes are derivable (ItemInfo prefix done),
   names are not from data alone (message lists are incomplete). Next: in-game confirmation of the
@@ -27,6 +25,11 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] Pre-release polish (roadmap phase 17): GUI aesthetic redesign (typography, widget styling,
+  badge appearance with soft tint fill and softened 5px radius, `card_frame` helper for consistent card/panel grouping
+  in collections, profiles, and data browser, WCAG AA contrast conformance) and final pre-release code refactoring
+  (zero compiler warnings, accurate deployment summaries for archive overlay/in-place, modernized mod detail descriptions,
+  and 100% test pass rate across 176 automated tests).
 - [x] B-17 ASI mod creation (D-15): research and decision record ([`docs/research/asi-mods.md`](docs/research/asi-mods.md), D-15),
   expanded scaffolding templates for Rust `cdylib` and C++ MinGW projects with memory pattern scanning (`find_pattern` /
   `FindPattern`), memory patching (`patch_memory` / `PatchMemory`), and logging harnesses; in-app build and staging

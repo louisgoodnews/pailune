@@ -3,7 +3,7 @@
 use crate::steam::GameStatus;
 use crate::tables::browser::InspectedRecord;
 use crate::ui::intent::DataBrowserAction;
-use crate::ui::theme::{accent, muted, success, warning};
+use crate::ui::theme::{self, accent, muted, success, warning};
 use crate::ui::{Action, PailuneApp};
 use eframe::egui::{self, RichText};
 use egui_extras::{Column, TableBuilder};
@@ -245,7 +245,7 @@ fn render_inspector(ui: &mut egui::Ui, app: &PailuneApp, rec: &InspectedRecord) 
 
     // Active edit panel
     if let Some(ref edit) = app.data_browser.active_edit {
-        egui::Frame::group(ui.style()).show(ui, |ui| {
+        theme::card_frame(&ui.visuals()).show(ui, |ui| {
             ui.horizontal(|ui| {
                 if edit.is_raw {
                     ui.label(RichText::new("✏ Raw Byte Patch").strong().color(accent()));

@@ -97,12 +97,12 @@ A standalone project generator and development kit for creating Crimson Desert m
 4. **Mod Export Pipeline** — single-click/command export bundling the project into a validated,
    staged Pailune mod and packaging a distributable release archive for Crimson Desert on Nexus. *(M)*
 
-## Phase 17 — Pre-Release Refinement & Polish
+## Phase 17 — Pre-Release Refinement & Polish (Completed)
 
 1. **GUI Aesthetic Redesign** — cohesive styling, typography, responsive pane hierarchy, refined
-   visual badges, and accessibility pass. *(M)*
-2. **Final Pre-Release Code Refactoring** — performance profiling, memory footprint checks, and
-   code hygiene across engine and UI modules. *(M)*
+   visual badges with tinted fills and softened corners, `card_frame` panel containers, and WCAG AA accessibility. *(Completed)*
+2. **Final Pre-Release Code Refactoring** — clean compiler check with zero warnings, accurate deploy
+   summaries for overlay and in-place paths, modernized descriptions, and 100% test pass rate across 176 automated tests. *(Completed)*
 
 ## Phase 18 — General Public Release
 

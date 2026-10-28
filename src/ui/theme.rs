@@ -57,6 +57,14 @@ fn dark_visuals() -> egui::Visuals {
     visuals.selection.bg_fill = rgb(0xd0, 0x8a, 0x3c).linear_multiply(0.6);
     visuals.hyperlink_color = rgb(0xd0, 0x8a, 0x3c);
     visuals.window_corner_radius = CornerRadius::same(8);
+    visuals.widgets.noninteractive.corner_radius = CornerRadius::same(5);
+    visuals.widgets.inactive.corner_radius = CornerRadius::same(5);
+    visuals.widgets.hovered.corner_radius = CornerRadius::same(5);
+    visuals.widgets.active.corner_radius = CornerRadius::same(5);
+    visuals.widgets.open.corner_radius = CornerRadius::same(5);
+    visuals.widgets.hovered.bg_stroke =
+        Stroke::new(1.0, rgb(0xd0, 0x8a, 0x3c).linear_multiply(0.6));
+    visuals.widgets.active.bg_stroke = Stroke::new(1.0, rgb(0xd0, 0x8a, 0x3c));
     visuals
 }
 
@@ -69,6 +77,14 @@ fn light_visuals() -> egui::Visuals {
     visuals.selection.bg_fill = rgb(0xf0, 0xc8, 0x96);
     visuals.hyperlink_color = rgb(0x9a, 0x55, 0x10);
     visuals.window_corner_radius = CornerRadius::same(8);
+    visuals.widgets.noninteractive.corner_radius = CornerRadius::same(5);
+    visuals.widgets.inactive.corner_radius = CornerRadius::same(5);
+    visuals.widgets.hovered.corner_radius = CornerRadius::same(5);
+    visuals.widgets.active.corner_radius = CornerRadius::same(5);
+    visuals.widgets.open.corner_radius = CornerRadius::same(5);
+    visuals.widgets.hovered.bg_stroke =
+        Stroke::new(1.0, rgb(0x9a, 0x55, 0x10).linear_multiply(0.6));
+    visuals.widgets.active.bg_stroke = Stroke::new(1.0, rgb(0x9a, 0x55, 0x10));
     visuals
 }
 
@@ -151,16 +167,32 @@ fn teal() -> Color32 {
     pick(rgb(0x3f, 0xa8, 0x9a), rgb(0x1a, 0x6e, 0x63))
 }
 
-/// A small pill with coloured outline and text.
+/// A small pill with tinted fill, subtle outline, and coloured text.
 pub fn badge(ui: &mut egui::Ui, text: &str, color: Color32) -> egui::Response {
+    let fill = color.linear_multiply(if LIGHT.load(Ordering::Relaxed) { 0.12 } else { 0.18 });
+    let stroke_color = color.linear_multiply(if LIGHT.load(Ordering::Relaxed) { 0.65 } else { 0.50 });
     egui::Frame::new()
-        .stroke(Stroke::new(1.0, color))
-        .corner_radius(CornerRadius::same(9))
-        .inner_margin(egui::Margin::symmetric(7, 1))
+        .fill(fill)
+        .stroke(Stroke::new(1.0, stroke_color))
+        .corner_radius(CornerRadius::same(5))
+        .inner_margin(egui::Margin::symmetric(7, 2))
         .show(ui, |ui| {
             ui.label(RichText::new(text).small().strong().color(color))
         })
         .response
+}
+
+/// A styled panel/card container for grouping related content with palette-aware background and subtle border.
+pub fn card_frame(visuals: &egui::Visuals) -> egui::Frame {
+    let (fill, stroke) = match visuals.dark_mode {
+        true => (rgb(0x1c, 0x1f, 0x24), Stroke::new(1.0, rgb(0x2b, 0x2f, 0x38))),
+        false => (rgb(0xfb, 0xfa, 0xf8), Stroke::new(1.0, rgb(0xe2, 0xe0, 0xd8))),
+    };
+    egui::Frame::new()
+        .fill(fill)
+        .stroke(stroke)
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(egui::Margin::same(10))
 }
 
 /// WCAG 2.2 relative luminance.

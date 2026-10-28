@@ -9,7 +9,7 @@ use eframe::egui::{self, RichText};
 /// One profile card.
 fn card(ui: &mut egui::Ui, profile: &Profile, active: bool, draft: &mut String) -> Vec<Action> {
     let name = profile.name.clone();
-    egui::Frame::group(ui.style())
+    theme::card_frame(&ui.visuals())
         .show(ui, |ui| {
             let mut actions = ui
                 .horizontal(|ui| {

@@ -85,7 +85,7 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
     });
     let mut text = summarise(ctx, conn, EventKind::Deploy, "Applied", &report);
     let waiting = enabled.iter().filter(|m| m.paz_files > 0).count();
-    if waiting > 0 {
+    if waiting > 0 && overlay.is_none() && inplace_plan.is_none() {
         text.push_str(&format!(
             " — {waiting} mod(s) contain textures, JSON patches or unplaced files that were skipped"
         ));

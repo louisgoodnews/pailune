@@ -2,7 +2,7 @@
 
 use crate::mod_engine::conflicts::{Contest, ModConflicts};
 use crate::mod_engine::model::{ModDetails, ModEntry};
-use crate::ui::theme::{self, accent, muted, success, warning};
+use crate::ui::theme::{self, accent, muted, success};
 use crate::ui::{Action, PailuneApp};
 use eframe::egui::{self, RichText};
 
@@ -36,15 +36,14 @@ fn info_grid(ui: &mut egui::Ui, entry: &ModEntry, details: &ModDetails) {
                 ),
             );
             if entry.paz_files > 0 {
-                ui.label(RichText::new("Needs PAZ").color(warning()));
+                ui.label(RichText::new("Archive Files").color(theme::accent()));
                 ui.label(
                     RichText::new(format!(
-                        "{} file(s) are JSON patches or RAW/loose game files. The game only reads \
-                     these from its PAZ archives, so they are not deployed until Pailune can \
-                     pack archives (roadmap phase 3).",
+                        "{} file(s) are JSON patches, loose game assets, or audio/XML files. These \
+                     are packed into game PAZ archive overlays or redirected in-place during deployment.",
                         entry.paz_files
                     ))
-                    .color(warning()),
+                    .color(theme::muted()),
                 );
                 ui.end_row();
             }
