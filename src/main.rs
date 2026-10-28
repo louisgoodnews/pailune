@@ -33,6 +33,7 @@ mod platform;
 mod profiles;
 mod save_backup;
 mod savefile;
+pub mod sdk;
 mod steam;
 mod symlink;
 mod tables;

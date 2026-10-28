@@ -74,6 +74,12 @@ pub enum ModAction {
     ClosePackageMod,
     /// Package a mod into an installable distribution archive.
     PackageMod(crate::mod_engine::package::PackageMetadata),
+    /// Open the wizard to spawn a new mod project via the SDK.
+    SpawnProjectPrompt,
+    /// Close the spawn project dialog.
+    CloseSpawnProject,
+    /// Scaffold a new mod project via the SDK.
+    SpawnProject(super::state::SpawnProjectDraft),
     Rescan,
 }
 

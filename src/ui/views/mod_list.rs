@@ -106,6 +106,12 @@ fn toolbar(ui: &mut egui::Ui) -> Vec<Action> {
                 Action::Mod(ModAction::CreateModPrompt),
             ),
             (
+                ui.button("🛠 SDK Project…")
+                    .on_hover_text("Spawn a new ASI plugin or JSON mod project with build templates & docs")
+                    .clicked(),
+                Action::Mod(ModAction::SpawnProjectPrompt),
+            ),
+            (
                 ui.button("⟳ Rescan")
                     .on_hover_text("Look for changes in the staging folder (F5)")
                     .clicked(),

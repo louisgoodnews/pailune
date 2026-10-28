@@ -12,14 +12,13 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 |:---:|:---|:---|:---:|:---|
 | **P1** | **A-01** | **Format 3.1 Table Patches (Phase 1 `match` done; Phase 2 nested fields)** | **L** (phased) | Resolves active warnings and failed patch applications seen on popular mods (*Character Creator*). |
 | **P1** | **A-01** | **In-Game Test Batch 1 (Tests 2–4 Verification)** | **Owner** | Completes validation of table overlay patching in game (hunting, drops, coin crates). |
-| **P2** | **B-18** | **Pailune Modding SDK (Scaffolding, Libs, Markdown Docs, Export)** | **L** (Phase 16) | Project generator via CLI/MCP and GUI for new ASI & JSON projects; bundles libs, docs, and mod export. |
-| **P3** | **A-01** | **Compressed Type-1 `.pac` Meshes** | **M** | Decodes the remaining 2,914 compressed meshes in the archives for complete inspection & patching. |
-| **P4** | **B-07** | **Variable-Length Save Editing (Step 4)** | **L** | Extends the verified fixed-size save editor to add/remove inventory items and dynamic lists. |
-| **P4** | **D-14** | **In-Place Route for Non-Overlay Game Files** | **M** | Already built and tested (`inplace::store`), ready to wire if dialogue audio/weapon XML mods require it. |
-| **P4** | **B-17** | **ASI Mod Creation: Research & Templates** | **Research / M** | Scaffolds native ASI plugin development with compiler toolchain and debug loop. |
-| **P5** | **Polish** | **Pre-Release Polish: GUI Redesign & Final Code Refactoring** | **M** | Aesthetic redesign, typography, visual hierarchy, and performance/memory optimization pass. |
-| **P6** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
-| **P6** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
+| **P2** | **A-01** | **Compressed Type-1 `.pac` Meshes** | **M** | Decodes the remaining 2,914 compressed meshes in the archives for complete inspection & patching. |
+| **P3** | **B-07** | **Variable-Length Save Editing (Step 4)** | **L** | Extends the verified fixed-size save editor to add/remove inventory items and dynamic lists. |
+| **P3** | **D-14** | **In-Place Route for Non-Overlay Game Files** | **M** | Already built and tested (`inplace::store`), ready to wire if dialogue audio/weapon XML mods require it. |
+| **P3** | **B-17** | **ASI Mod Creation: Research & Templates** | **Research / M** | Scaffolds native ASI plugin development with compiler toolchain and debug loop. |
+| **P4** | **Polish** | **Pre-Release Polish: GUI Redesign & Final Code Refactoring** | **M** | Aesthetic redesign, typography, visual hierarchy, and performance/memory optimization pass. |
+| **P5** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
+| **P5** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
 
 ---
 
@@ -44,19 +43,15 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 ---
 
-### Tier 2: Modding SDK — Pre-Release Tier (P2)
+### Completed Features
 
-#### 3. B-18 — Pailune Modding SDK (Phase 16)
-* **Status:** Scheduled pre-release SDK tier.
+#### B-18 — Pailune Modding SDK (Phase 16)
+* **Status:** Completed & verified with automated tests.
 * **Size:** *L*.
-* **Rationale:**
-  * Transforms Pailune into a complete mod development suite. Allows creators to spawn standalone mod projects (ASI or JSON) from the GUI or via the MCP control protocol (`spawn_mod_project`).
-  * Scaffolds the project folder at a user-chosen destination with project metadata, ready-to-build templates, bundled libraries (Rust `cdylib` or C++ MinGW for ASI; format-3 schemas for JSON), and generated Markdown documentation.
-  * Provides an integrated export command to build and package projects directly into ready-to-deploy Crimson Desert mods.
-* **Target Areas:**
-  * `src/sdk/`: Project scaffolding, template generation, and library bundling.
-  * `src/mcp/`: MCP protocol commands (`spawn_mod_project`, `export_mod_project`).
-  * `src/ui/views/`: Project creation dialog and export interface.
+* **Implementation Summary:**
+  * Project generation via CLI/MCP (`spawn_mod_project`, `export_mod_project`) and GUI modal (`SpawnProjectPrompt`).
+  * Scaffolds new standalone mod projects (ASI or JSON) with metadata (`modinfo.json`), bundled libraries and build configurations (Rust `cdylib` with `Cargo.toml`, `lib.rs`, `config.ini`, `.cargo/config.toml` targeting MinGW for Windows cross-compilation; format-3 JSON `.field.json` schema), and generated Markdown documentation (`README.md`, `DEVELOPMENT.md`).
+  * Integrated export pipeline (`crate::sdk::export_project`) to package projects into distribution `.zip` archives under `~/.local/share/pailune/exports` or directly stage them into Pailune.
 
 ---
 

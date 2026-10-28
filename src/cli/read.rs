@@ -19,6 +19,63 @@ pub fn run(op: &Op, paths: &DataPaths, config: &Config) -> Result<Report> {
         Op::Log { mod_name, limit } => log(&conn, mod_name.as_deref(), *limit),
         Op::Saves => super::saves::list(config),
         Op::SaveShow { slot, find } => super::saves::show(config, slot, find.as_deref()),
+        Op::SpawnProject {
+            name,
+            location,
+            mod_type,
+            author,
+            version,
+            description,
+        } => {
+            let mtype = crate::sdk::ProjectType::parse(mod_type).ok_or_else(|| {
+                crate::error::PailuneError::Invalid(format!(
+                    "unknown mod type '{mod_type}'; use 'asi' or 'json'"
+                ))
+            })?;
+            let cfg = crate::sdk::ProjectConfig {
+                name: name.clone(),
+                mod_type: mtype,
+                author: author.clone().unwrap_or_default(),
+                version: version.clone().unwrap_or_else(|| "1.0".into()),
+                description: description.clone().unwrap_or_default(),
+                target_dir: location.clone(),
+            };
+            let rep = crate::sdk::scaffold_project(&cfg)?;
+            Ok(Report {
+                text: format!(
+                    "Scaffolded {} project '{}' at {}",
+                    mtype.as_str(),
+                    name,
+                    rep.project_dir.display()
+                ),
+                data: serde_json::json!({
+                    "project_dir": rep.project_dir.display().to_string(),
+                    "mod_type": mtype.as_str(),
+                    "files": rep.files_created,
+                }),
+            })
+        }
+        Op::ExportProject {
+            project_path,
+            output_path,
+            stage,
+        } => {
+            let out_dir = output_path.clone().unwrap_or_else(|| paths.exports.clone());
+            let stage_dir = if *stage {
+                Some(paths.staging.as_path())
+            } else {
+                None
+            };
+            let res = crate::sdk::export_project(project_path, &out_dir, stage_dir)?;
+            Ok(Report {
+                text: format!("Exported mod to {}", res.archive_path.display()),
+                data: serde_json::json!({
+                    "archive_path": res.archive_path.display().to_string(),
+                    "file_count": res.file_count,
+                    "total_bytes": res.total_bytes,
+                }),
+            })
+        }
         _ => Ok(backups(paths)),
     }
 }

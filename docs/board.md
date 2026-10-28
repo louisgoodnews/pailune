@@ -21,9 +21,6 @@ Move a line between columns when its status changes.
   "Equip All Armor"; needs the full ItemInfo layout first — *L*
 - [ ] A-01 compressed type-1 `.pac` meshes (2 914 in the game): decode for reading and patching — *M*
 
-- [ ] B-18 Pailune Modding SDK (roadmap phase 16): project generator via CLI/MCP and GUI for
-  new ASI or JSON projects; scaffolding at target path with name/description; bundled libraries
-  and Markdown docs; export pipeline to Crimson Desert mod — *L*
 - [ ] Pre-release polish (roadmap phase 17): GUI aesthetic redesign and final pre-release
   code refactoring — *M*
 - [ ] B-17 ASI mod creation (D-13), after B-16: research + decision record first, then templates,
@@ -48,6 +45,12 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-18 Pailune Modding SDK (roadmap phase 16): project generator via CLI/MCP (`spawn_mod_project`,
+  `export_mod_project`) and GUI wizard (`SpawnProjectPrompt`) for new ASI or JSON projects; scaffolding
+  at target directory with metadata, author, and description; bundled MinGW cross-compile libraries and
+  templates (Rust `cdylib` with `Cargo.toml`, `lib.rs`, `config.ini`, `.cargo/config.toml`; format-3 JSON schema)
+  and generated Markdown documentation (`README.md`, `DEVELOPMENT.md`); export pipeline (`crate::sdk::export_project`)
+  to package projects into distribution `.zip` archives or stage directly into Pailune.
 - [x] B-16 JSON mod creation (steps 5–6: test loop & Nexus packaging): in-editor test loop
   (`⚡ Apply`, `▶ Test (Apply & Launch)`), automatic table-version offset shift detection with
   one-click rebase (`document::rebase_offset`), and one-click packaging modal generating

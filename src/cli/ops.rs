@@ -70,6 +70,21 @@ pub enum Op {
     BackupSaves,
     CheckUpdates,
     Launch,
+    /// Scaffolds a new ASI or JSON mod project with build templates and docs (SDK).
+    SpawnProject {
+        name: String,
+        location: PathBuf,
+        mod_type: String,
+        author: Option<String>,
+        version: Option<String>,
+        description: Option<String>,
+    },
+    /// Builds and exports a mod project into an installable Crimson Desert mod (SDK).
+    ExportProject {
+        project_path: PathBuf,
+        output_path: Option<PathBuf>,
+        stage: bool,
+    },
 }
 
 impl Op {
@@ -84,6 +99,8 @@ impl Op {
                 | Op::Backups
                 | Op::Saves
                 | Op::SaveShow { .. }
+                | Op::SpawnProject { .. }
+                | Op::ExportProject { .. }
         )
     }
 

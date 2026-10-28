@@ -32,6 +32,7 @@ pub mod save_view;
 pub mod saves;
 pub mod settings;
 pub mod setup;
+pub mod spawn_project;
 pub mod status_bar;
 pub mod variant;
 

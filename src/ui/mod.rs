@@ -22,7 +22,7 @@ pub use intent::{
 };
 pub use state::{
     ActiveFieldEdit, DataBrowserState, Incoming, JobState, JobView, LogState, ModsState,
-    NexusState, ProfilesState,
+    NexusState, ProfilesState, SpawnProjectDraft,
 };
 
 use crate::backup::BackupStatus;

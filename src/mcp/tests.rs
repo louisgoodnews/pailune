@@ -77,3 +77,40 @@ fn failed_jobs_are_errors_and_the_lock_is_released() {
     let lock = crate::instance::try_lock_for(&server.paths, wait).unwrap();
     assert!(lock.is_some(), "the window can start between calls");
 }
+
+#[test]
+fn mcp_spawns_and_exports_mod_project() {
+    let fx = fixture();
+    let mut server = server(&fx);
+    let temp = tempfile::tempdir().unwrap();
+    let projects_dir = temp.path().join("projects");
+    let exports_dir = temp.path().join("exports");
+
+    let spawn = call(
+        &mut server,
+        "spawn_mod_project",
+        json!({
+            "name": "McpStamina",
+            "location": projects_dir.to_str().unwrap(),
+            "mod_type": "json",
+            "author": "McpAuthor",
+            "version": "1.0",
+            "description": "Infinite stamina via MCP"
+        }),
+    );
+    assert_eq!(spawn["isError"], false, "{spawn}");
+    assert!(projects_dir.join("McpStamina").join("McpStamina.field.json").is_file());
+
+    let export = call(
+        &mut server,
+        "export_mod_project",
+        json!({
+            "project_path": projects_dir.join("McpStamina").to_str().unwrap(),
+            "output_path": exports_dir.to_str().unwrap(),
+            "stage": true
+        }),
+    );
+    assert_eq!(export["isError"], false, "{export}");
+    assert!(exports_dir.join("McpStamina-v1.0.zip").is_file());
+    assert!(server.paths.staging.join("McpStamina/McpStamina.field.json").is_file());
+}

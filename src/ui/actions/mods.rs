@@ -189,6 +189,67 @@ impl PailuneApp {
                     format!("Packaged mod '{}' as exports/{archive_name}", meta.name),
                 )))
             }
+            ModAction::SpawnProjectPrompt => {
+                self.mods.spawn_project = Some(crate::ui::state::SpawnProjectDraft::default());
+                Ok(None)
+            }
+            ModAction::CloseSpawnProject => {
+                self.mods.spawn_project = None;
+                Ok(None)
+            }
+            ModAction::SpawnProject(draft) => {
+                self.mods.spawn_project = None;
+                let clean_name = crate::mod_engine::install::sanitize_name(&draft.name);
+                if clean_name.is_empty() {
+                    return Err(PailuneError::Invalid("project name cannot be empty".into()));
+                }
+                let loc = PathBuf::from(draft.location.trim());
+                if !loc.is_dir() {
+                    return Err(PailuneError::Invalid(format!(
+                        "destination folder '{}' does not exist",
+                        loc.display()
+                    )));
+                }
+
+                let cfg = crate::sdk::ProjectConfig {
+                    name: clean_name.clone(),
+                    mod_type: draft.mod_type,
+                    author: draft.author.clone(),
+                    version: draft.version.clone(),
+                    description: draft.description.clone(),
+                    target_dir: loc,
+                };
+                let report = crate::sdk::scaffold_project(&cfg)?;
+
+                if draft.stage_after {
+                    let _ = crate::sdk::export_project(
+                        &report.project_dir,
+                        &self.paths.exports,
+                        Some(&self.paths.staging),
+                    );
+                    let now = crate::db::now();
+                    let scan = registry::scan(&self.paths.staging)?;
+                    self.update_registry(|r| Ok(registry::merge(r, &scan, now)))?;
+                    let _ = crate::db::mods::record_install(&self.conn, &clean_name, "created", None, now);
+                    self.select(clean_name.clone())?;
+                }
+
+                let type_name = draft.mod_type.as_str().to_uppercase();
+                self.notices.push(
+                    Level::Success,
+                    "Project Spawned",
+                    &format!(
+                        "Created {type_name} project '{}' at {}",
+                        clean_name,
+                        report.project_dir.display()
+                    ),
+                );
+
+                Ok(Some(StatusLine::new(
+                    Level::Success,
+                    format!("Created {type_name} project '{}'", clean_name),
+                )))
+            }
             ModAction::ImportFolder => Ok(Some(
                 self.import(rfd::FileDialog::new().pick_folder().into_iter().collect()),
             )),

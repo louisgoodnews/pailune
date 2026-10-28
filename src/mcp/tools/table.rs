@@ -218,4 +218,29 @@ pub const TOOLS: &[Tool] = &[
         read_only: false,
         destructive: false,
     },
+    Tool {
+        name: "spawn_mod_project",
+        description: "Scaffold a new standalone ASI or JSON mod project with build templates and documentation (Pailune Modding SDK).",
+        params: &[
+            ("name", "string", "Project name"),
+            ("location", "string", "Destination folder location"),
+            ("mod_type", "string", "Mod project type: 'asi' (Rust/C++) or 'json' (Format 3)"),
+            ("author", "string", "Optional: author name"),
+            ("version", "string", "Optional: initial version (default 1.0)"),
+            ("description", "string", "Optional: what the mod does"),
+        ],
+        read_only: true,
+        destructive: false,
+    },
+    Tool {
+        name: "export_mod_project",
+        description: "Package a mod project into an installable Crimson Desert distribution archive (Pailune Modding SDK).",
+        params: &[
+            ("project_path", "string", "Absolute path to the project directory"),
+            ("output_path", "string", "Optional: destination export folder"),
+            ("stage", "boolean", "Optional: install directly into Pailune staging"),
+        ],
+        read_only: true,
+        destructive: false,
+    },
 ];

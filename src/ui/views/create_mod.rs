@@ -80,6 +80,15 @@ pub fn show(ctx: &egui::Context, draft: &mut Option<CreateModDraft>) -> Vec<Acti
             if ui.button("Cancel").clicked() {
                 actions.push(Action::Mod(ModAction::CloseCreateMod));
             }
+            ui.separator();
+            if ui
+                .button("🛠 Spawn SDK Project…")
+                .on_hover_text("Scaffold a standalone ASI or JSON project folder with templates & documentation")
+                .clicked()
+            {
+                actions.push(Action::Mod(ModAction::CloseCreateMod));
+                actions.push(Action::Mod(ModAction::SpawnProjectPrompt));
+            }
         });
     });
     if response.should_close() && actions.is_empty() {

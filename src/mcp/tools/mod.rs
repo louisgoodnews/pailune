@@ -125,6 +125,19 @@ pub fn op(name: &str, args: &Value) -> Result<Op, String> {
         "backup_saves" => Ok(Op::BackupSaves),
         "check_updates" => Ok(Op::CheckUpdates),
         "launch_game" => Ok(Op::Launch),
+        "spawn_mod_project" => Ok(Op::SpawnProject {
+            name: text("name")?,
+            location: PathBuf::from(text("location")?),
+            mod_type: text("mod_type")?,
+            author: text("author").ok(),
+            version: text("version").ok(),
+            description: text("description").ok(),
+        }),
+        "export_mod_project" => Ok(Op::ExportProject {
+            project_path: PathBuf::from(text("project_path")?),
+            output_path: text("output_path").ok().map(PathBuf::from),
+            stage: flag("stage"),
+        }),
         other => Err(format!("unknown tool '{other}'")),
     }
 }

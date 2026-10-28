@@ -510,3 +510,40 @@ fn rebase_format2_offset_after_table_move() {
     let rebased_json = crate::patch::document::rebase_offset(original_json, 0, 0, sug.new_offset).unwrap();
     assert!(rebased_json.contains("\"rel_offset\": 4"));
 }
+
+#[test]
+fn spawn_project_modal_action_creates_project_and_stages() {
+    let fx = fixture();
+    let mut app = app(&fx);
+    let temp = tempfile::tempdir().unwrap();
+
+    // 1. Trigger SpawnProjectPrompt
+    app.dispatch(Action::Mod(crate::ui::ModAction::SpawnProjectPrompt));
+    assert!(app.mods.spawn_project.is_some());
+
+    // 2. Dispatch SpawnProject
+    let draft = crate::ui::SpawnProjectDraft {
+        name: "HudMinimap".into(),
+        mod_type: crate::sdk::ProjectType::Asi,
+        location: temp.path().display().to_string(),
+        author: "DevHud".into(),
+        version: "1.0".into(),
+        description: "Custom HUD minimap".into(),
+        stage_after: true,
+    };
+    app.dispatch(Action::Mod(crate::ui::ModAction::SpawnProject(draft)));
+    assert!(app.mods.spawn_project.is_none());
+
+    // 3. Verify project folder on disk
+    let proj = temp.path().join("HudMinimap");
+    assert!(proj.is_dir());
+    assert!(proj.join("Cargo.toml").is_file());
+    assert!(proj.join("src/lib.rs").is_file());
+    assert!(proj.join("config.ini").is_file());
+    assert!(proj.join("README.md").is_file());
+    assert!(proj.join("DEVELOPMENT.md").is_file());
+
+    // 4. Verify staged in Pailune
+    assert!(app.paths.staging.join("HudMinimap").is_dir());
+    assert_eq!(app.mods.selected.as_deref(), Some("HudMinimap"));
+}

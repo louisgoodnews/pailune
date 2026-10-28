@@ -57,6 +57,34 @@ pub struct ModsState {
     pub create_mod: Option<CreateModDraft>,
     /// Dialog state when packaging a mod for distribution.
     pub package_mod: Option<crate::mod_engine::package::PackageMetadata>,
+    /// Dialog state when spawning a new mod project via the SDK.
+    pub spawn_project: Option<SpawnProjectDraft>,
+}
+
+/// Draft state for spawning a new mod project via the SDK.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SpawnProjectDraft {
+    pub name: String,
+    pub mod_type: crate::sdk::ProjectType,
+    pub location: String,
+    pub author: String,
+    pub version: String,
+    pub description: String,
+    pub stage_after: bool,
+}
+
+impl Default for SpawnProjectDraft {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            mod_type: crate::sdk::ProjectType::Asi,
+            location: String::new(),
+            author: String::new(),
+            version: "1.0".into(),
+            description: String::new(),
+            stage_after: true,
+        }
+    }
 }
 
 /// Draft fields for creating a new JSON mod in staging.
