@@ -187,3 +187,83 @@ fn partial_layouts_change_leading_fields_only() {
     );
     assert!(failed[0].contains("does not match"), "{failed:?}");
 }
+
+#[test]
+fn records_chosen_by_match_predicate() {
+    let (header, body) = wanted();
+    let table = table("wantedinfo.pabgb").expect("wantedinfo layout");
+    verify(table, &header, &body).unwrap();
+
+    // 1. Single record matched by scalar field value
+    let match_single = Intent {
+        entry: None,
+        key: None,
+        field: Some("increase_price".into()),
+        op: "set".into(),
+        new: serde_json::json!(8888),
+        old: None,
+        matches: Some(serde_json::json!({
+            "increase_price": 2000
+        })),
+    };
+
+    let (changes, failed) = resolve("wantedinfo.pabgb", &header, &body, &[match_single]);
+    assert_eq!(changes.len(), 1, "{failed:?}");
+    assert!(failed.is_empty(), "{failed:?}");
+    assert_eq!(
+        changes[0].edit,
+        crate::patch::Edit::Replace {
+            original: Some(2000u64.to_le_bytes().to_vec()),
+            patched: 8888u64.to_le_bytes().to_vec()
+        }
+    );
+
+    // 2. Multiple records matched by IN list predicate
+    let match_multi = Intent {
+        entry: None,
+        key: None,
+        field: Some("_isBlocked".into()),
+        op: "set".into(),
+        new: serde_json::json!(true),
+        old: None,
+        matches: Some(serde_json::json!({
+            "increase_price": [1500, 2000]
+        })),
+    };
+
+    let (changes, failed) = resolve("wantedinfo.pabgb", &header, &body, &[match_multi]);
+    assert_eq!(changes.len(), 2, "{failed:?}");
+    assert!(failed.is_empty(), "{failed:?}");
+
+    // 3. No records matching predicate
+    let match_none = Intent {
+        entry: None,
+        key: None,
+        field: Some("increase_price".into()),
+        op: "set".into(),
+        new: serde_json::json!(5000),
+        old: None,
+        matches: Some(serde_json::json!({
+            "increase_price": 99999
+        })),
+    };
+
+    let (changes, failed) = resolve("wantedinfo.pabgb", &header, &body, &[match_none]);
+    assert!(changes.is_empty());
+    assert_eq!(failed.len(), 1);
+    assert!(failed[0].contains("no records matched"), "{failed:?}");
+
+    // 4. Nested field intent returns descriptive unsupported message
+    let nested = Intent {
+        entry: None,
+        key: None,
+        field: Some("data[*].nested_val".into()),
+        op: "set".into(),
+        new: serde_json::json!(1),
+        old: None,
+        matches: Some(serde_json::json!({"x": 1})),
+    };
+    let (_, failed) = resolve("wantedinfo.pabgb", &header, &body, &[nested]);
+    assert_eq!(failed.len(), 1);
+    assert!(failed[0].contains("nested fields (format 3.1) are not supported yet"), "{failed:?}");
+}

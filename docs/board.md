@@ -16,9 +16,9 @@ Move a line between columns when its status changes.
   audio, weapon/socket XML). Parts built and tested (`paz::pamt_edit`, `inplace::store`), not
   wired; wire when such a file type is confirmed to need it — *M*
 
-- [ ] A-01 format 3.1: records chosen by `match`, nested fields (`prefab_data_list[*].…`) and
-  list values that change a record's length (table rewrite with new index offsets). Needed by
-  *Character Creator*'s "Equip All Armor"; needs the full ItemInfo layout first — *L*
+- [ ] A-01 format 3.1 (phase 2): nested fields (`prefab_data_list[*].…`) and list values that
+  change a record's length (table rewrite with new index offsets). Needed by *Character Creator*'s
+  "Equip All Armor"; needs the full ItemInfo layout first — *L*
 - [ ] A-01 compressed type-1 `.pac` meshes (2 914 in the game): decode for reading and patching — *M*
 
 - [ ] B-16 JSON mod creation (D-13): new mod → data browser → change from the browser → check
@@ -45,6 +45,10 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-01 format 3.1 (phase 1: predicate matching by `match`): `Intent.matches` evaluates field
+  predicates across candidate records (scalars, string, numeric tolerances, array IN-matching)
+  and applies changes across all matching records; `value::decode` extracts typed fields
+  (`bool`, `int`, `float`, `vec3`, `str`, `ref`, `hash`) from table payloads (`src/tables/`).
 - [x] Post-extraction permission sanitization in `mod_engine/archive.rs`: normalizes restrictive
   archive permissions (`u+rwX`), guaranteeing user traversal/read/write on extracted directories
   (`0o700`) and files (`0o600`/`0o700`) across zip, 7z, and rar. Prevents OS error 13 walk errors.

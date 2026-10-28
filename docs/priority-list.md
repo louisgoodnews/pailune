@@ -10,7 +10,7 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
-| **P1** | **A-01** | **Format 3.1 Table Patches (`match` & nested fields)** | **L** (phased) | Resolves active warnings and failed patch applications seen on popular mods (*Character Creator*). |
+| **P1** | **A-01** | **Format 3.1 Table Patches (Phase 1 `match` done; Phase 2 nested fields)** | **L** (phased) | Resolves active warnings and failed patch applications seen on popular mods (*Character Creator*). |
 | **P1** | **A-01** | **In-Game Test Batch 1 (Tests 2–4 Verification)** | **Owner** | Completes validation of table overlay patching in game (hunting, drops, coin crates). |
 | **P2** | **B-16** | **JSON Mod Creation: Data Browser (Phase 15 Steps 1–2)** | **S–M** | Unlocks Pailune's primary differentiator as a modding tool; builds directly on proven table layouts. |
 | **P2** | **B-16** | **JSON Mod Creation: Change Creator & Dry Run (Steps 3–4)** | **S–M** | Enables safe, layout-verified patch generation directly against the user's installed game version. |

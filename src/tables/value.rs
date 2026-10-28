@@ -51,3 +51,71 @@ pub fn encode(field: &Field, size: usize, new: &Value) -> std::result::Result<Ve
         (meaning, _) => bad(&format!("unsupported value for a {meaning} field")),
     }
 }
+
+/// Decodes field bytes into a JSON value based on the field's meaning and shape.
+pub fn decode(field: &Field, bytes: &[u8]) -> std::result::Result<Value, String> {
+    let size = bytes.len();
+    match field.meaning.as_str() {
+        "bool" if size == 1 => Ok(Value::Bool(bytes[0] != 0)),
+        "float" if size == 4 => {
+            let arr: [u8; 4] = bytes
+                .try_into()
+                .map_err(|_| format!("{}: expects 4 bytes for float", field.name))?;
+            Ok(serde_json::json!(f32::from_le_bytes(arr)))
+        }
+        "float" if size == 8 => {
+            let arr: [u8; 8] = bytes
+                .try_into()
+                .map_err(|_| format!("{}: expects 8 bytes for float", field.name))?;
+            Ok(serde_json::json!(f64::from_le_bytes(arr)))
+        }
+        "vec3" if size == 12 => {
+            let x = f32::from_le_bytes(bytes[0..4].try_into().unwrap());
+            let y = f32::from_le_bytes(bytes[4..8].try_into().unwrap());
+            let z = f32::from_le_bytes(bytes[8..12].try_into().unwrap());
+            Ok(serde_json::json!([x, y, z]))
+        }
+        "int" => match size {
+            1 => Ok(serde_json::json!(bytes[0] as i8)),
+            2 => {
+                let arr: [u8; 2] = bytes.try_into().unwrap();
+                Ok(serde_json::json!(i16::from_le_bytes(arr)))
+            }
+            4 => {
+                let arr: [u8; 4] = bytes.try_into().unwrap();
+                Ok(serde_json::json!(i32::from_le_bytes(arr)))
+            }
+            8 => {
+                let arr: [u8; 8] = bytes.try_into().unwrap();
+                Ok(serde_json::json!(i64::from_le_bytes(arr)))
+            }
+            _ => Ok(serde_json::json!(crate::patch::document::hex(bytes))),
+        },
+        "ref" | "hash" => match size {
+            1 => Ok(serde_json::json!(bytes[0])),
+            2 => {
+                let arr: [u8; 2] = bytes.try_into().unwrap();
+                Ok(serde_json::json!(u16::from_le_bytes(arr)))
+            }
+            4 => {
+                let arr: [u8; 4] = bytes.try_into().unwrap();
+                Ok(serde_json::json!(u32::from_le_bytes(arr)))
+            }
+            8 => {
+                let arr: [u8; 8] = bytes.try_into().unwrap();
+                Ok(serde_json::json!(u64::from_le_bytes(arr)))
+            }
+            _ => Ok(serde_json::json!(crate::patch::document::hex(bytes))),
+        },
+        _ => {
+            if field.shape == "str" && size >= 4 {
+                let len = u32::from_le_bytes(bytes[0..4].try_into().unwrap()) as usize;
+                if 4 + len <= size {
+                    let s = String::from_utf8_lossy(&bytes[4..4 + len]);
+                    return Ok(Value::String(s.to_string()));
+                }
+            }
+            Ok(serde_json::json!(crate::patch::document::hex(bytes)))
+        }
+    }
+}

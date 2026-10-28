@@ -117,15 +117,79 @@ fn change(
 /// Why Pailune cannot carry out an intent of a newer format revision yet.
 fn unsupported(i: &Intent) -> Option<String> {
     let field = i.field.as_deref().unwrap_or_default();
-    match (&i.matches, field.contains(['[', '.'])) {
-        (Some(_), _) => Some(format!(
-            "{field}: choosing records by \"match\" (format 3.1) is not supported yet"
-        )),
-        (None, true) => Some(format!(
+    match field.contains(['[', '.']) {
+        true => Some(format!(
             "{field}: nested fields (format 3.1) are not supported yet"
         )),
-        (None, false) => None,
+        false => None,
     }
+}
+
+fn value_matches(actual: &Value, expected: &Value) -> bool {
+    if actual == expected {
+        return true;
+    }
+    match (actual, expected) {
+        (Value::Number(a), Value::Number(b)) => {
+            if let (Some(ai), Some(bi)) = (a.as_i64(), b.as_i64()) {
+                ai == bi
+            } else if let (Some(au), Some(bu)) = (a.as_u64(), b.as_u64()) {
+                au == bu
+            } else if let (Some(af), Some(bf)) = (a.as_f64(), b.as_f64()) {
+                (af - bf).abs() < 1e-6
+            } else {
+                false
+            }
+        }
+        (Value::Bool(a), Value::Bool(b)) => a == b,
+        (Value::String(a), Value::String(b)) => a == b,
+        (scalar, Value::Array(list)) => list.iter().any(|item| value_matches(scalar, item)),
+        _ => false,
+    }
+}
+
+fn filter_by_matches<'a>(
+    layout: &std::result::Result<&Table, String>,
+    body: &[u8],
+    records: &[&'a super::Record],
+    pattern: &Value,
+) -> std::result::Result<Vec<&'a super::Record>, String> {
+    let table = layout.as_ref().map_err(String::clone)?;
+    let Value::Object(predicates) = pattern else {
+        return Err("match predicate must be a JSON object".into());
+    };
+    let mut matched = Vec::new();
+    'record: for &r in records {
+        let payload = &body[r.payload..r.end];
+        let spans = super::spans(table, payload).ok_or("record does not match layout")?;
+        for (field_name, expected) in predicates {
+            if same_name(field_name, "key") {
+                if !value_matches(&Value::from(r.key), expected) {
+                    continue 'record;
+                }
+                continue;
+            }
+            if same_name(field_name, "name") || same_name(field_name, "entry") {
+                if !value_matches(&Value::String(r.name.clone()), expected) {
+                    continue 'record;
+                }
+                continue;
+            }
+            let index = table
+                .fields
+                .iter()
+                .position(|f| same_name(&f.name, field_name))
+                .ok_or_else(|| format!("{field_name}: no such field in {}", table.class))?;
+            let field = &table.fields[index];
+            let (start, end) = spans[index];
+            let actual = super::value::decode(field, &payload[start..end])?;
+            if !value_matches(&actual, expected) {
+                continue 'record;
+            }
+        }
+        matched.push(r);
+    }
+    Ok(matched)
 }
 
 /// Resolves intents for a table into changes; failures are explained.
@@ -162,28 +226,52 @@ pub fn resolve(
                 failed.push(why);
                 return (ok, failed);
             }
-            let candidates = match (i.key, i.entry.as_deref()) {
-                (Some(key), _) => by_key.get(&key),
-                (None, Some(name)) => by_name.get(name),
-                (None, None) => None,
+            let candidates: Vec<&super::Record> = match (i.key, i.entry.as_deref(), &i.matches) {
+                (Some(key), _, _) => by_key.get(&key).into_iter().flatten().copied().collect(),
+                (None, Some(name), _) => by_name.get(name).into_iter().flatten().copied().collect(),
+                (None, None, Some(_)) => all.iter().collect(),
+                (None, None, None) => Vec::new(),
             };
-            let found: Vec<&super::Record> = candidates
+            let mut found: Vec<&super::Record> = candidates
                 .into_iter()
-                .flatten()
-                .copied()
                 .filter(|r| i.entry.as_deref().is_none_or(|e| r.name == e))
                 .collect();
-            match found.as_slice() {
-                [one] => match change(&layout, body, one, i) {
-                    Ok(c) => ok.push(c),
-                    Err(why) => failed.push(why),
-                },
-                [] => failed.push(format!("record {:?} / key {:?} not found", i.entry, i.key)),
-                _ => failed.push(format!(
-                    "{:?}: {} records share this name; add its \"key\"",
-                    i.entry.as_deref().unwrap_or_default(),
-                    found.len()
-                )),
+            if let Some(pattern) = &i.matches {
+                match filter_by_matches(&layout, body, &found, pattern) {
+                    Ok(filtered) => found = filtered,
+                    Err(why) => {
+                        failed.push(why);
+                        return (ok, failed);
+                    }
+                }
+            }
+            if found.is_empty() {
+                if i.matches.is_some() {
+                    failed.push(format!("no records matched the predicate {:?}", i.matches.as_ref().unwrap()));
+                } else {
+                    failed.push(format!("record {:?} / key {:?} not found", i.entry, i.key));
+                }
+                return (ok, failed);
+            }
+            if i.matches.is_some() {
+                for r in found {
+                    match change(&layout, body, r, i) {
+                        Ok(c) => ok.push(c),
+                        Err(why) => failed.push(why),
+                    }
+                }
+            } else {
+                match found.as_slice() {
+                    [one] => match change(&layout, body, one, i) {
+                        Ok(c) => ok.push(c),
+                        Err(why) => failed.push(why),
+                    },
+                    _ => failed.push(format!(
+                        "{:?}: {} records share this name; add its \"key\"",
+                        i.entry.as_deref().unwrap_or_default(),
+                        found.len()
+                    )),
+                }
             }
             (ok, failed)
         })
