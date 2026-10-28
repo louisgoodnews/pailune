@@ -80,6 +80,36 @@ undo, conflicts, logs) works for them while they are being made.
    redeploy with one action. *(M)*
 5. **Package** — DLL/ASI, INI and readme as an installable mod. *(S)*
 
+## Phase 16 — Pailune Modding SDK (B-18)
+
+A standalone project generator and development kit for creating Crimson Desert mods from scratch:
+
+1. **Project Scaffolding (MCP & GUI)** — create new standalone ASI or JSON mod projects via GUI wizard
+   or MCP control protocol (`spawn_mod_project`). Asks for project name, target folder location,
+   mod type (ASI or JSON), and a description of its intended behavior. *(M)*
+2. **Bundled Libraries & Templates**:
+   - For ASI mods: C++ MinGW and Rust `cdylib` project skeletons (`Cargo.toml` / `Makefile`), loader
+     hooks, logging harness, and INI configuration parser.
+   - For JSON mods: format-3 schemas, target definition templates, and layout reference snippets. *(M)*
+3. **Integrated Markdown Documentation** — automatically generated `README.md`, `ARCHITECTURE.md`,
+   and table/hook reference docs inside the project folder explaining build instructions and engine
+   contracts. *(S)*
+4. **Mod Export Pipeline** — single-click/command export bundling the project into a validated,
+   staged Pailune mod and packaging a distributable release archive for Crimson Desert on Nexus. *(M)*
+
+## Phase 17 — Pre-Release Refinement & Polish
+
+1. **GUI Aesthetic Redesign** — cohesive styling, typography, responsive pane hierarchy, refined
+   visual badges, and accessibility pass. *(M)*
+2. **Final Pre-Release Code Refactoring** — performance profiling, memory footprint checks, and
+   code hygiene across engine and UI modules. *(M)*
+
+## Phase 18 — General Public Release
+
+- B-08 (step 2) Windows and macOS native deployment and packaging.
+- A-21 Register Pailune with Nexus Mods (AUP agreement) for public distribution.
+- Release tagging, AppImage and archive distribution.
+
 ## Owner tasks
 
 - A-21 Register Pailune with Nexus Mods (API acceptable use policy) before a public release.

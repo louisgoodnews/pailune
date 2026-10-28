@@ -23,6 +23,11 @@ Move a line between columns when its status changes.
 
 - [ ] B-16 JSON mod creation (steps 3–6): change from the browser → check against the game →
   test loop → package (roadmap phase 15) — *L*
+- [ ] B-18 Pailune Modding SDK (roadmap phase 16): project generator via CLI/MCP and GUI for
+  new ASI or JSON projects; scaffolding at target path with name/description; bundled libraries
+  and Markdown docs; export pipeline to Crimson Desert mod — *L*
+- [ ] Pre-release polish (roadmap phase 17): GUI aesthetic redesign and final pre-release
+  code refactoring — *M*
 - [ ] B-17 ASI mod creation (D-13), after B-16: research + decision record first, then templates,
   build/deploy, debug loop, packaging — *L*
 

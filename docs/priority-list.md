@@ -12,14 +12,15 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 |:---:|:---|:---|:---:|:---|
 | **P1** | **A-01** | **Format 3.1 Table Patches (Phase 1 `match` done; Phase 2 nested fields)** | **L** (phased) | Resolves active warnings and failed patch applications seen on popular mods (*Character Creator*). |
 | **P1** | **A-01** | **In-Game Test Batch 1 (Tests 2–4 Verification)** | **Owner** | Completes validation of table overlay patching in game (hunting, drops, coin crates). |
-| **P2** | **B-16** | **JSON Mod Creation: Steps 1 & 2 done; Step 3 Change Creator next** | **M** | Unlocks Pailune's primary differentiator as a modding tool; builds directly on proven table layouts. |
-| **P2** | **B-16** | **JSON Mod Creation: Change Creator & Dry Run (Steps 3–4)** | **S–M** | Enables safe, layout-verified patch generation directly against the user's installed game version. |
-| **P3** | **A-01** | **Compressed Type-1 `.pac` Meshes** | **M** | Decodes the remaining 2,914 compressed meshes in the archives for complete inspection & patching. |
-| **P3** | **B-07** | **Variable-Length Save Editing (Step 4)** | **L** | Extends the verified fixed-size save editor to add/remove inventory items and dynamic lists. |
+| **P2** | **B-16** | **JSON Mod Creation: Change from Browser & Dry Run (Steps 3–4)** | **S–M** | Completes interactive patch generation and verification directly against installed game data. |
+| **P3** | **B-18** | **Pailune Modding SDK (Scaffolding, Libs, Markdown Docs, Export)** | **L** (Phase 16) | Project generator via CLI/MCP and GUI for new ASI & JSON projects; bundles libs, docs, and mod export. |
+| **P4** | **A-01** | **Compressed Type-1 `.pac` Meshes** | **M** | Decodes the remaining 2,914 compressed meshes in the archives for complete inspection & patching. |
+| **P4** | **B-07** | **Variable-Length Save Editing (Step 4)** | **L** | Extends the verified fixed-size save editor to add/remove inventory items and dynamic lists. |
 | **P4** | **D-14** | **In-Place Route for Non-Overlay Game Files** | **M** | Already built and tested (`inplace::store`), ready to wire if dialogue audio/weapon XML mods require it. |
-| **P4** | **B-17** | **ASI Mod Creation: Research & Templates** | **Research / M** | Next step in Phase 15 after B-16; scaffolds native plugins with compiler toolchain & debug loop. |
-| **P5** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
-| **P5** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
+| **P4** | **B-17** | **ASI Mod Creation: Research & Templates** | **Research / M** | Scaffolds native ASI plugin development with compiler toolchain and debug loop. |
+| **P5** | **Polish** | **Pre-Release Polish: GUI Redesign & Final Code Refactoring** | **M** | Aesthetic redesign, typography, visual hierarchy, and performance/memory optimization pass. |
+| **P6** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
+| **P6** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
 
 ---
 
@@ -28,11 +29,97 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 ### Tier 1: Immediate & Compatibility (P1)
 
 #### 1. A-01 — Format 3.1 Table Patches (`match` record selector & nested fields)
-* **Status:** Backlog (`board.md`) / Encountered during deployment of *Character Creator*.
-* **Size:** *L* (can be phased into *M* for record lookup, *M* for nested array traversal).
+* **Status:** Phase 1 (`match` predicate evaluation) completed and verified; Phase 2 (nested field traversal & table rewriting) in Backlog.
+* **Size:** *L* (phased).
 * **Rationale:**
-  * Real-world mod deployments emit warnings and skip intended table adjustments because Pailune's format 3 parser currently rejects `matches` queries and nested field paths (`prefab_data_list[*].tribe_gender_list`).
-  * Supporting predicate-based record selection ensures compatibility with modern community patches that avoid hardcoded record indices.
+  * Predicate selection is now functional across tables. Phase 2 extends layout resolution to nested record arrays (`prefab_data_list[*].tribe_gender_list`) and table length rebuilds.
+* **Target Areas:**
+  * [`src/tables/format3.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/format3.rs): Nested field navigation and table re-indexing.
+
+#### 2. Owner Task — In-Game Test Batch 1 (Tests 2–4 Verification)
+* **Status:** Owner column in `board.md` (Test 1 Arrow Stacks confirmed; tests 2–4 pending).
+* **Size:** Owner validation.
+* **Rationale:**
+  * Re-verifies in-game that the per-table archive group architecture correctly injects multi-table modifications without engine side-effects.
+  * Validates hunting drops, drop rates, and crate coin rewards defined in [`local/test-mods/TESTING.md`](file:///home/louisgoodnews/Dokumente/pailune/local/test-mods/TESTING.md).
+
+---
+
+### Tier 2: Strategic Feature Driver — Phase 15 Modding Workbench (P2)
+
+#### 3. B-16 (Steps 3 & 4) — Change Creator from Data Browser & Game Dry-Run Verification
+* **Status:** In progress (Steps 1 & 2 completed).
+* **Size:** *S–M*.
+* **Rationale:**
+  * Allows a mod author browsing table records to select a verified field, input a modified value, and automatically generate a format-3 intent with matching original bytes into their active JSON mod.
+  * Dry-run checks against the installed game files to guarantee that patches apply cleanly without collisions.
+* **Target Areas:**
+  * [`src/ui/views/data_browser.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/ui/views/data_browser.rs): Context action to inject a field modification into the active JSON mod.
+  * [`src/patch/apply_safety.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/patch/apply_safety.rs): Dry-run validation against installed tables.
+
+---
+
+### Tier 3: Modding SDK — Pre-Release Tier (P3)
+
+#### 4. B-18 — Pailune Modding SDK (Phase 16)
+* **Status:** Scheduled pre-release SDK tier.
+* **Size:** *L*.
+* **Rationale:**
+  * Transforms Pailune into a complete mod development suite. Allows creators to spawn standalone mod projects (ASI or JSON) from the GUI or via the MCP control protocol (`spawn_mod_project`).
+  * Scaffolds the project folder at a user-chosen destination with project metadata, ready-to-build templates, bundled libraries (Rust `cdylib` or C++ MinGW for ASI; format-3 schemas for JSON), and generated Markdown documentation.
+  * Provides an integrated export command to build and package projects directly into ready-to-deploy Crimson Desert mods.
+* **Target Areas:**
+  * `src/sdk/`: Project scaffolding, template generation, and library bundling.
+  * `src/mcp/`: MCP protocol commands (`spawn_mod_project`, `export_mod_project`).
+  * `src/ui/views/`: Project creation dialog and export interface.
+
+---
+
+### Tier 4: Engine Completeness & Utility Depth (P4)
+
+#### 5. A-01 — Compressed Type-1 `.pac` Meshes
+* **Size:** *M*.
+* **Rationale:**
+  * Decodes the remaining 2,914 3D mesh assets stored in compressed type-1 containers.
+
+#### 6. B-07 (Step 4) — Variable-Length Save Editing
+* **Size:** *L*.
+* **Rationale:**
+  * Expands the verified save editor to support adding and removing inventory items and dynamic lists with table-of-contents recalculation.
+
+#### 7. D-14 — In-Place Route for Non-Overlay Game Files
+* **Size:** *M*.
+* **Rationale:**
+  * Pre-built machinery (`inplace::store`) ready for non-overlay audio or socket XML mods if needed.
+
+#### 8. B-17 — ASI Mod Scaffolding Toolkit
+* **Size:** *Research / M*.
+* **Rationale:**
+  * Scaffolds native ASI plugin development with compiler toolchain and debug loop.
+
+---
+
+### Tier 5: Pre-Release Polish (P5)
+
+#### 9. GUI Aesthetic Redesign & Pre-Release Refactoring (Phase 17)
+* **Size:** *M*.
+* **Rationale:**
+  * Complete aesthetic review: unified visual hierarchy, refined typography, responsive pane layout, consistent iconography, and WCAG AA contrast conformance.
+  * Comprehensive pre-release code refactoring, performance profiling, and memory footprint check.
+
+---
+
+### Tier 6: General Release & Distribution (P6)
+
+#### 10. B-08 (Step 2) — Windows & macOS Target Verification
+* **Size:** *L*.
+* **Rationale:**
+  * Cross-platform testing on real Windows and macOS machines, code signing, and macOS app bundling.
+
+#### 11. A-21 — Nexus Mods API Registration
+* **Size:** *Admin*.
+* **Rationale:**
+  * Formal API agreement with Nexus Mods prior to public general release.
 * **Target Areas:**
   * [`src/tables/format3.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/format3.rs): Implement predicate matching logic for `Intent::matches`.
   * [`src/tables/mod.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/mod.rs): Extend layout resolution to evaluate sub-records and nested array offsets.
