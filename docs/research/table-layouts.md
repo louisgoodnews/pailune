@@ -130,15 +130,18 @@ field name stays limited to verified layouts.
 2. **Semantic evidence** from values (e.g. arrows stack to 100), marked as inferred and never
    editable by name without (1).
 
-### `DropSetInfo` (shapes from data, names pending batch 1)
+### `DropSetInfo` (confirmed in-game in Batch 1)
 
-Header: `u8 _isBlocked, u8, u32, u32, hash, u32 count`, then `count` drop entries of 64 bytes
-(on the animal drop sets): `+0 u8 01, +1 u32 item key, +26 u32 rate (1 000 000 = 100 %),
-+42 u64 amount, +50 u64 amount, +58 ffff, +60 u32 item key`. Friendship drops use the same
-amounts for friendship points (Donate +50, Talk +5, Threat −200).
+Header: `u8 _isBlocked, u8, u32, u32, hash, u32 count` (14-byte header), then `count` drop entries of 64 bytes
+in `_dropInfoList`: `+0 u8 _entryType, +1 u32 _itemKey, +5 (21 bytes padding), +26 u32 _dropRate (1 000 000 = 100 %),
++30 (12 bytes padding), +42 u64 _minDropCount, +50 u64 _maxDropCount, +58 u16 (ffff), +60 u32 _itemKeyRef`.
+Confirmed in game across animal hunting yields (`DropSet_Middle_Animal_Common`, `DropSet_Small_Animal_Common`),
+fishing drops, and container rewards (`DropSet_BoxBarrel_01`, `DropSet_Pot_01`). Shipped in `data/table-layouts.json`
+with nested `list:struct` format-3 resolution (`_dropInfoList[*]._dropRate`, `_dropInfoList[0]._minDropCount`,
+`_dropInfoList[0]._maxDropCount`).
 
 ## Order of work
 
-Fixed-size tables first (done: phase 1), then the tables mods target most — `iteminfo`,
-`dropsetinfo`, `skill`, `storeinfo`, `characterinfo`, `buffinfo` — one at a time, each with its
+Fixed-size tables first (done: phase 1), then the tables mods target most — `iteminfo` (done: partial),
+`dropsetinfo` (done: partial), `skill`, `storeinfo`, `characterinfo`, `buffinfo` — one at a time, each with its
 own verification report.

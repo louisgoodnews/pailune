@@ -10,14 +10,24 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
-| **P1** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
+| **P1** | **Packaging** | **Linux Release Packaging (AppImage & Tarball)** | **S** | Pailune's primary platform is Linux; finalize binary release artifacts, AppImage bundling, and `.desktop` metadata. |
 | **P2** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
+| *Deferred* | *B-08* | *Windows & macOS Target Testing* | *L* | Optional / deferred until dedicated Windows/macOS test hardware is available. |
 
 ---
 
 ## Detailed Action Items & Rationales
 
 ### Completed Features
+
+#### A-01 — Table Schema Expansion (DropSetInfo)
+* **Status:** Completed & verified with automated tests.
+* **Size:** *M*.
+* **Implementation Summary:**
+  * Added `DropSetInfo` (`dropsetinfo`) to shipped [`data/table-layouts.json`](file:///home/louisgoodnews/Dokumente/pailune/data/table-layouts.json) with verified 14-byte header (`_isBlocked`, `_headerPadding`) and 64-byte `_dropInfoList` struct list.
+  * Mapped proven subfields: `_entryType` (u8), `_itemKey` (u32 ref), `_dropRate` (u32, 1,000,000 = 100%), `_minDropCount` (u64), and `_maxDropCount` (u64).
+  * Implemented structured `list:struct` and `struct` decoding in [`src/tables/value.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/value.rs) for human-readable JSON output in the Game Data Browser.
+  * Verified format-3 intent resolution (both indexed `_dropInfoList[0]` and wildcard `_dropInfoList[*]`) in [`src/tables/tests.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/tests.rs).
 
 #### Phase 17 — Pre-Release Polish: GUI Redesign & Final Code Refactoring
 * **Status:** Completed & verified with automated tests.

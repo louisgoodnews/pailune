@@ -9,13 +9,11 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
+- [ ] Linux release packaging (AppImage, standalone distribution tarball, `.desktop` entry & iconography) — *S*
 
 ## Backlog (large)
 
-- [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
-- [ ] A-01 format 3, phase 2: names for large tables. Shapes are derivable (ItemInfo prefix done),
-  names are not from data alone (message lists are incomplete). Next: in-game confirmation of the
-  most-modded fields with the owner (stack sizes, prices, drop rates, cooldowns) — *L*
+- [ ] B-08 (step 2) Windows/macOS: optional/deferred (owner has no Windows/macOS hardware; test on real installs, macOS app bundle with `nxm://` URL type) — *L*
 
 ## Owner
 
@@ -25,6 +23,10 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-01 format 3, phase 2: Table schema expansion (`DropSetInfo` in `data/table-layouts.json` and `src/tables/`).
+  Decodes 14-byte header and 64-byte `_dropInfoList` (`list:struct`) with verified subfields (`_entryType`,
+  `_itemKey`, `_dropRate` with 1,000,000 = 100%, `_minDropCount`, `_maxDropCount`). Supports wildcard (`[*]`)
+  and indexed (`[0]`) format-3 intent resolution and structured JSON decoding in the Game Data Browser.
 - [x] Pre-release polish (roadmap phase 17): GUI aesthetic redesign (typography, widget styling,
   badge appearance with soft tint fill and softened 5px radius, `card_frame` helper for consistent card/panel grouping
   in collections, profiles, and data browser, WCAG AA contrast conformance) and final pre-release code refactoring

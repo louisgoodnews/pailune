@@ -418,3 +418,141 @@ fn nested_fields_and_table_index_rewriting() {
     assert_eq!(new_idx.offsets[1], r2_start_in_body - 12);
     assert_eq!(patched_body.len(), body.len() - 12);
 }
+
+#[test]
+fn shipped_dropsetinfo_layout_resolves_and_modifies_rates_and_amounts() {
+    let table = table("dropsetinfo").expect("dropsetinfo layout exists in shipped table-layouts.json");
+    assert_eq!(table.class, "DropSetInfo");
+    assert_eq!(table.key_size, 4);
+    assert!(table.partial);
+
+    // Build Entry helper (64 bytes)
+    let make_entry = |item_key: u32, rate: u32, min_count: u64, max_count: u64| {
+        let mut entry = Vec::with_capacity(64);
+        entry.push(1u8); // _entryType
+        entry.extend_from_slice(&item_key.to_le_bytes()); // _itemKey (4 bytes)
+        entry.extend_from_slice(&[0u8; 21]); // _pad1 (21 bytes)
+        entry.extend_from_slice(&rate.to_le_bytes()); // _dropRate (4 bytes)
+        entry.extend_from_slice(&[0u8; 12]); // _pad2 (12 bytes)
+        entry.extend_from_slice(&min_count.to_le_bytes()); // _minDropCount (8 bytes)
+        entry.extend_from_slice(&max_count.to_le_bytes()); // _maxDropCount (8 bytes)
+        entry.extend_from_slice(&0xffffu16.to_le_bytes()); // _pad3 (2 bytes)
+        entry.extend_from_slice(&item_key.to_le_bytes()); // _itemKeyRef (4 bytes)
+        assert_eq!(entry.len(), 64);
+        entry
+    };
+
+    // Build Record 1 (key 1001, name "DropSet_Middle_Animal_Common")
+    let mut r1_payload = Vec::new();
+    r1_payload.push(0u8); // _isBlocked
+    r1_payload.extend_from_slice(&[0u8; 13]); // _headerPadding (13 bytes)
+    r1_payload.extend_from_slice(&2u32.to_le_bytes()); // _dropInfoList count = 2
+    r1_payload.extend_from_slice(&make_entry(5001, 100_000, 1, 2)); // Entry 0 (item 5001, 10% rate, 1..2)
+    r1_payload.extend_from_slice(&make_entry(5002, 50_000, 1, 3)); // Entry 1 (item 5002, 5% rate, 1..3)
+
+    // Build Record 2 (key 1002, name "DropSet_Pot_01")
+    let mut r2_payload = Vec::new();
+    r2_payload.push(0u8);
+    r2_payload.extend_from_slice(&[0u8; 13]);
+    r2_payload.extend_from_slice(&1u32.to_le_bytes()); // count = 1
+    r2_payload.extend_from_slice(&make_entry(5003, 150_000, 1, 1));
+
+    let mut body = Vec::new();
+    let mut header = vec![2u16.to_le_bytes()[0], 2u16.to_le_bytes()[1]]; // 2 records
+
+    // Record 1 in body
+    header.extend_from_slice(&1001u32.to_le_bytes());
+    header.extend_from_slice(&(body.len() as u32).to_le_bytes());
+    body.extend_from_slice(&1001u32.to_le_bytes());
+    let r1_name = b"DropSet_Middle_Animal_Common";
+    body.extend_from_slice(&(r1_name.len() as u32).to_le_bytes());
+    body.extend_from_slice(r1_name);
+    body.extend_from_slice(&r1_payload);
+
+    // Record 2 in body
+    header.extend_from_slice(&1002u32.to_le_bytes());
+    let r2_start = body.len() as u32;
+    header.extend_from_slice(&r2_start.to_le_bytes());
+    body.extend_from_slice(&1002u32.to_le_bytes());
+    let r2_name = b"DropSet_Pot_01";
+    body.extend_from_slice(&(r2_name.len() as u32).to_le_bytes());
+    body.extend_from_slice(r2_name);
+    body.extend_from_slice(&r2_payload);
+
+    // Verify spans fit
+    let spans1 = spans(table, &r1_payload).expect("r1 spans match dropsetinfo layout");
+    assert_eq!(spans1.len(), 3); // _isBlocked, _headerPadding, _dropInfoList
+
+    // Test format3 resolve with wildcards and specific indices:
+    // 1. Set all drop rates to 100% (1_000_000) on DropSet_Middle_Animal_Common (batch 1 test 3)
+    // 2. Set min and max drop count on entry 0 to 30 (batch 1 test 2)
+    let intents = vec![
+        Intent {
+            entry: Some("DropSet_Middle_Animal_Common".into()),
+            key: None,
+            field: Some("_dropInfoList[*]._dropRate".into()),
+            op: "set".into(),
+            new: serde_json::json!(1_000_000),
+            old: None,
+            matches: None,
+        },
+        Intent {
+            entry: Some("DropSet_Middle_Animal_Common".into()),
+            key: None,
+            field: Some("_dropInfoList[0]._minDropCount".into()),
+            op: "set".into(),
+            new: serde_json::json!(30),
+            old: None,
+            matches: None,
+        },
+        Intent {
+            entry: Some("DropSet_Middle_Animal_Common".into()),
+            key: None,
+            field: Some("_dropInfoList[0]._maxDropCount".into()),
+            op: "set".into(),
+            new: serde_json::json!(30),
+            old: None,
+            matches: None,
+        },
+    ];
+
+    let (changes, failed) = resolve("dropsetinfo.staticinfobody", &header, &body, &intents);
+    assert!(failed.is_empty(), "{failed:?}");
+    assert_eq!(changes.len(), 4); // 2 rates + 1 min count + 1 max count
+
+    // Apply patch over body
+    let patch = crate::patch::FilePatch {
+        game_file: "dropsetinfo.staticinfobody".into(),
+        signature: None,
+        changes,
+        fields: Vec::new(),
+    };
+    let mut patched_body = body.clone();
+    let report = crate::patch::apply::apply_over(&mut patched_body, &patch, Some(&header), true, false, None);
+    assert_eq!(report.applied, 4);
+    assert!(report.failed.is_empty(), "{:?}", report.failed);
+
+    // Inspect patched record to verify values
+    let all_recs = records(&header, &patched_body).unwrap();
+    let inspected = browser::inspect_record("dropsetinfo", &all_recs[0], &patched_body);
+    assert_eq!(inspected.name, "DropSet_Middle_Animal_Common");
+    assert_eq!(inspected.fields.len(), 3);
+
+    // _dropInfoList field is decoded into JSON
+    let list_field = &inspected.fields[2];
+    assert_eq!(list_field.name, "_dropInfoList");
+    let parsed_json: serde_json::Value = serde_json::from_str(&list_field.value)
+        .expect("list:struct value decodes to valid JSON");
+    assert_eq!(parsed_json.as_array().unwrap().len(), 2);
+
+    let elem0 = &parsed_json.as_array().unwrap()[0];
+    assert_eq!(elem0["_dropRate"], 1_000_000);
+    assert_eq!(elem0["_minDropCount"], 30);
+    assert_eq!(elem0["_maxDropCount"], 30);
+    assert_eq!(elem0["_itemKey"], 5001);
+
+    let elem1 = &parsed_json.as_array().unwrap()[1];
+    assert_eq!(elem1["_dropRate"], 1_000_000);
+    assert_eq!(elem1["_minDropCount"], 1);
+    assert_eq!(elem1["_maxDropCount"], 3);
+}

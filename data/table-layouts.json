@@ -402,6 +402,101 @@
     }
    ]
   },
+  "dropsetinfo": {
+   "class": "DropSetInfo",
+   "key_size": 4,
+   "records": 128,
+   "partial": true,
+   "evidence": "In-game test batch 1 confirmed: +26 drop rate (1,000,000 = 100%), +42 min drop amount, +50 max drop amount on DropInfoData (64 bytes); header starts with _isBlocked and 13 bytes prefix before drop list",
+   "fields": [
+    {
+     "name": "_isBlocked",
+     "shape": "fixed:1",
+     "meaning": "bool",
+     "offset": "proven",
+     "name_certain": true
+    },
+    {
+     "name": "_headerPadding",
+     "shape": "fixed:13",
+     "meaning": "raw",
+     "offset": "proven",
+     "name_certain": false
+    },
+    {
+     "name": "_dropInfoList",
+     "shape": "list:struct",
+     "meaning": "list",
+     "offset": "proven",
+     "name_certain": true,
+     "subfields": [
+      {
+       "name": "_entryType",
+       "shape": "fixed:1",
+       "meaning": "int",
+       "offset": "proven",
+       "name_certain": false
+      },
+      {
+       "name": "_itemKey",
+       "shape": "fixed:4",
+       "meaning": "ref",
+       "offset": "proven",
+       "name_certain": true
+      },
+      {
+       "name": "_pad1",
+       "shape": "fixed:21",
+       "meaning": "raw",
+       "offset": "proven",
+       "name_certain": false
+      },
+      {
+       "name": "_dropRate",
+       "shape": "fixed:4",
+       "meaning": "int",
+       "offset": "proven",
+       "name_certain": true
+      },
+      {
+       "name": "_pad2",
+       "shape": "fixed:12",
+       "meaning": "raw",
+       "offset": "proven",
+       "name_certain": false
+      },
+      {
+       "name": "_minDropCount",
+       "shape": "fixed:8",
+       "meaning": "int",
+       "offset": "proven",
+       "name_certain": true
+      },
+      {
+       "name": "_maxDropCount",
+       "shape": "fixed:8",
+       "meaning": "int",
+       "offset": "proven",
+       "name_certain": true
+      },
+      {
+       "name": "_pad3",
+       "shape": "fixed:2",
+       "meaning": "raw",
+       "offset": "proven",
+       "name_certain": false
+      },
+      {
+       "name": "_itemKeyRef",
+       "shape": "fixed:4",
+       "meaning": "ref",
+       "offset": "proven",
+       "name_certain": false
+      }
+     ]
+    }
+   ]
+  },
   "gameplayvariableinfo": {
    "class": "GamePlayVariableInfo",
    "key_size": 4,

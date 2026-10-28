@@ -95,6 +95,44 @@ pub fn encode(field: &Field, size: usize, new: &Value) -> std::result::Result<Ve
 /// Decodes field bytes into a JSON value based on the field's meaning and shape.
 pub fn decode(field: &Field, bytes: &[u8]) -> std::result::Result<Value, String> {
     let size = bytes.len();
+
+    if field.shape == "list:struct" && size >= 4 {
+        let count = u32::from_le_bytes(bytes[0..4].try_into().unwrap()) as usize;
+        let mut pos = 4;
+        let mut items = Vec::with_capacity(count);
+        for _ in 0..count {
+            let mut obj = serde_json::Map::new();
+            for sub in &field.subfields {
+                let sub_end = super::skip_field(sub, bytes, pos).unwrap_or(pos);
+                if sub_end <= bytes.len() && sub_end >= pos {
+                    let sub_val = decode(sub, &bytes[pos..sub_end]).unwrap_or_else(|_| {
+                        serde_json::json!(crate::patch::document::hex(&bytes[pos..sub_end]))
+                    });
+                    obj.insert(sub.name.clone(), sub_val);
+                    pos = sub_end;
+                }
+            }
+            items.push(Value::Object(obj));
+        }
+        return Ok(Value::Array(items));
+    }
+
+    if field.shape == "struct" {
+        let mut pos = 0;
+        let mut obj = serde_json::Map::new();
+        for sub in &field.subfields {
+            let sub_end = super::skip_field(sub, bytes, pos).unwrap_or(pos);
+            if sub_end <= bytes.len() && sub_end >= pos {
+                let sub_val = decode(sub, &bytes[pos..sub_end]).unwrap_or_else(|_| {
+                    serde_json::json!(crate::patch::document::hex(&bytes[pos..sub_end]))
+                });
+                obj.insert(sub.name.clone(), sub_val);
+                pos = sub_end;
+            }
+        }
+        return Ok(Value::Object(obj));
+    }
+
     match field.meaning.as_str() {
         "bool" if size == 1 => Ok(Value::Bool(bytes[0] != 0)),
         "float" if size == 4 => {
