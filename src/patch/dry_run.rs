@@ -23,6 +23,14 @@ pub enum DryRunStatus {
     Skipped(String),
 }
 
+/// Suggestion to update a format-2 change's relative offset when original bytes moved.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RebaseSuggestion {
+    pub entry_name: String,
+    pub old_offset: u64,
+    pub new_offset: u64,
+}
+
 /// Verification results for a single game file patch.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PatchDryRun {
@@ -30,6 +38,7 @@ pub struct PatchDryRun {
     pub file_found: bool,
     pub changes: Vec<DryRunStatus>,
     pub intents: Vec<DryRunStatus>,
+    pub rebases: std::collections::HashMap<usize, RebaseSuggestion>,
 }
 
 /// Verification results for an entire JSON mod.
@@ -104,9 +113,10 @@ pub fn check_patch_data(
 
     // 2. Check format-2 byte patches
     let mut changes = Vec::with_capacity(patch.changes.len());
+    let mut rebases = std::collections::HashMap::new();
     let frame = Frame::of(data, patch, header);
 
-    for change in &patch.changes {
+    for (c, change) in patch.changes.iter().enumerate() {
         let Some(ref f) = frame else {
             changes.push(DryRunStatus::Failed("Anchor signature not found in file".into()));
             continue;
@@ -155,9 +165,42 @@ pub fn check_patch_data(
 
                 if let Some(orig) = original {
                     if data.get(at..end) != Some(orig.as_slice()) {
-                        changes.push(DryRunStatus::Failed(
-                            "Original bytes do not match installed game data".into(),
-                        ));
+                        // Check if bytes moved within this record
+                        let mut found_rebase = None;
+                        if let Anchor::Entry { ref name, rel_offset } = change.anchor {
+                            if let Some(ref anchors) = f.anchors {
+                                if let Some(&name_at) = anchors.get(name) {
+                                    let search_end = (name_at + 16384).min(data.len());
+                                    if search_end > name_at {
+                                        let slice = &data[name_at..search_end];
+                                        if let Some(pos) = slice
+                                            .windows(orig.len())
+                                            .position(|w| w == orig.as_slice())
+                                        {
+                                            if (pos as u64) != rel_offset {
+                                                found_rebase = Some(RebaseSuggestion {
+                                                    entry_name: name.clone(),
+                                                    old_offset: rel_offset,
+                                                    new_offset: pos as u64,
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if let Some(sug) = found_rebase {
+                            rebases.insert(c, sug.clone());
+                            changes.push(DryRunStatus::Failed(format!(
+                                "Original bytes moved to +{} (was +{})",
+                                sug.new_offset, sug.old_offset
+                            )));
+                        } else {
+                            changes.push(DryRunStatus::Failed(
+                                "Original bytes do not match installed game data".into(),
+                            ));
+                        }
                         continue;
                     }
                 }
@@ -177,6 +220,7 @@ pub fn check_patch_data(
         file_found: true,
         changes,
         intents,
+        rebases,
     }
 }
 
@@ -216,6 +260,7 @@ pub fn check_mod(game_dir: &Path, json_mod: &JsonMod) -> ModDryRun {
                     DryRunStatus::Skipped("Game file not found in archives or game folder".into());
                     patch.fields.len()
                 ],
+                rebases: std::collections::HashMap::new(),
             }
         };
 

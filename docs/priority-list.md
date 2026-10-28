@@ -12,9 +12,8 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 |:---:|:---|:---|:---:|:---|
 | **P1** | **A-01** | **Format 3.1 Table Patches (Phase 1 `match` done; Phase 2 nested fields)** | **L** (phased) | Resolves active warnings and failed patch applications seen on popular mods (*Character Creator*). |
 | **P1** | **A-01** | **In-Game Test Batch 1 (Tests 2–4 Verification)** | **Owner** | Completes validation of table overlay patching in game (hunting, drops, coin crates). |
-| **P2** | **B-16** | **JSON Mod Creation: Test Loop & Nexus Packaging (Steps 5–6)** | **M** | Enables rapid in-editor test loop (apply & rebase) and one-click packaging for Nexus upload. |
-| **P3** | **B-18** | **Pailune Modding SDK (Scaffolding, Libs, Markdown Docs, Export)** | **L** (Phase 16) | Project generator via CLI/MCP and GUI for new ASI & JSON projects; bundles libs, docs, and mod export. |
-| **P4** | **A-01** | **Compressed Type-1 `.pac` Meshes** | **M** | Decodes the remaining 2,914 compressed meshes in the archives for complete inspection & patching. |
+| **P2** | **B-18** | **Pailune Modding SDK (Scaffolding, Libs, Markdown Docs, Export)** | **L** (Phase 16) | Project generator via CLI/MCP and GUI for new ASI & JSON projects; bundles libs, docs, and mod export. |
+| **P3** | **A-01** | **Compressed Type-1 `.pac` Meshes** | **M** | Decodes the remaining 2,914 compressed meshes in the archives for complete inspection & patching. |
 | **P4** | **B-07** | **Variable-Length Save Editing (Step 4)** | **L** | Extends the verified fixed-size save editor to add/remove inventory items and dynamic lists. |
 | **P4** | **D-14** | **In-Place Route for Non-Overlay Game Files** | **M** | Already built and tested (`inplace::store`), ready to wire if dialogue audio/weapon XML mods require it. |
 | **P4** | **B-17** | **ASI Mod Creation: Research & Templates** | **Research / M** | Scaffolds native ASI plugin development with compiler toolchain and debug loop. |
@@ -45,23 +44,9 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 ---
 
-### Tier 2: Strategic Feature Driver — Phase 15 Modding Workbench (P2)
+### Tier 2: Modding SDK — Pre-Release Tier (P2)
 
-#### 3. B-16 (Steps 5 & 6) — Test Loop & Nexus Packaging
-* **Status:** Steps 1–4 completed (`CreateMod` wizard, Data Browser, interactive change injection, dry-run verification against installed game data); Steps 5 & 6 open.
-* **Size:** *M*.
-* **Rationale:**
-  * Enables mod authors to test their created JSON mods immediately from the editor (enable, Apply, launch) and re-check / rebase offsets following game updates.
-  * Provides one-click zip packaging with auto-generated `modinfo`, readme, and version bumping ready for Nexus Mods upload.
-* **Target Areas:**
-  * [`src/ui/views/json_editor/mod.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/ui/views/json_editor/mod.rs): In-editor test & deploy controls.
-  * `src/ui/actions/package.rs`: Archive packaging and metadata generation.
-
----
-
-### Tier 3: Modding SDK — Pre-Release Tier (P3)
-
-#### 4. B-18 — Pailune Modding SDK (Phase 16)
+#### 3. B-18 — Pailune Modding SDK (Phase 16)
 * **Status:** Scheduled pre-release SDK tier.
 * **Size:** *L*.
 * **Rationale:**

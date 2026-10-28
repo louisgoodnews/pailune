@@ -103,6 +103,92 @@ impl PailuneApp {
                     format!("Created mod '{clean_name}'"),
                 )))
             }
+            ModAction::PackageModPrompt(name) => {
+                let mod_dir = self.paths.staging.join(&name);
+                let mut author = String::new();
+                let mut version = "1.0".to_string();
+                let mut description = String::new();
+
+                let modinfo_path = mod_dir.join("modinfo.json");
+                if let Ok(text) = std::fs::read_to_string(&modinfo_path) {
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
+                        if let Some(a) = val.get("author").and_then(|v| v.as_str()) {
+                            author = a.to_string();
+                        }
+                        if let Some(v) = val.get("version").and_then(|v| v.as_str()) {
+                            version = v.to_string();
+                        }
+                        if let Some(d) = val.get("description").and_then(|v| v.as_str()) {
+                            description = d.to_string();
+                        }
+                    }
+                } else if let Ok(entries) = std::fs::read_dir(&mod_dir) {
+                    for entry in entries.flatten() {
+                        let p = entry.path();
+                        if p.extension().is_some_and(|e| e == "json") {
+                            if let Ok(text) = std::fs::read_to_string(&p) {
+                                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
+                                    if let Some(info) = val.get("modinfo") {
+                                        if let Some(a) = info.get("author").and_then(|v| v.as_str()) {
+                                            author = a.to_string();
+                                        }
+                                        if let Some(v) = info.get("version").and_then(|v| v.as_str()) {
+                                            version = v.to_string();
+                                        }
+                                        if let Some(d) = info.get("description").and_then(|v| v.as_str()) {
+                                            description = d.to_string();
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                let bumped_version = crate::mod_engine::package::bump_version_string(&version);
+                self.mods.package_mod = Some(crate::mod_engine::package::PackageMetadata {
+                    name,
+                    author,
+                    version: bumped_version,
+                    description,
+                    bump_version: true,
+                });
+                Ok(None)
+            }
+            ModAction::ClosePackageMod => {
+                self.mods.package_mod = None;
+                Ok(None)
+            }
+            ModAction::PackageMod(meta) => {
+                let exports_dir = self.paths.exports.clone();
+                let res = crate::mod_engine::package::package_mod(
+                    &self.paths.staging,
+                    &meta.name,
+                    &exports_dir,
+                    &meta,
+                )?;
+                self.mods.package_mod = None;
+                let size_kb = (res.total_bytes / 1024).max(1);
+                let archive_name = res
+                    .archive_path
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string();
+                self.notices.push(
+                    Level::Success,
+                    "Mod Packaged",
+                    &format!(
+                        "Created archive: exports/{archive_name} ({} file(s), {size_kb} KB)",
+                        res.file_count,
+                    ),
+                );
+                Ok(Some(StatusLine::new(
+                    Level::Success,
+                    format!("Packaged mod '{}' as exports/{archive_name}", meta.name),
+                )))
+            }
             ModAction::ImportFolder => Ok(Some(
                 self.import(rfd::FileDialog::new().pick_folder().into_iter().collect()),
             )),

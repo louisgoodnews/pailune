@@ -75,22 +75,23 @@ fn summary(
     }
 }
 
-/// Save, Revert and Format; Save needs a document Apply can read.
+/// Save, Revert, Format, Test Loop and Packaging controls.
 fn buttons(
     ui: &mut egui::Ui,
     draft: &mut Draft,
     saved: &str,
     valid: bool,
     path: &Path,
-) -> Option<Action> {
+    entry: &ModEntry,
+) -> Vec<Action> {
     let changed = draft.text != saved;
-    let mut action = None;
+    let mut actions = Vec::new();
     ui.horizontal(|ui| {
         let save = ui
             .add_enabled(changed && valid, egui::Button::new("💾 Save"))
             .on_disabled_hover_text("Nothing changed, or the file has an error");
         if save.clicked() {
-            action = Some(Action::Mod(ModAction::SaveModFile(
+            actions.push(Action::Mod(ModAction::SaveModFile(
                 path.to_path_buf(),
                 draft.text.clone(),
             )));
@@ -117,12 +118,60 @@ fn buttons(
             .on_hover_text("Open the Game Data Browser to inspect vanilla table records")
             .clicked()
         {
-            action = Some(Action::SwitchTab(crate::ui::Tab::DataBrowser));
+            actions.push(Action::SwitchTab(crate::ui::Tab::DataBrowser));
         }
+
+        ui.separator();
+        // In-editor test loop
+        if ui
+            .button("⚡ Apply")
+            .on_hover_text("Save, enable mod, and apply changes to game overlay")
+            .clicked()
+        {
+            if changed && valid {
+                actions.push(Action::Mod(ModAction::SaveModFile(
+                    path.to_path_buf(),
+                    draft.text.clone(),
+                )));
+                draft.base = draft.text.clone();
+            }
+            if !entry.enabled {
+                actions.push(Action::Mod(ModAction::SetEnabled(entry.name.clone(), true)));
+            }
+            actions.push(Action::Deploy(crate::ui::DeployAction::Apply));
+        }
+
+        if ui
+            .button(RichText::new("▶ Test").strong())
+            .on_hover_text("Apply changes and launch the game directly")
+            .clicked()
+        {
+            if changed && valid {
+                actions.push(Action::Mod(ModAction::SaveModFile(
+                    path.to_path_buf(),
+                    draft.text.clone(),
+                )));
+                draft.base = draft.text.clone();
+            }
+            if !entry.enabled {
+                actions.push(Action::Mod(ModAction::SetEnabled(entry.name.clone(), true)));
+            }
+            actions.push(Action::Deploy(crate::ui::DeployAction::Launch));
+        }
+
+        if ui
+            .button("📦 Package")
+            .on_hover_text("Package mod into a zip archive with modinfo.json for Nexus upload")
+            .clicked()
+        {
+            actions.push(Action::Mod(ModAction::PackageModPrompt(entry.name.clone())));
+        }
+
+        ui.separator();
         ui.selectable_value(&mut draft.raw, false, "Changes");
         ui.selectable_value(&mut draft.raw, true, "Raw JSON");
     });
-    action
+    actions
 }
 
 /// One JSON file: summary, table or raw text, and the buttons. The file is
@@ -133,9 +182,10 @@ fn editor(
     rel: &Path,
     only: bool,
     game_dir: Option<&Path>,
-) -> Option<Action> {
+    entry: &ModEntry,
+) -> Vec<Action> {
     let id = egui::Id::unique(("pailune_json", path));
-    let mut action = None;
+    let mut actions = Vec::new();
     egui::CollapsingHeader::new(rel.display().to_string())
         .id_salt(id)
         .default_open(only)
@@ -162,7 +212,7 @@ fn editor(
                 };
             }
             summary(ui, &checked, draft.dry_run.as_ref());
-            action = buttons(ui, &mut draft, &saved, checked.is_ok(), path);
+            actions.extend(buttons(ui, &mut draft, &saved, checked.is_ok(), path, entry));
             match (&checked, draft.raw) {
                 (Ok(json), false) => {
                     changes::show(ui, id, &mut draft.text, json, draft.dry_run.as_ref())
@@ -181,7 +231,7 @@ fn editor(
             }
             ui.data_mut(|d| d.insert_temp(id, draft));
         });
-    action
+    actions
 }
 
 /// The JSON patch files among the mod's (already listed) files.
@@ -218,6 +268,6 @@ pub fn show(
     );
     files
         .iter()
-        .filter_map(|rel| editor(ui, &root.join(rel), rel, files.len() == 1, game_dir))
+        .flat_map(|rel| editor(ui, &root.join(rel), rel, files.len() == 1, game_dir, entry))
         .collect()
 }

@@ -24,6 +24,8 @@ pub struct DataPaths {
     pub backups: PathBuf,
     /// Backups of the game's save files.
     pub save_backups: PathBuf,
+    /// Packaged mod distribution archives ready for upload/sharing.
+    pub exports: PathBuf,
     /// Rolling application log files.
     pub logs: PathBuf,
     /// One log file per mod.
@@ -48,6 +50,7 @@ impl DataPaths {
             trash: data.join("trash"),
             backups: data.join("backups"),
             save_backups: data.join("save-backups"),
+            exports: data.join("exports"),
             logs: data.join("logs"),
             mod_logs: data.join("logs").join("mods"),
             nexus_key: data.join("nexus_api_key"),
@@ -58,7 +61,7 @@ impl DataPaths {
 
     /// Creates every directory in the layout.
     pub fn create_dirs(&self) -> Result<()> {
-        [&self.staging, &self.downloads, &self.mod_logs]
+        [&self.staging, &self.downloads, &self.mod_logs, &self.exports]
             .into_iter()
             .try_for_each(|dir| fs::create_dir_all(dir).at(dir))
     }

@@ -6,7 +6,7 @@ use crate::patch::document::{self, Slot};
 use crate::patch::dry_run::DryRunStatus;
 use crate::patch::{Anchor, Change, Edit, JsonMod};
 use crate::tables::format3::Intent;
-use crate::ui::theme::{danger, muted, success};
+use crate::ui::theme::{accent, danger, muted, success};
 use eframe::egui::{self, RichText, TextStyle};
 use serde_json::Value;
 
@@ -97,15 +97,41 @@ fn write_number(ui: &mut egui::Ui, text: &mut String, slot: Slot, typed: &str, l
 
 /// One byte-patch row: what and where, the original value, the new value
 /// as a number (when the bytes are one) and as hex.
+#[allow(clippy::too_many_arguments)]
 fn change_row(
     ui: &mut egui::Ui,
     id: egui::Id,
     text: &mut String,
     slot: Slot,
+    patch_idx: usize,
+    change_idx: usize,
     change: &Change,
     status: Option<&DryRunStatus>,
+    rebase: Option<&crate::patch::dry_run::RebaseSuggestion>,
 ) {
-    status_icon(ui, status);
+    ui.horizontal(|ui| {
+        status_icon(ui, status);
+        if let Some(sug) = rebase {
+            if ui
+                .button(
+                    RichText::new(format!("⚡ Rebase +{}", sug.new_offset))
+                        .color(accent())
+                        .small(),
+                )
+                .on_hover_text(format!(
+                    "Update offset from +{} to +{} matching the current game table",
+                    sug.old_offset, sug.new_offset
+                ))
+                .clicked()
+            {
+                if let Ok(updated) =
+                    document::rebase_offset(text, patch_idx, change_idx, sug.new_offset)
+                {
+                    *text = updated;
+                }
+            }
+        }
+    });
     let (original, patched) = match &change.edit {
         Edit::Replace { original, patched } => (original.as_deref(), patched),
         Edit::Insert { bytes } => (None, bytes),
@@ -199,7 +225,8 @@ pub fn show(
                         change: c,
                     };
                     let status = pdr.and_then(|d| d.changes.get(c));
-                    change_row(ui, id.with((p, c)), text, slot, change, status);
+                    let rebase = pdr.and_then(|d| d.rebases.get(&c));
+                    change_row(ui, id.with((p, c)), text, slot, p, c, change, status, rebase);
                 });
                 patch.fields.iter().enumerate().for_each(|(i, intent)| {
                     let slot = Slot::Intent {

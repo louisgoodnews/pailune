@@ -21,7 +21,6 @@ Move a line between columns when its status changes.
   "Equip All Armor"; needs the full ItemInfo layout first — *L*
 - [ ] A-01 compressed type-1 `.pac` meshes (2 914 in the game): decode for reading and patching — *M*
 
-- [ ] B-16 JSON mod creation (steps 5–6): test loop (apply & rebase) → package for Nexus (roadmap phase 15) — *M*
 - [ ] B-18 Pailune Modding SDK (roadmap phase 16): project generator via CLI/MCP and GUI for
   new ASI or JSON projects; scaffolding at target path with name/description; bundled libraries
   and Markdown docs; export pipeline to Crimson Desert mod — *L*
@@ -49,6 +48,11 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-16 JSON mod creation (steps 5–6: test loop & Nexus packaging): in-editor test loop
+  (`⚡ Apply`, `▶ Test (Apply & Launch)`), automatic table-version offset shift detection with
+  one-click rebase (`document::rebase_offset`), and one-click packaging modal generating
+  installable distribution `.zip` archives with auto-bumped `modinfo.json` and generated
+  `README.md` (`src/mod_engine/package.rs`, `src/ui/views/package_mod.rs`, `src/ui/views/json_editor/`).
 - [x] B-16 JSON mod creation (step 4: check against the game / dry run): live verification of format-2
   byte patches and format-3 field intents against installed game data; checks table record/field
   presence, original byte matches, table length preservation, and overlaps; rendered per-change with

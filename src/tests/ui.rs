@@ -409,3 +409,104 @@ fn dry_run_verifies_intents_and_detects_errors() {
     assert_eq!(res_err.intents.len(), 1);
     assert!(matches!(res_err.intents[0], DryRunStatus::Failed(_)));
 }
+
+#[test]
+fn package_mod_action_creates_distribution_archive() {
+    let fx = fixture();
+    let mut app = app(&fx);
+
+    // 1. Create a staged JSON mod
+    app.dispatch(Action::Mod(crate::ui::ModAction::CreateMod {
+        name: "QuickLoot".into(),
+        author: "Dev".into(),
+        version: "1.0".into(),
+        description: "Loot faster".into(),
+    }));
+
+    // 2. Trigger PackageModPrompt
+    app.dispatch(Action::Mod(crate::ui::ModAction::PackageModPrompt("QuickLoot".into())));
+    let draft = app.mods.package_mod.as_ref().expect("package draft");
+    assert_eq!(draft.name, "QuickLoot");
+    assert_eq!(draft.author, "Dev");
+    assert_eq!(draft.version, "1.1"); // Auto-bumped
+
+    // 3. Trigger PackageMod
+    let meta = draft.clone();
+    app.dispatch(Action::Mod(crate::ui::ModAction::PackageMod(meta)));
+    assert!(app.mods.package_mod.is_none());
+
+    // 4. Verify distribution archive in exports/
+    let zip_path = app.paths.exports.join("QuickLoot-v1.1.zip");
+    assert!(zip_path.exists());
+    assert!(fs::metadata(&zip_path).unwrap().len() > 0);
+}
+
+#[test]
+fn rebase_format2_offset_after_table_move() {
+    use crate::patch::dry_run::{DryRunStatus, check_patch_data};
+    use crate::patch::{Anchor, Change, Edit, FilePatch};
+
+    // Body with entry "Potion" followed by payload: 0xaa, 0xbb at offset +4 instead of +0
+    let key = 10u16;
+    let name = "Potion";
+    let payload = vec![0x00, 0x00, 0x00, 0x00, 0xaa, 0xbb]; // bytes moved 4 bytes ahead!
+
+    let body = [
+        &key.to_le_bytes()[..],
+        &(name.len() as u32).to_le_bytes(),
+        name.as_bytes(),
+        &payload,
+    ]
+    .concat();
+
+    let header = [
+        &1u16.to_le_bytes()[..],
+        &key.to_le_bytes(),
+        &0u32.to_le_bytes(),
+    ]
+    .concat();
+
+    // Patch assumed rel_offset was 0
+    let patch = FilePatch {
+        game_file: "test.staticinfobody".into(),
+        signature: None,
+        changes: vec![Change {
+            anchor: Anchor::Entry {
+                name: "Potion".into(),
+                rel_offset: 0,
+            },
+            edit: Edit::Replace {
+                original: Some(vec![0xaa, 0xbb]),
+                patched: vec![0x11, 0x22],
+            },
+            label: "potion effect".into(),
+        }],
+        fields: Vec::new(),
+    };
+
+    let res = check_patch_data(&patch, Some(&header), &body, true);
+    assert_eq!(res.changes.len(), 1);
+    assert!(matches!(res.changes[0], DryRunStatus::Failed(_)));
+    // Should detect rebase suggestion at +4
+    let sug = res.rebases.get(&0).expect("rebase suggestion");
+    assert_eq!(sug.entry_name, "Potion");
+    assert_eq!(sug.old_offset, 0);
+    assert_eq!(sug.new_offset, 4);
+
+    // Apply rebase rewrite
+    let original_json = r#"{
+      "format": 2,
+      "patches": [{
+        "game_file": "test.staticinfobody",
+        "changes": [{
+          "entry": "Potion",
+          "rel_offset": 0,
+          "original": "aabb",
+          "patched": "1122"
+        }]
+      }]
+    }"#;
+
+    let rebased_json = crate::patch::document::rebase_offset(original_json, 0, 0, sug.new_offset).unwrap();
+    assert!(rebased_json.contains("\"rel_offset\": 4"));
+}

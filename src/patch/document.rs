@@ -66,6 +66,25 @@ pub fn set(text: &str, slot: Slot, value: Value) -> Result<String, String> {
     Ok(pretty(&root))
 }
 
+/// Updates the relative offset of a format-2 change in a JSON patch document.
+pub fn rebase_offset(text: &str, patch: usize, change: usize, new_offset: u64) -> Result<String, String> {
+    let mut root: Value =
+        serde_json::from_str(text.trim_start_matches('\u{feff}')).map_err(|err| err.to_string())?;
+    let change_obj = root
+        .get_mut("patches")
+        .and_then(|p| p.get_mut(patch))
+        .and_then(|p| p.get_mut("changes"))
+        .and_then(|c| c.get_mut(change))
+        .and_then(Value::as_object_mut)
+        .ok_or_else(|| "the change is no longer in the file".to_string())?;
+    if change_obj.contains_key("relative_offset") {
+        change_obj.insert("relative_offset".into(), Value::Number(new_offset.into()));
+    } else {
+        change_obj.insert("rel_offset".into(), Value::Number(new_offset.into()));
+    }
+    Ok(pretty(&root))
+}
+
 /// Bytes as lower-case hex without separators.
 pub fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()

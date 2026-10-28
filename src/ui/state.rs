@@ -55,6 +55,8 @@ pub struct ModsState {
     pub list_import: Option<ListImport>,
     /// Dialog state when creating a new JSON mod.
     pub create_mod: Option<CreateModDraft>,
+    /// Dialog state when packaging a mod for distribution.
+    pub package_mod: Option<crate::mod_engine::package::PackageMetadata>,
 }
 
 /// Draft fields for creating a new JSON mod in staging.

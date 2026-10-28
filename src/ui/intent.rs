@@ -68,6 +68,12 @@ pub enum ModAction {
         version: String,
         description: String,
     },
+    /// Open the dialog to package a mod for distribution.
+    PackageModPrompt(String),
+    /// Close the package mod dialog.
+    ClosePackageMod,
+    /// Package a mod into an installable distribution archive.
+    PackageMod(crate::mod_engine::package::PackageMetadata),
     Rescan,
 }
 
