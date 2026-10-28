@@ -76,6 +76,41 @@ pub fn run(op: &Op, paths: &DataPaths, config: &Config) -> Result<Report> {
                 }),
             })
         }
+        Op::BuildProject {
+            project_path,
+            release,
+            stage,
+        } => {
+            let mut rep = crate::sdk::build_project(project_path, *release)?;
+            if *stage {
+                let staged = crate::sdk::stage_built_project(project_path, &rep.binary_path, &paths.staging)?;
+                rep.staged_path = Some(staged);
+            }
+            let staged_msg = match &rep.staged_path {
+                Some(p) => format!(" and staged to {}", p.display()),
+                None => String::new(),
+            };
+            Ok(Report {
+                text: format!("Built {} mod '{}'{staged_msg}", rep.mod_type.as_str(), rep.name),
+                data: serde_json::json!({
+                    "name": rep.name,
+                    "mod_type": rep.mod_type.as_str(),
+                    "binary_path": rep.binary_path.display().to_string(),
+                    "staged_path": rep.staged_path.map(|p| p.display().to_string()),
+                    "output_log": rep.output_log,
+                }),
+            })
+        }
+        Op::ReadPluginLog { name, limit } => {
+            let lines = crate::sdk::read_plugin_log(&config.game.dir, name, *limit)?;
+            Ok(Report {
+                text: format!("Read {} line(s) from {name}.log", lines.len()),
+                data: serde_json::json!({
+                    "name": name,
+                    "lines": lines,
+                }),
+            })
+        }
         _ => Ok(backups(paths)),
     }
 }

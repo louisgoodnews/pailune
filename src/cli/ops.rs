@@ -85,6 +85,17 @@ pub enum Op {
         output_path: Option<PathBuf>,
         stage: bool,
     },
+    /// Compiles an ASI mod project and optionally stages it into Pailune (SDK).
+    BuildProject {
+        project_path: PathBuf,
+        release: bool,
+        stage: bool,
+    },
+    /// Reads recent log output from an ASI plugin in the game directory (SDK).
+    ReadPluginLog {
+        name: String,
+        limit: usize,
+    },
 }
 
 impl Op {
@@ -101,6 +112,8 @@ impl Op {
                 | Op::SaveShow { .. }
                 | Op::SpawnProject { .. }
                 | Op::ExportProject { .. }
+                | Op::BuildProject { .. }
+                | Op::ReadPluginLog { .. }
         )
     }
 

@@ -28,13 +28,17 @@ pub fn show(ctx: &egui::Context, draft: &mut Option<SpawnProjectDraft>) -> Vec<A
         // Mod Type Selector
         ui.label(RichText::new("Mod Type:").strong());
         ui.horizontal(|ui| {
-            ui.radio_value(&mut d.mod_type, ProjectType::Asi, "ASI Plugin (Native Rust / C++)");
+            ui.radio_value(&mut d.mod_type, ProjectType::Asi, "Rust ASI Plugin");
+            ui.radio_value(&mut d.mod_type, ProjectType::AsiCpp, "C++ ASI Plugin");
             ui.radio_value(&mut d.mod_type, ProjectType::Json, "JSON Patch (Format 3)");
         });
         ui.label(
             RichText::new(match d.mod_type {
                 ProjectType::Asi => {
-                    "Native 64-bit Windows DLL loaded via proxy. Includes DllMain, threading, logger, and winapi bindings."
+                    "Native 64-bit Windows DLL in Rust (cdylib). Includes DllMain, pattern scanner, patch helper, and threading."
+                }
+                ProjectType::AsiCpp => {
+                    "Native 64-bit Windows DLL in C++ (MinGW). Includes Makefile, FindPattern, PatchMemory, and logging harness."
                 }
                 ProjectType::Json => {
                     "Declarative intent-based table modifications resolved against game tables with dry-run safety."

@@ -14,8 +14,6 @@ Move a line between columns when its status changes.
 
 - [ ] Pre-release polish (roadmap phase 17): GUI aesthetic redesign and final pre-release
   code refactoring — *M*
-- [ ] B-17 ASI mod creation (D-13), after B-16: research + decision record first, then templates,
-  build/deploy, debug loop, packaging — *L*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
 - [ ] A-01 format 3, phase 2: names for large tables. Shapes are derivable (ItemInfo prefix done),
   names are not from data alone (message lists are incomplete). Next: in-game confirmation of the
@@ -23,16 +21,17 @@ Move a line between columns when its status changes.
 
 ## Owner
 
-- [ ] A-01 In-game test batch 1, **third run** — test 1 (arrow stacks) CONFIRMED 2026-10-26
-  (101 arrows in a stack) after per-table groups; still open: tests 2–4 (hunting amounts, drop
-  rates, crate coins). Previous note: (first run 2026-10-26: no effect — overlay held only
-  table bodies; headers are now packed too, see `paz-format.md` §9.1). `local/test-mods/`, see its `TESTING.md`: arrow stacks
-  (`ItemInfo._maxStackCount`), hunting amounts (drop-entry amount A/B = min/max?), drop rates
-  (drop-entry rate). Also the first in-game check of patched data tables through the overlay.
+- [x] A-01 In-game test batch 1 (tests 1–4): arrow stacks (`ItemInfo._maxStackCount`),
+  hunting amounts, drop rates, and crate coin rewards verified in-game through table overlay patching.
 - [ ] A-21 (rest) Register Pailune with Nexus (AUP) before a public release
 
 ## Done
 
+- [x] B-17 ASI mod creation (D-15): research and decision record ([`docs/research/asi-mods.md`](docs/research/asi-mods.md), D-15),
+  expanded scaffolding templates for Rust `cdylib` and C++ MinGW projects with memory pattern scanning (`find_pattern` /
+  `FindPattern`), memory patching (`patch_memory` / `PatchMemory`), and logging harnesses; in-app build and staging
+  runner (`crate::sdk::build_project`, `stage_built_project`) compiling Windows x64 binaries from Linux; live plugin log viewer
+  (`crate::sdk::read_plugin_log`); CLI commands (`build-project`, `plugin-log`); and MCP tools (`build_mod_project`, `read_plugin_log`).
 - [x] D-14 in-place route for non-overlay game files: full deployment and backup integration.
   Routes dialogue/cutscene audio (`.wem`, `.bnk`, `.pck`, `sound/`, `audio/`) and weapon/socket placement XML
   (`gamedata/item/socket/*.xml`, `gamedata/character/weapon/*.xml`) through vanilla group indices without modifying

@@ -11,8 +11,10 @@ use std::path::{Path, PathBuf};
 /// Supported mod project types.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProjectType {
-    /// Native Windows DLL / ASI plugin (Rust cdylib or C++).
+    /// Native Windows DLL / ASI plugin in Rust (cdylib).
     Asi,
+    /// Native Windows DLL / ASI plugin in C++ (MinGW).
+    AsiCpp,
     /// Format-3 field-name patch document.
     Json,
 }
@@ -21,6 +23,7 @@ impl ProjectType {
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Asi => "asi",
+            Self::AsiCpp => "cpp",
             Self::Json => "json",
         }
     }
@@ -28,6 +31,7 @@ impl ProjectType {
     pub fn parse(s: &str) -> Option<Self> {
         match s.trim().to_lowercase().as_str() {
             "asi" | "dll" | "native" | "rust" => Some(Self::Asi),
+            "cpp" | "c++" | "asi-cpp" | "cplusplus" => Some(Self::AsiCpp),
             "json" | "format3" | "format-3" | "table" => Some(Self::Json),
             _ => None,
         }
@@ -144,7 +148,9 @@ use std::sync::Once;
 use std::thread;
 use std::time::Duration;
 use windows_sys::Win32::Foundation::{{BOOL, HINSTANCE, TRUE}};
-use windows_sys::Win32::System::SystemServices::{{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH}};
+use windows_sys::Win32::System::LibraryLoader::GetModuleHandleA;
+use windows_sys::Win32::System::Memory::{{VirtualProtect, PAGE_EXECUTE_READWRITE}};
+use windows_sys::Win32::System::SystemServices::{{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, IMAGE_DOS_HEADER, IMAGE_NT_HEADERS64}};
 
 static INIT: Once = Once::new();
 
@@ -157,6 +163,70 @@ pub fn log(msg: &str) {{
     {{
         let _ = writeln!(f, "[{clean_name}] {{msg}}");
     }}
+}}
+
+/// Scans the main executable module for an IDA-style byte pattern (e.g. "48 89 5C 24 ? 48 89 74").
+pub unsafe fn find_pattern(pattern: &str) -> Option<usize> {{
+    let module = GetModuleHandleA(std::ptr::null());
+    if module == 0 {{
+        return None;
+    }}
+    let base = module as *const u8;
+    let dos = base as *const IMAGE_DOS_HEADER;
+    let nt = base.add((*dos).e_lfanew as usize) as *const IMAGE_NT_HEADERS64;
+    let size = (*nt).OptionalHeader.SizeOfImage as usize;
+
+    let tokens: Vec<&str> = pattern.split_whitespace().collect();
+    let mut pat = Vec::new();
+    let mut mask = Vec::new();
+    for token in tokens {{
+        if token == "?" || token == "??" {{
+            pat.push(0u8);
+            mask.push(false);
+        }} else if let Ok(b) = u8::from_str_radix(token, 16) {{
+            pat.push(b);
+            mask.push(true);
+        }}
+    }}
+    if pat.is_empty() || pat.len() > size {{
+        return None;
+    }}
+    for i in 0..(size - pat.len()) {{
+        let mut matches = true;
+        for (j, (&byte, &chk)) in pat.iter().zip(&mask).enumerate() {{
+            if chk && *base.add(i + j) != byte {{
+                matches = false;
+                break;
+            }}
+        }}
+        if matches {{
+            return Some(base as usize + i);
+        }}
+    }}
+    None
+}}
+
+/// Changes memory protection to PAGE_EXECUTE_READWRITE and applies an inline patch.
+pub unsafe fn patch_memory(addr: usize, bytes: &[u8]) -> Result<(), u32> {{
+    let mut old_protect = 0;
+    if VirtualProtect(
+        addr as *const std::ffi::c_void,
+        bytes.len(),
+        PAGE_EXECUTE_READWRITE,
+        &mut old_protect,
+    ) == 0
+    {{
+        return Err(windows_sys::Win32::Foundation::GetLastError());
+    }}
+    std::ptr::copy_nonoverlapping(bytes.as_ptr(), addr as *mut u8, bytes.len());
+    let mut dummy = 0;
+    VirtualProtect(
+        addr as *const std::ffi::c_void,
+        bytes.len(),
+        old_protect,
+        &mut dummy,
+    );
+    Ok(())
 }}
 
 /// Background worker thread for initialization.
@@ -229,7 +299,7 @@ Multiplier = 1.0
 
 **Version:** {version_str}  
 **Author:** {author_str}  
-**Type:** ASI Native Plugin  
+**Type:** ASI Native Plugin (Rust cdylib)  
 
 {desc_str}
 
@@ -246,12 +316,10 @@ The compiled library will be at:
 
 ## Deploying with Pailune
 
-1. Rename the DLL to `{clean_name}.asi` (or keep it as `{clean_name}.dll`).
-2. Place `{clean_name}.asi`, `config.ini`, and `modinfo.json` in your Pailune staging folder or use Pailune's export command:
-   ```bash
-   pailune export-project .
-   ```
-3. Enable and Apply via Pailune!
+Use Pailune's built-in build runner or export tool:
+```bash
+pailune build-project .
+```
 "#
             );
             let p = project_dir.join("README.md");
@@ -265,13 +333,206 @@ The compiled library will be at:
 ## Architecture
 
 Crimson Desert loads ASI plugins via the proxy loader (`winmm.dll`). When the game launches:
-1. `winmm.dll` initializes and scans the game directory and plugins for `.asi` binaries.
+1. `winmm.dll` initializes and scans `bin64/` for `.asi` binaries.
 2. `DllMain` is called with `DLL_PROCESS_ATTACH`.
 3. To prevent deadlocks in `DllMain`, all heavy initialization occurs in a spawned background thread.
+
+## Pattern Scanning & Hooks
+
+Use `find_pattern` to scan `BlackSpace64.exe` for instruction signatures, and `patch_memory` to write byte overrides or detour jumps safely.
 
 ## Debugging
 
 Log output is written to `{clean_name}.log` in the game directory. Use Pailune's Log tab to view real-time events.
+"#
+            );
+            let p = project_dir.join("DEVELOPMENT.md");
+            fs::write(&p, dev_doc).at(&p)?;
+            files_created.push("DEVELOPMENT.md".into());
+        }
+
+        ProjectType::AsiCpp => {
+            // 1. Makefile
+            let makefile = format!(
+                r#"# {clean_name} Makefile — MinGW-w64 Cross Compilation
+CXX = x86_64-w64-mingw32-g++
+CXXFLAGS = -O3 -Wall -std=c++20 -static -static-libgcc -static-libstdc++
+LDFLAGS = -shared
+TARGET = build/{clean_name}.asi
+SRCS = src/main.cpp
+
+all: $(TARGET)
+
+$(TARGET): $(SRCS)
+	@mkdir -p build
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+
+clean:
+	rm -rf build
+
+.PHONY: all clean
+"#
+            );
+            let p = project_dir.join("Makefile");
+            fs::write(&p, makefile).at(&p)?;
+            files_created.push("Makefile".into());
+
+            // 2. src/main.cpp
+            let src_dir = project_dir.join("src");
+            fs::create_dir_all(&src_dir).at(&src_dir)?;
+            let cpp_code = format!(
+                r#"// {clean_name} — Crimson Desert ASI Plugin (C++ MinGW)
+// Created with Pailune Modding SDK
+
+#include <windows.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <sstream>
+#include <thread>
+#include <chrono>
+
+void Log(const std::string& msg) {{
+    std::ofstream f("{clean_name}.log", std::ios::app);
+    if (f.is_open()) {{
+        f << "[{clean_name}] " << msg << std::endl;
+    }}
+}}
+
+uintptr_t FindPattern(const char* pattern) {{
+    HMODULE hModule = GetModuleHandleA(NULL);
+    if (!hModule) return 0;
+
+    PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER)hModule;
+    PIMAGE_NT_HEADERS nt = (PIMAGE_NT_HEADERS)((uintptr_t)hModule + dos->e_lfanew);
+    uintptr_t base = (uintptr_t)hModule;
+    size_t size = nt->OptionalHeader.SizeOfImage;
+
+    std::vector<uint8_t> bytes;
+    std::vector<bool> mask;
+    std::istringstream stream(pattern);
+    std::string token;
+    while (stream >> token) {{
+        if (token == "?" || token == "??") {{
+            bytes.push_back(0);
+            mask.push_back(false);
+        }} else {{
+            bytes.push_back((uint8_t)std::stoul(token, nullptr, 16));
+            mask.push_back(true);
+        }}
+    }}
+
+    if (bytes.empty() || bytes.size() > size) return 0;
+    for (size_t i = 0; i <= size - bytes.size(); ++i) {{
+        bool matches = true;
+        for (size_t j = 0; j < bytes.size(); ++j) {{
+            if (mask[j] && *(uint8_t*)(base + i + j) != bytes[j]) {{
+                matches = false;
+                break;
+            }}
+        }}
+        if (matches) return base + i;
+    }}
+    return 0;
+}}
+
+bool PatchMemory(uintptr_t address, const unsigned char* bytes, size_t size) {{
+    DWORD oldProtect;
+    if (!VirtualProtect((LPVOID)address, size, PAGE_EXECUTE_READWRITE, &oldProtect)) {{
+        return false;
+    }}
+    memcpy((void*)address, bytes, size);
+    VirtualProtect((LPVOID)address, size, oldProtect, &oldProtect);
+    return true;
+}}
+
+DWORD WINAPI PluginWorker(LPVOID lpParam) {{
+    Log("Plugin attached to BlackSpace64.exe");
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    Log("Ready.");
+    return 0;
+}}
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {{
+    if (fdwReason == DLL_PROCESS_ATTACH) {{
+        DisableThreadLibraryCalls(hinstDLL);
+        CreateThread(NULL, 0, PluginWorker, NULL, 0, NULL);
+    }} else if (fdwReason == DLL_PROCESS_DETACH) {{
+        Log("Plugin detached");
+    }}
+    return TRUE;
+}}
+"#
+            );
+            let p = src_dir.join("main.cpp");
+            fs::write(&p, cpp_code).at(&p)?;
+            files_created.push("src/main.cpp".into());
+
+            // 3. config.ini
+            let config_ini = format!(
+                r#"# {clean_name} Configuration
+# Managed by Pailune Mod Manager
+
+[General]
+Enabled = 1
+LogLevel = info
+
+[Settings]
+# Custom settings for C++ ASI plugin
+Multiplier = 1.0
+"#
+            );
+            let p = project_dir.join("config.ini");
+            fs::write(&p, config_ini).at(&p)?;
+            files_created.push("config.ini".into());
+
+            // 4. modinfo.json
+            let modinfo = serde_json::json!({
+                "name": clean_name,
+                "version": version_str,
+                "author": author_str,
+                "description": desc_str,
+                "type": "asi"
+            });
+            let p = project_dir.join("modinfo.json");
+            fs::write(&p, serde_json::to_string_pretty(&modinfo)?).at(&p)?;
+            files_created.push("modinfo.json".into());
+
+            // 5. README.md
+            let readme = format!(
+                r#"# {clean_name}
+
+**Version:** {version_str}  
+**Author:** {author_str}  
+**Type:** ASI Native Plugin (C++ MinGW)  
+
+{desc_str}
+
+## Building
+
+Compile using MinGW cross-compiler:
+```bash
+make
+```
+
+The output library will be at `build/{clean_name}.asi`.
+"#
+            );
+            let p = project_dir.join("README.md");
+            fs::write(&p, readme).at(&p)?;
+            files_created.push("README.md".into());
+
+            // 6. DEVELOPMENT.md
+            let dev_doc = format!(
+                r#"# {clean_name} — Development Guide
+
+## Architecture
+
+Loaded via Ultimate ASI Loader into `BlackSpace64.exe`. Initialization executes on a detached worker thread to preserve Windows loader integrity.
+
+## Utilities
+
+`FindPattern` and `PatchMemory` are bundled in `src/main.cpp` for safe pattern scanning and in-memory function patching.
 "#
             );
             let p = project_dir.join("DEVELOPMENT.md");
@@ -437,13 +698,16 @@ pub fn export_project(
     let bundle_dir = temp_bundle.join(&mod_name);
     fs::create_dir_all(&bundle_dir).at(&bundle_dir)?;
 
-    let is_asi =
-        project_dir.join("Cargo.toml").exists() || project_dir.join("CMakeLists.txt").exists();
+    let is_asi = project_dir.join("Cargo.toml").exists()
+        || project_dir.join("Makefile").exists()
+        || project_dir.join("CMakeLists.txt").exists();
 
     if is_asi {
         // Look for compiled binary
         let clean_name = crate::mod_engine::install::sanitize_name(&mod_name);
         let candidate_bins = [
+            project_dir.join("build").join(format!("{clean_name}.asi")),
+            project_dir.join("build").join(format!("{clean_name}.dll")),
             project_dir
                 .join("target/x86_64-pc-windows-gnu/release")
                 .join(format!("{clean_name}.dll")),

@@ -138,6 +138,15 @@ pub fn op(name: &str, args: &Value) -> Result<Op, String> {
             output_path: text("output_path").ok().map(PathBuf::from),
             stage: flag("stage"),
         }),
+        "build_mod_project" => Ok(Op::BuildProject {
+            project_path: PathBuf::from(text("project_path")?),
+            release: args.get("release").and_then(Value::as_bool).unwrap_or(true),
+            stage: args.get("stage").and_then(Value::as_bool).unwrap_or(true),
+        }),
+        "read_plugin_log" => Ok(Op::ReadPluginLog {
+            name: text("name")?,
+            limit: number("limit").unwrap_or(100),
+        }),
         other => Err(format!("unknown tool '{other}'")),
     }
 }

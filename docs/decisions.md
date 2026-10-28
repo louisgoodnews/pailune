@@ -132,3 +132,8 @@ when the planned `.bak` rename had not happened yet, since the file is then the 
 and the crash test interrupts at every journal write for symlinks and copies.
 **Trade-off.** Copies use disk space and do not follow later staging changes until the next
 Apply (which redeploys anyway).
+
+## D-15 Tooling for native ASI plugin development (accepted 2026-10-28)
+
+**Context.** B-17 asks for native ASI mod creation tooling. Game mechanics not controlled by data tables are hardcoded into the executable. Authors hook these functions via ASI proxy DLL loaders (`winmm.dll`, etc.). Developing plugins on Linux for Windows x64 requires cross-compilation toolchains, loader synchronization discipline, and log visibility.
+**Decision.** Pailune provides complete native mod creation tooling: project scaffolding (Rust `cdylib` and C++ MinGW with static CRT linking and pattern scanning harnesses), background build runners targeting `x86_64-pc-windows-gnu`, staging directly to `bin64/`, one-click deploy/apply, live log monitoring from `bin64/<name>.log`, and release packaging. Pailune remains strictly a tool harness: it never analyzes, disassembles, or modifies protected executable code.

@@ -10,26 +10,31 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
-| **P1** | **A-01** | **In-Game Test Batch 1 (Tests 2–4 Verification)** | **Owner** | Completes validation of table overlay patching in game (hunting, drops, coin crates). |
-| **P2** | **B-17** | **ASI Mod Creation: Research & Templates** | **Research / M** | Scaffolds native ASI plugin development with compiler toolchain and debug loop. |
-| **P3** | **Polish** | **Pre-Release Polish: GUI Redesign & Final Code Refactoring** | **M** | Aesthetic redesign, typography, visual hierarchy, and performance/memory optimization pass. |
-| **P4** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
-| **P4** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
+| **P1** | **Polish** | **Pre-Release Polish: GUI Redesign & Final Code Refactoring** | **M** | Aesthetic redesign, typography, visual hierarchy, and performance/memory optimization pass. |
+| **P2** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
+| **P3** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
 
 ---
 
 ## Detailed Action Items & Rationales
 
-### Tier 1: Immediate & Compatibility (P1)
-
-#### 1. Owner Task — In-Game Test Batch 1 (Tests 2–4 Verification)
-* **Status:** Owner column in `board.md` (Test 1 Arrow Stacks confirmed; tests 2–4 pending).
-* **Size:** Owner validation.
-* **Rationale:**
-  * Re-verifies in-game that the per-table archive group architecture correctly injects multi-table modifications without engine side-effects.
-  * Validates hunting drops, drop rates, and crate coin rewards defined in [`local/test-mods/TESTING.md`](file:///home/louisgoodnews/Dokumente/pailune/local/test-mods/TESTING.md).
-
 ### Completed Features
+
+#### B-17 — ASI Mod Creation: Research & Templates
+* **Status:** Completed & verified with automated tests.
+* **Size:** *Research / M*.
+* **Implementation Summary:**
+  * Produced architecture research ([`docs/research/asi-mods.md`](file:///home/louisgoodnews/Dokumente/pailune/docs/research/asi-mods.md)) and architecture decision record ([`D-15`](file:///home/louisgoodnews/Dokumente/pailune/docs/decisions.md)) covering the Ultimate ASI Loader proxy DLL contract, threading rules avoiding Windows loader locks, pattern scanning, and MinGW static CRT linking for cross-compiling Windows x64 DLLs from Linux.
+  * Extended SDK project generator to support both Rust `cdylib` and C++ MinGW projects (`Makefile`, `src/main.cpp`) with built-in IDA-style byte pattern scanning (`find_pattern` / `FindPattern`) and memory patch helpers (`patch_memory` / `PatchMemory`).
+  * Implemented build runner (`crate::sdk::build_project`) and staging pipeline (`crate::sdk::stage_built_project`) executing native builds and staging directly into `~/.local/share/pailune/staging/<name>/bin64/`.
+  * Implemented debug loop log reader (`crate::sdk::read_plugin_log`) tailing `<name>.log` from `bin64/`.
+  * Exposed CLI commands (`build-project`, `plugin-log`) and MCP tools (`build_mod_project`, `read_plugin_log`).
+
+#### A-01 — In-Game Test Batch 1 (Tests 1–4 Verification)
+* **Status:** Completed & confirmed in-game.
+* **Size:** Owner validation.
+* **Implementation Summary:**
+  * In-game verification confirmed that table overlay patching operates accurately for arrow stacks (`ItemInfo._maxStackCount`), hunting amounts, drop rates, and crate coin rewards without unintended side effects.
 
 #### D-14 — In-Place Route for Non-Overlay Game Files
 * **Status:** Completed & verified with automated tests.
@@ -74,16 +79,6 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
   * Project generation via CLI/MCP (`spawn_mod_project`, `export_mod_project`) and GUI modal (`SpawnProjectPrompt`).
   * Scaffolds new standalone mod projects (ASI or JSON) with metadata (`modinfo.json`), bundled libraries and build configurations (Rust `cdylib` with `Cargo.toml`, `lib.rs`, `config.ini`, `.cargo/config.toml` targeting MinGW for Windows cross-compilation; format-3 JSON `.field.json` schema), and generated Markdown documentation (`README.md`, `DEVELOPMENT.md`).
   * Integrated export pipeline (`crate::sdk::export_project`) to package projects into distribution `.zip` archives under `~/.local/share/pailune/exports` or directly stage them into Pailune.
-
----
-
-### Tier 2: ASI Scaffolding & Native Toolchain (P2)
-
-#### 2. B-17 — ASI Mod Creation: Research & Templates
-* **Size:** *Research / M*.
-* **Rationale:**
-  * Scaffolds native ASI plugin development with MinGW compiler toolchain and debug loop.
-
 
 ---
 

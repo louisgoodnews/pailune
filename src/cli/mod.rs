@@ -105,6 +105,25 @@ enum Command {
     CheckUpdates,
     /// Start the game (applies pending changes first if configured).
     Launch,
+    /// Build an ASI or native mod project and optionally stage it (SDK).
+    BuildProject {
+        /// Project directory containing Cargo.toml or Makefile.
+        path: PathBuf,
+        /// Compile in release mode.
+        #[arg(long, default_value_t = true)]
+        release: bool,
+        /// Stage into Pailune staging directory after build.
+        #[arg(long, default_value_t = true)]
+        stage: bool,
+    },
+    /// Read recent log output from an ASI plugin in the game directory.
+    PluginLog {
+        /// Plugin name (without .asi or .log).
+        name: String,
+        /// Maximum number of lines.
+        #[arg(long, default_value_t = 100)]
+        limit: usize,
+    },
     /// Serve these operations over the Model Context Protocol (stdio).
     Mcp,
 }
@@ -156,6 +175,16 @@ fn op(command: Command) -> Option<Op> {
         Command::BackupSaves => Op::BackupSaves,
         Command::CheckUpdates => Op::CheckUpdates,
         Command::Launch => Op::Launch,
+        Command::BuildProject {
+            path,
+            release,
+            stage,
+        } => Op::BuildProject {
+            project_path: path,
+            release,
+            stage,
+        },
+        Command::PluginLog { name, limit } => Op::ReadPluginLog { name, limit },
         Command::Mcp => return None,
     })
 }

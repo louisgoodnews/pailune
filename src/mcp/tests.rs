@@ -125,3 +125,50 @@ fn mcp_spawns_and_exports_mod_project() {
             .is_file()
     );
 }
+
+#[test]
+fn mcp_builds_and_reads_plugin_log() {
+    let fx = fixture();
+    let mut server = server(&fx);
+    let temp = tempfile::tempdir().unwrap();
+    let project_dir = temp.path().join("McpAsi");
+    std::fs::create_dir_all(&project_dir).unwrap();
+    std::fs::write(
+        project_dir.join("modinfo.json"),
+        r#"{"name": "McpAsi", "type": "asi"}"#,
+    )
+    .unwrap();
+    std::fs::write(project_dir.join("config.ini"), "[Settings]\nSpeed=2.0\n").unwrap();
+    let build_dir = project_dir.join("build");
+    std::fs::create_dir_all(&build_dir).unwrap();
+    std::fs::write(build_dir.join("McpAsi.asi"), b"MZ_MOCK_ASI").unwrap();
+    std::fs::write(project_dir.join("Makefile"), "all:\n").unwrap();
+
+    let staged = crate::sdk::stage_built_project(
+        &project_dir,
+        &build_dir.join("McpAsi.asi"),
+        &server.paths.staging,
+    )
+    .unwrap();
+    assert!(staged.join("bin64/McpAsi.asi").is_file());
+
+    let bin64 = fx.config.game.dir.join("bin64");
+    std::fs::create_dir_all(&bin64).unwrap();
+    std::fs::write(bin64.join("McpAsi.log"), "Init\nHooked\nRunning\n").unwrap();
+
+    let log_call = call(
+        &mut server,
+        "read_plugin_log",
+        json!({
+            "name": "McpAsi",
+            "limit": 2
+        }),
+    );
+    assert_eq!(log_call["isError"], false, "{log_call}");
+    let lines = log_call["structuredContent"]["data"]["lines"]
+        .as_array()
+        .unwrap();
+    assert_eq!(lines.len(), 2);
+    assert_eq!(lines[0], "Hooked");
+    assert_eq!(lines[1], "Running");
+}

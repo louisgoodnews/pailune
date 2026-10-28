@@ -263,4 +263,45 @@ pub const TOOLS: &[Tool] = &[
         read_only: true,
         destructive: false,
     },
+    Tool {
+        name: "build_mod_project",
+        description: "Compile an ASI or native mod project and optionally stage it into Pailune (Pailune Modding SDK).",
+        params: &[
+            (
+                "project_path",
+                "string",
+                "Absolute path to the project directory containing Cargo.toml or Makefile",
+            ),
+            (
+                "release",
+                "boolean",
+                "Optional: compile in release mode (default: true)",
+            ),
+            (
+                "stage",
+                "boolean",
+                "Optional: install directly into Pailune staging (default: true)",
+            ),
+        ],
+        read_only: false,
+        destructive: false,
+    },
+    Tool {
+        name: "read_plugin_log",
+        description: "Read recent log output from an ASI plugin in the game directory (Pailune Modding SDK).",
+        params: &[
+            (
+                "name",
+                "string",
+                "Plugin name (without .asi or .log)",
+            ),
+            (
+                "limit",
+                "integer",
+                "Optional: maximum lines to read (default: 100)",
+            ),
+        ],
+        read_only: true,
+        destructive: false,
+    },
 ];
