@@ -27,16 +27,16 @@ pub struct BuildReport {
 /// Detects the project type of `project_dir`.
 pub fn detect_project_type(project_dir: &Path) -> Result<(ProjectType, String)> {
     if project_dir.join("Cargo.toml").exists() {
-        let name = read_cargo_pkg_name(project_dir)
-            .unwrap_or_else(|| project_name_from_dir(project_dir));
+        let name =
+            read_cargo_pkg_name(project_dir).unwrap_or_else(|| project_name_from_dir(project_dir));
         Ok((ProjectType::Asi, name))
     } else if project_dir.join("Makefile").exists() {
-        let name = read_modinfo_name(project_dir)
-            .unwrap_or_else(|| project_name_from_dir(project_dir));
+        let name =
+            read_modinfo_name(project_dir).unwrap_or_else(|| project_name_from_dir(project_dir));
         Ok((ProjectType::AsiCpp, name))
     } else if project_dir.join("modinfo.json").exists() {
-        let name = read_modinfo_name(project_dir)
-            .unwrap_or_else(|| project_name_from_dir(project_dir));
+        let name =
+            read_modinfo_name(project_dir).unwrap_or_else(|| project_name_from_dir(project_dir));
         Ok((ProjectType::Json, name))
     } else {
         Err(PailuneError::Invalid(format!(
@@ -96,7 +96,9 @@ pub fn build_project(project_dir: &Path, release: bool) -> Result<BuildReport> {
 
 fn build_rust_asi(project_dir: &Path, name: &str, release: bool) -> Result<BuildReport> {
     let mut cmd = Command::new("cargo");
-    cmd.arg("build").arg("--target").arg("x86_64-pc-windows-gnu");
+    cmd.arg("build")
+        .arg("--target")
+        .arg("x86_64-pc-windows-gnu");
     if release {
         cmd.arg("--release");
     }

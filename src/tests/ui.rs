@@ -592,7 +592,13 @@ fn visual_creator_template_actions_and_manipulation() {
     app.dispatch(Action::Creator(crate::ui::CreatorAction::DeleteNode(
         first_node_id.clone(),
     )));
-    assert!(app.creator.graph.nodes.iter().all(|n| n.id != first_node_id));
+    assert!(
+        app.creator
+            .graph
+            .nodes
+            .iter()
+            .all(|n| n.id != first_node_id)
+    );
 
     // 4. Clear graph
     app.dispatch(Action::Creator(crate::ui::CreatorAction::ClearGraph));
@@ -617,7 +623,14 @@ fn visual_creator_export_zip_action() {
         .collect();
     assert_eq!(zips.len(), 1);
     let zip_path = zips.pop().unwrap().path();
-    assert!(zip_path.file_name().unwrap().to_str().unwrap().contains("Mega Stacks"));
+    assert!(
+        zip_path
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .contains("Mega Stacks")
+    );
 
     // Verify zip contents
     let file = std::fs::File::open(&zip_path).unwrap();

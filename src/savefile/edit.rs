@@ -111,7 +111,7 @@ pub fn apply(bytes: &[u8], edits: &[SaveEdit]) -> Result<Vec<u8>> {
         // Variable-length edits: sort in descending order of `at` so that
         // earlier offsets are preserved as higher offsets shift.
         let mut sorted = edits.to_vec();
-        sorted.sort_by(|a, b| b.at.cmp(&a.at));
+        sorted.sort_by_key(|e| std::cmp::Reverse(e.at));
 
         for e in sorted {
             let delta = e.new.len() as i64 - e.old.len() as i64;
@@ -206,10 +206,7 @@ pub fn apply(bytes: &[u8], edits: &[SaveEdit]) -> Result<Vec<u8>> {
 }
 
 /// Finds a `Value::List` in an `Object` hierarchy by its `list_at` offset.
-fn find_list_in_object<'a>(
-    obj: &'a body::walk::Object,
-    list_at: usize,
-) -> Option<&'a body::walk::Value> {
+fn find_list_in_object(obj: &body::walk::Object, list_at: usize) -> Option<&body::walk::Value> {
     for (_, val) in &obj.fields {
         match val {
             val @ body::walk::Value::List { at, .. } if *at == list_at => return Some(val),

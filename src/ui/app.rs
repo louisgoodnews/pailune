@@ -2,8 +2,8 @@
 
 use super::guide::GuideState;
 use super::{
-    Action, CreatorState, DataBrowserState, Level, LogState, ModsState, NexusState, PailuneApp, ProfilesState,
-    SettingsDraft, StatusLine, Tab,
+    Action, CreatorState, DataBrowserState, Level, LogState, ModsState, NexusState, PailuneApp,
+    ProfilesState, SettingsDraft, StatusLine, Tab,
 };
 use super::{theme, views};
 use crate::backup::snapshot;

@@ -216,6 +216,44 @@ mods stay in Pailune.
 
 Press **Save** to keep changes or **Discard** to drop them; each page can be reset to defaults.
 
+## Visual Mod Creator (No-Code)
+
+The **Visual Creator** tab allows you to design gameplay mods visually through a node graph without writing code or editing JSON:
+
+- **Canvas & Navigation:** Pan with left-drag (on blank space) or middle-drag; zoom smoothly with the mouse wheel (50% to 200%).
+- **Adding Nodes:** Use the **+ Add Node** menu to spawn:
+  - *Item Query / Drop Table Query*: Filter game assets by name or ID.
+  - *Math Operators*: Calculate dynamic multipliers (`Multiply`, `Add`, `Subtract`, `Set`, `Min`, `Max`).
+  - *Set Item Stack Limit*: Change inventory stacking limits (e.g. arrows, potions, materials).
+  - *Modify Drop Rate / Drop Count*: Adjust loot chances (up to 100%) and item quantity ranges.
+  - *Mod Target*: Metadata configuration (`title`, `author`, `version`, `description`).
+- **Connecting Sockets:** Click any output socket on the right of a node, then click a compatible input socket on another node. Sockets are color-coded by type (`ItemRef` blue, `DropTableRef` purple, `Number` green, `Boolean` yellow, `Text` grey). Right-click cancels an in-progress wire.
+- **Starter Templates:** Quick presets from the **Templates** dropdown:
+  - *Mega Stacks (Arrows & Potions)*: Increases ammunition and consumable stacks to 999.
+  - *Hunting & Animal Yields*: Sets animal hunting drops to 100% chance and high quantity.
+  - *Crate Coin Rewards*: Multiplies breakable loot crate coin yields.
+- **Testing & Exporting:**
+  - **⚡ Apply & Deploy:** Compiles the graph into a verified Format-3 `.field.json` patch, stages it, enables it in your load order, and deploys it immediately.
+  - **▶ Test (Launch):** Applies the mod and starts the game.
+  - **📦 Export to ZIP:** Packages a standalone distribution `.zip` in `~/.local/share/pailune/exports/` complete with `modinfo.json`, `graph.json` (for future visual re-editing), and a generated `README.md`.
+
+## Game Data Browser
+
+The **Data Browser** tab opens the game's internal binary static info tables (`iteminfo.pabgb`, `dropsetinfo.pabgb`, `wantedinfo.pabgb`):
+
+- **Search & Inspection:** Filter by item name, item key, or drop set ID. Pailune decodes records, subfields, arrays, and enums into formatted JSON.
+- **Inject into Mod:** Select any record, customize its fields, and click **Inject into Mod** to generate a format-3 patch inside any staged mod or create a new one.
+
+## Developing Native ASI Mods
+
+For executable function hooking and custom runtime features, Pailune includes an integrated SDK:
+
+- **Create Mod Project:** On the *Mods* tab, click **🛠 SDK Project…** to scaffold a project:
+  - *Rust (`cdylib`)*: Scaffolds a complete Cargo workspace targeting `x86_64-pc-windows-gnu` with pattern scanning helpers (`find_pattern`).
+  - *C++ (MinGW)*: Scaffolds a CMake/Makefile project with MinGW-w64 static CRT linking and memory patch harnesses.
+- **Building from Linux:** Press **Build Project** or run `pailune build-project <path>` to compile an x64 Windows DLL directly from Linux.
+- **Live Plugin Logs:** Plugins writing to `bin64/<name>.log` can be monitored in real time under *Settings → Diagnostics → ASI plugins* or via `pailune plugin-log <name>`.
+
 ## Command line and AI agents
 
 Everything important also works without the window. Read-only commands work while the window is
@@ -237,6 +275,8 @@ pailune launch
 pailune log --mod "Some Mod" --limit 20
 pailune saves                     # save slots: level, time
 pailune save 1 --find ItemSaveData  # what a save contains (read-only)
+pailune build-project ~/src/MyMod  # compile Rust/C++ ASI mod to Windows x64 DLL
+pailune plugin-log MyMod          # inspect live plugin log from bin64/
 ```
 
 Add `--json` for machine-readable output (`{"ok", "message", "data"}`); the exit code is 0 on

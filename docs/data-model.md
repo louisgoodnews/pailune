@@ -13,6 +13,7 @@ Everything Pailune stores, where it lives, and what each part means.
 | `…/trash/<time>-<mod>/` | Deleted mods with `entry.json` (name, time, source, variant, Nexus origin). Newest `[mods] trash_keep` kept. |
 | `…/backups/pailune-<time>-<kind>-<n>.zip` | Pailune backups (below). |
 | `…/save-backups/saves-<time>-<n>.zip` | Save-game backups (below). |
+| `…/exports/<mod>-v<version>.zip` | Packaged mod distribution zip archives ready for Nexus Mods. |
 | `…/downloads/` | Nexus downloads in progress (`.part`, resumable). |
 | `…/logs/pailune.log.<date>` | Daily application logs, newest `[logging] keep_days` kept. |
 | `…/logs/mods/<mod>.log` | Per-mod history: installs, file lists, deployments, patch results. |

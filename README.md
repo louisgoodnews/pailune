@@ -1,9 +1,10 @@
 # Pailune
 
-Native Linux mod manager for **Crimson Desert** (Steam / Proton), written in Rust with egui.
+Native Linux mod manager and visual modding studio for **Crimson Desert** (Steam / Proton), written in Rust with egui.
 
 **Documentation:** [user guide](docs/user-guide.md) · [vision](docs/vision.md) ·
 [architecture](docs/architecture.md) · [data model](docs/data-model.md) ·
+[visual mod creator](docs/design/visual-mod-creator.md) · [engine architecture](docs/research/engine-architecture.md) ·
 [extending Pailune](docs/extending.md) · [decisions](docs/decisions.md) ·
 [UX principles](docs/ux-principles.md) · [all documents](docs/README.md)
 
@@ -137,7 +138,10 @@ are backed up first. If Steam reports a cloud conflict afterwards, keep the loca
 | byte-patch JSON mods (`"patches": [{ "game_file", "changes" }]`) | applied to the game file, packed into Pailune's archive group; every change is checked against the original bytes, results per mod in the Log tab |
 | `meta/*` shipped by a mod                      | ignored — Pailune generates `0.papgt` from your vanilla backup |
 | CSS patch files (`<file>.css.patch`, `<file>.css.merge`) in RAW layouts | merged into the stylesheet in load order (`@merge`, `@replace`, `@add`, `@remove`) |
-| field-name JSON (format 3), XML/HTML patch files, game files with unknown location | not supported yet — reported in the UI/Log |
+| Field-name JSON (`format: 3`, `*.field.json`) | resolved into byte changes using verified static table layouts (`iteminfo.pabgb`, `dropsetinfo.pabgb`, `wantedinfo.pabgb`) and packed into Pailune's archive group |
+| XML patch files (`*.xml.patch`, `*.xml.merge`) | merged or patched into game XML structures while maintaining self-closing tags and element identities |
+| HTML patch files (`*.html.patch`) | CSS-selector based operations applied to game UI documents |
+| Non-overlay assets (`sound/windows/*.wem`, `.bnk`, weapon XML) | deployed via safe in-place route with automatic `.bak` snapshots |
 | readmes, images, `manifest.json`               | not deployed (shown in the details panel) |
 
 ### The archive overlay
@@ -152,13 +156,42 @@ modified; *Unlink all* restores the original `0.papgt` (and `0.pathc`) byte for 
 ASI mods need a loader (`winmm.dll`, `version.dll` or `dinput8.dll`) in `bin64/` plus
 `WINEDLLOVERRIDES="<loader>=n,b"` in Steam's launch options or a profile's launch options.
 
+## Visual Mod Creator (No-Code)
+
+Pailune includes a full node-based visual modding studio (**Visual Creator** tab) that allows
+non-technical creators to build and package mods without editing raw byte files or JSON:
+
+- **Interactive Canvas:** Pannable and zoomable graph editor with smooth cubic bezier wires.
+- **Typed Sockets & Validation:** Color-coded typed sockets (`ItemRef`, `DropTableRef`, `Number`, `Boolean`, `Text`) with topological sort cycle detection.
+- **Starter Templates:** One-click presets for *Mega Stacks* (arrows and potions), *Hunting & Animal Yields* (100% drop rates), and *Crate Coin Rewards*.
+- **Math & Operation Nodes:** Dynamic scaling via `Multiply`, `Add`, `Subtract`, `Set`, `Min`, and `Max`.
+- **Live Diff Preview:** Inspect compiled table changes and target fields before applying.
+- **One-Click Deploy & ZIP Export:** Test mods immediately in-game with *Apply & Deploy* or package installable `.zip` archives ready for Nexus Mods.
+
+## Game Data Browser
+
+The **Data Browser** tab decodes the game's binary static info tables (`iteminfo.pabgb`, `dropsetinfo.pabgb`, `wantedinfo.pabgb`):
+
+- Decodes complex structs, lists, enums, drop tables, and item attributes into readable JSON.
+- Fast multi-term search across item keys, localized labels, and drop sets.
+- **Inject into Mod:** Generates and injects semantic format-3 patch rules directly into your staged mods.
+
+## Native ASI Modding SDK
+
+For advanced gameplay modifications requiring executable hooks, Pailune provides an end-to-end native modding SDK:
+
+- **Project Scaffolding:** Create Rust `cdylib` or C++ MinGW projects equipped with memory pattern scanning (`find_pattern`), memory patching (`patch_memory`), and logging harnesses.
+- **Cross-Compilation from Linux:** Build Windows x64 `.asi` / `.dll` binaries directly from the app or command line (`pailune build-project`).
+- **Live Plugin Logging:** Real-time log inspection (`pailune plugin-log`) streaming messages from `bin64/<plugin>.log`.
+
 ## Build and install
 
 ```sh
 cargo build --release
+packaging/dist.sh          # builds standalone release tarball in target/dist/
 packaging/install.sh       # binary to ~/.local/bin, launcher and icon for your desktop
 cargo run --release
-cargo test                 # offline suite
+cargo test                 # offline suite (187 unit and integration tests)
 cargo test -- --ignored    # also talks to api.nexusmods.com, renders screens (GPU)
 ```
 

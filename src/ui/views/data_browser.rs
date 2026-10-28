@@ -245,7 +245,7 @@ fn render_inspector(ui: &mut egui::Ui, app: &PailuneApp, rec: &InspectedRecord) 
 
     // Active edit panel
     if let Some(ref edit) = app.data_browser.active_edit {
-        theme::card_frame(&ui.visuals()).show(ui, |ui| {
+        theme::card_frame(ui.visuals()).show(ui, |ui| {
             ui.horizontal(|ui| {
                 if edit.is_raw {
                     ui.label(RichText::new("✏ Raw Byte Patch").strong().color(accent()));

@@ -175,50 +175,46 @@ pub fn check_patch_data(
                     }
                 };
 
-                if let Some(orig) = original {
-                    if data.get(at..end) != Some(orig.as_slice()) {
-                        // Check if bytes moved within this record
-                        let mut found_rebase = None;
-                        if let Anchor::Entry {
-                            ref name,
-                            rel_offset,
-                        } = change.anchor
-                        {
-                            if let Some(ref anchors) = f.anchors {
-                                if let Some(&name_at) = anchors.get(name) {
-                                    let search_end = (name_at + 16384).min(data.len());
-                                    if search_end > name_at {
-                                        let slice = &data[name_at..search_end];
-                                        if let Some(pos) = slice
-                                            .windows(orig.len())
-                                            .position(|w| w == orig.as_slice())
-                                        {
-                                            if (pos as u64) != rel_offset {
-                                                found_rebase = Some(RebaseSuggestion {
-                                                    entry_name: name.clone(),
-                                                    old_offset: rel_offset,
-                                                    new_offset: pos as u64,
-                                                });
-                                            }
-                                        }
-                                    }
-                                }
+                if let Some(orig) = original
+                    && data.get(at..end) != Some(orig.as_slice())
+                {
+                    // Check if bytes moved within this record
+                    let mut found_rebase = None;
+                    if let Anchor::Entry {
+                        ref name,
+                        rel_offset,
+                    } = change.anchor
+                        && let Some(ref anchors) = f.anchors
+                        && let Some(&name_at) = anchors.get(name)
+                    {
+                        let search_end = (name_at + 16384).min(data.len());
+                        if search_end > name_at {
+                            let slice = &data[name_at..search_end];
+                            if let Some(pos) =
+                                slice.windows(orig.len()).position(|w| w == orig.as_slice())
+                                && (pos as u64) != rel_offset
+                            {
+                                found_rebase = Some(RebaseSuggestion {
+                                    entry_name: name.clone(),
+                                    old_offset: rel_offset,
+                                    new_offset: pos as u64,
+                                });
                             }
                         }
-
-                        if let Some(sug) = found_rebase {
-                            rebases.insert(c, sug.clone());
-                            changes.push(DryRunStatus::Failed(format!(
-                                "Original bytes moved to +{} (was +{})",
-                                sug.new_offset, sug.old_offset
-                            )));
-                        } else {
-                            changes.push(DryRunStatus::Failed(
-                                "Original bytes do not match installed game data".into(),
-                            ));
-                        }
-                        continue;
                     }
+
+                    if let Some(sug) = found_rebase {
+                        rebases.insert(c, sug.clone());
+                        changes.push(DryRunStatus::Failed(format!(
+                            "Original bytes moved to +{} (was +{})",
+                            sug.new_offset, sug.old_offset
+                        )));
+                    } else {
+                        changes.push(DryRunStatus::Failed(
+                            "Original bytes do not match installed game data".into(),
+                        ));
+                    }
+                    continue;
                 }
 
                 if occupied_spans.iter().any(|&(s, e)| at < e && s < end) {

@@ -10,4 +10,6 @@ pub mod templates;
 mod tests;
 
 pub use compiler::{CompiledMod, compile};
-pub use graph::{Connection, Graph, ItemMatchMode, MathOp, Node, NodeCategory, NodeType, Socket, SocketType};
+pub use graph::{
+    Connection, Graph, ItemMatchMode, MathOp, Node, NodeCategory, NodeType, Socket, SocketType,
+};

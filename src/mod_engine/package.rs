@@ -34,13 +34,11 @@ pub fn bump_version_string(version: &str) -> String {
         return "1.0".to_string();
     }
     let parts: Vec<&str> = trimmed.split('.').collect();
-    if let Some(last) = parts.last() {
-        if let Ok(num) = last.parse::<u64>() {
-            let mut bumped = parts[..parts.len() - 1].to_vec();
-            let next = (num + 1).to_string();
-            bumped.push(&next);
-            return bumped.join(".");
-        }
+    if let Some(num) = parts.last().and_then(|l| l.parse::<u64>().ok()) {
+        let mut bumped = parts[..parts.len() - 1].to_vec();
+        let next = (num + 1).to_string();
+        bumped.push(&next);
+        return bumped.join(".");
     }
     format!("{trimmed}.1")
 }
@@ -81,16 +79,15 @@ pub fn package_mod(
     if let Ok(entries) = fs::read_dir(&mod_dir) {
         for entry in entries.flatten() {
             let p = entry.path();
-            if p.extension().is_some_and(|e| e == "json") && p != modinfo_path {
-                if let Ok(text) = fs::read_to_string(&p) {
-                    if let Ok(mut doc) = serde_json::from_str::<serde_json::Value>(&text) {
-                        if let Some(info) = doc.get_mut("modinfo").and_then(|i| i.as_object_mut()) {
-                            info.insert("version".into(), serde_json::json!(version_str));
-                            if let Ok(updated) = serde_json::to_string_pretty(&doc) {
-                                let _ = fs::write(&p, updated + "\n");
-                            }
-                        }
-                    }
+            if p.extension().is_some_and(|e| e == "json")
+                && p != modinfo_path
+                && let Ok(text) = fs::read_to_string(&p)
+                && let Ok(mut doc) = serde_json::from_str::<serde_json::Value>(&text)
+                && let Some(info) = doc.get_mut("modinfo").and_then(|i| i.as_object_mut())
+            {
+                info.insert("version".into(), serde_json::json!(version_str));
+                if let Ok(updated) = serde_json::to_string_pretty(&doc) {
+                    let _ = fs::write(&p, updated + "\n");
                 }
             }
         }

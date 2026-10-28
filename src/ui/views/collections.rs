@@ -15,7 +15,7 @@ fn nexus(action: NexusAction) -> Action {
 fn installed(ui: &mut egui::Ui, c: &Collection) -> Vec<Action> {
     let wanted: Vec<_> = c.members.iter().filter(|m| m.selected).collect();
     let done = wanted.iter().filter(|m| m.mod_name.is_some()).count();
-    theme::card_frame(&ui.visuals())
+    theme::card_frame(ui.visuals())
         .show(ui, |ui| {
             let mut actions = ui
                 .horizontal(|ui| {

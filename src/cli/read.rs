@@ -83,7 +83,11 @@ pub fn run(op: &Op, paths: &DataPaths, config: &Config) -> Result<Report> {
         } => {
             let mut rep = crate::sdk::build_project(project_path, *release)?;
             if *stage {
-                let staged = crate::sdk::stage_built_project(project_path, &rep.binary_path, &paths.staging)?;
+                let staged = crate::sdk::stage_built_project(
+                    project_path,
+                    &rep.binary_path,
+                    &paths.staging,
+                )?;
                 rep.staged_path = Some(staged);
             }
             let staged_msg = match &rep.staged_path {
@@ -91,7 +95,11 @@ pub fn run(op: &Op, paths: &DataPaths, config: &Config) -> Result<Report> {
                 None => String::new(),
             };
             Ok(Report {
-                text: format!("Built {} mod '{}'{staged_msg}", rep.mod_type.as_str(), rep.name),
+                text: format!(
+                    "Built {} mod '{}'{staged_msg}",
+                    rep.mod_type.as_str(),
+                    rep.name
+                ),
                 data: serde_json::json!({
                     "name": rep.name,
                     "mod_type": rep.mod_type.as_str(),

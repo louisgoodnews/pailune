@@ -182,7 +182,9 @@ pub fn crate_coin_rewards(copper_amount: u64) -> Graph {
             title: "Crate Coin Rewards".into(),
             author: "Pailune Creator".into(),
             version: "1.0.0".into(),
-            description: format!("Guarantees {copper_amount} copper coins from breaking crates, barrels, and pots."),
+            description: format!(
+                "Guarantees {copper_amount} copper coins from breaking crates, barrels, and pots."
+            ),
         },
     )
     .with_pos(820.0, 280.0);

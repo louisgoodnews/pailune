@@ -32,9 +32,12 @@ a plan is computed, then executed), which keeps them testable without a window o
 | `tables/` | Derived layouts of the game's data tables (`data/table-layouts.json`), exact record decoder and verification, format-3 resolution into byte changes. |
 | `fomod/` | FOMOD installers: XML model and parser, resolution of choices into files (used by `mod_engine::plan`). |
 | `symlink/` | Executes link plans: `.bak` displacement, write-ahead journal, exact undeploy. |
+| `inplace/` | Classification and deployment of non-overlay files (audio banks, configs) with `.bak` safety. |
 | `paz/` | Read/write of the game's archive formats (PAPGT, PAMT, PAZ, PATHC, PAVER), ChaCha20, LZ4, DDS. See [paz-format.md](paz-format.md). |
 | `overlay/` | Builds Pailune's archive group (`0100`) and a rebuilt `meta/0.papgt`/`0.pathc` from enabled mods; output is deployed as symlinks. |
-| `patch/` | Byte-patch JSON and CSS patch/merge files applied to archived game files. |
+| `patch/` | Byte-patch JSON, format-3 field-name JSON, CSS, and XML/HTML patch/merge engines applied to game files. |
+| `sdk/` | Scaffolding for native ASI plugins (C++/Rust), cross-compilation build runners, live log inspection. |
+| `visual/` | Visual node-based mod creator: graph models, topological cycle detection, socket type safety, compiler, and templates. |
 | `backup/` | Snapshot of the game's `meta/` files to `.bak`; detection of game updates and foreign archive folders. |
 | `app_backup/` | Backups of Pailune itself (settings, database, optionally mod files) and restore. |
 | `savefile/` | Reading the game's save files: container crypto, self-describing body, readable trees, slot summaries (read-only). |

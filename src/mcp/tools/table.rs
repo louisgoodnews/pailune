@@ -290,11 +290,7 @@ pub const TOOLS: &[Tool] = &[
         name: "read_plugin_log",
         description: "Read recent log output from an ASI plugin in the game directory (Pailune Modding SDK).",
         params: &[
-            (
-                "name",
-                "string",
-                "Plugin name (without .asi or .log)",
-            ),
+            ("name", "string", "Plugin name (without .asi or .log)"),
             (
                 "limit",
                 "integer",

@@ -115,29 +115,30 @@ pub fn inspect_record(stem: &str, record: &Record, body: &[u8]) -> InspectedReco
     let raw_hex = crate::patch::document::hex(payload);
     let mut fields = Vec::new();
 
-    if let Some(table) = lookup_layout(stem) {
-        if let Some(spans) = spans(table, payload) {
-            for (idx, field) in table.fields.iter().enumerate() {
-                if let Some(&(start, end)) = spans.get(idx) {
-                    if end <= payload.len() && start <= end {
-                        let field_bytes = &payload[start..end];
-                        let val_str = value::decode(field, field_bytes)
-                            .map(|v| match v {
-                                serde_json::Value::String(s) => s,
-                                other => other.to_string(),
-                            })
-                            .unwrap_or_else(|_| crate::patch::document::hex(field_bytes));
-                        fields.push(DecodedField {
-                            name: field.name.clone(),
-                            offset: start,
-                            shape: field.shape.clone(),
-                            meaning: field.meaning.clone(),
-                            value: val_str,
-                            raw_hex: crate::patch::document::hex(field_bytes),
-                            editable: field.editable(),
-                        });
-                    }
-                }
+    if let Some(table) = lookup_layout(stem)
+        && let Some(spans) = spans(table, payload)
+    {
+        for (idx, field) in table.fields.iter().enumerate() {
+            if let Some(&(start, end)) = spans.get(idx)
+                && end <= payload.len()
+                && start <= end
+            {
+                let field_bytes = &payload[start..end];
+                let val_str = value::decode(field, field_bytes)
+                    .map(|v| match v {
+                        serde_json::Value::String(s) => s,
+                        other => other.to_string(),
+                    })
+                    .unwrap_or_else(|_| crate::patch::document::hex(field_bytes));
+                fields.push(DecodedField {
+                    name: field.name.clone(),
+                    offset: start,
+                    shape: field.shape.clone(),
+                    meaning: field.meaning.clone(),
+                    value: val_str,
+                    raw_hex: crate::patch::document::hex(field_bytes),
+                    editable: field.editable(),
+                });
             }
         }
     }

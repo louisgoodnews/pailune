@@ -4,9 +4,7 @@ use crate::ui::intent::{CreatorAction, DeployAction};
 use crate::ui::theme::{self, accent, muted, success, warning};
 use crate::ui::{Action, PailuneApp};
 use crate::visual::compiler::compile;
-use crate::visual::graph::{
-    ItemMatchMode, MathOp, Node, NodeCategory, NodeType, SocketType,
-};
+use crate::visual::graph::{ItemMatchMode, MathOp, Node, NodeCategory, NodeType, SocketType};
 use eframe::egui::{self, Color32, CornerRadius, Pos2, Rect, RichText, Stroke, Vec2};
 use std::collections::HashMap;
 
@@ -15,9 +13,9 @@ fn socket_color(st: SocketType) -> Color32 {
     match st {
         SocketType::ItemRef => Color32::from_rgb(0x5a, 0x9c, 0xe0), // Blue
         SocketType::DropTableRef => Color32::from_rgb(0xb3, 0x7d, 0xde), // Purple
-        SocketType::Number => Color32::from_rgb(0x5f, 0xb3, 0x6b),   // Green
-        SocketType::Boolean => Color32::from_rgb(0xe0, 0xb3, 0x4a),  // Yellow
-        SocketType::Text => Color32::from_rgb(0x9a, 0x9f, 0xa8),     // Grey
+        SocketType::Number => Color32::from_rgb(0x5f, 0xb3, 0x6b),  // Green
+        SocketType::Boolean => Color32::from_rgb(0xe0, 0xb3, 0x4a), // Yellow
+        SocketType::Text => Color32::from_rgb(0x9a, 0x9f, 0xa8),    // Grey
     }
 }
 
@@ -27,21 +25,41 @@ pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
 
     // 1. Top Toolbar
     ui.horizontal(|ui| {
-        ui.label(RichText::new("Visual Mod Creator").strong().size(18.0).color(accent()));
+        ui.label(
+            RichText::new("Visual Mod Creator")
+                .strong()
+                .size(18.0)
+                .color(accent()),
+        );
         ui.add_space(8.0);
 
         // Template selector
         egui::ComboBox::from_id_salt("template_select")
             .selected_text("Templates")
             .show_ui(ui, |ui| {
-                if ui.selectable_label(false, "★ Mega Stacks (Arrows & Potions)").clicked() {
-                    actions.push(Action::Creator(CreatorAction::LoadTemplate("mega_stacks".into())));
+                if ui
+                    .selectable_label(false, "★ Mega Stacks (Arrows & Potions)")
+                    .clicked()
+                {
+                    actions.push(Action::Creator(CreatorAction::LoadTemplate(
+                        "mega_stacks".into(),
+                    )));
                 }
-                if ui.selectable_label(false, "★ Hunting & Animal Yields (100% Drops)").clicked() {
-                    actions.push(Action::Creator(CreatorAction::LoadTemplate("loot_bounty".into())));
+                if ui
+                    .selectable_label(false, "★ Hunting & Animal Yields (100% Drops)")
+                    .clicked()
+                {
+                    actions.push(Action::Creator(CreatorAction::LoadTemplate(
+                        "loot_bounty".into(),
+                    )));
                 }
-                if ui.selectable_label(false, "★ Crate Coin Rewards (100 Coins)").clicked() {
-                    actions.push(Action::Creator(CreatorAction::LoadTemplate("crate_coins".into())));
+                if ui
+                    .selectable_label(false, "★ Crate Coin Rewards (100 Coins)")
+                    .clicked()
+                {
+                    actions.push(Action::Creator(CreatorAction::LoadTemplate(
+                        "crate_coins".into(),
+                    )));
                 }
             });
 
@@ -52,98 +70,130 @@ pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
                 ui.label(RichText::new("SOURCES").small().strong().color(muted()));
                 if ui.button("Item Query Node").clicked() {
                     let id = format!("item_{:x}", rand_id());
-                    app.creator.graph.add_node(Node::new(
-                        id,
-                        "Item Query",
-                        NodeType::ItemSource {
-                            item_name: "Arrow".into(),
-                            match_mode: ItemMatchMode::Contains,
-                        },
-                    ).with_pos(150.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]));
+                    app.creator.graph.add_node(
+                        Node::new(
+                            id,
+                            "Item Query",
+                            NodeType::ItemSource {
+                                item_name: "Arrow".into(),
+                                match_mode: ItemMatchMode::Contains,
+                            },
+                        )
+                        .with_pos(150.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]),
+                    );
                 }
                 if ui.button("Drop Set Query Node").clicked() {
                     let id = format!("drop_{:x}", rand_id());
-                    app.creator.graph.add_node(Node::new(
-                        id,
-                        "Drop Set Query",
-                        NodeType::DropSetSource {
-                            table_name: "DropSet_Middle_Animal_Common".into(),
-                            item_filter: None,
-                        },
-                    ).with_pos(150.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]));
+                    app.creator.graph.add_node(
+                        Node::new(
+                            id,
+                            "Drop Set Query",
+                            NodeType::DropSetSource {
+                                table_name: "DropSet_Middle_Animal_Common".into(),
+                                item_filter: None,
+                            },
+                        )
+                        .with_pos(150.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]),
+                    );
                 }
                 if ui.button("Number Constant").clicked() {
                     let id = format!("num_{:x}", rand_id());
-                    app.creator.graph.add_node(Node::new(
-                        id,
-                        "Number Value",
-                        NodeType::NumberConstant { value: 100.0 },
-                    ).with_pos(150.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]));
+                    app.creator.graph.add_node(
+                        Node::new(
+                            id,
+                            "Number Value",
+                            NodeType::NumberConstant { value: 100.0 },
+                        )
+                        .with_pos(150.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]),
+                    );
                 }
 
                 ui.separator();
                 ui.label(RichText::new("OPERATORS").small().strong().color(muted()));
                 if ui.button("Math Operation Node").clicked() {
                     let id = format!("math_{:x}", rand_id());
-                    app.creator.graph.add_node(Node::new(
-                        id,
-                        "Math Multiplier",
-                        NodeType::MathOperation {
-                            op: MathOp::Multiply,
-                            operand: 5.0,
-                        },
-                    ).with_pos(250.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]));
+                    app.creator.graph.add_node(
+                        Node::new(
+                            id,
+                            "Math Multiplier",
+                            NodeType::MathOperation {
+                                op: MathOp::Multiply,
+                                operand: 5.0,
+                            },
+                        )
+                        .with_pos(250.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]),
+                    );
                 }
 
                 ui.separator();
                 ui.label(RichText::new("ACTIONS").small().strong().color(muted()));
                 if ui.button("Set Stack Limit").clicked() {
                     let id = format!("act_stack_{:x}", rand_id());
-                    app.creator.graph.add_node(Node::new(
-                        id,
-                        "Set Stack Limit",
-                        NodeType::SetItemStackLimit { max_stack: 999 },
-                    ).with_pos(450.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]));
+                    app.creator.graph.add_node(
+                        Node::new(
+                            id,
+                            "Set Stack Limit",
+                            NodeType::SetItemStackLimit { max_stack: 999 },
+                        )
+                        .with_pos(450.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]),
+                    );
                 }
                 if ui.button("Set Drop Rate").clicked() {
                     let id = format!("act_rate_{:x}", rand_id());
-                    app.creator.graph.add_node(Node::new(
-                        id,
-                        "Set Drop Rate",
-                        NodeType::SetDropRate { rate_percent: 100.0 },
-                    ).with_pos(450.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]));
+                    app.creator.graph.add_node(
+                        Node::new(
+                            id,
+                            "Set Drop Rate",
+                            NodeType::SetDropRate {
+                                rate_percent: 100.0,
+                            },
+                        )
+                        .with_pos(450.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]),
+                    );
                 }
                 if ui.button("Set Loot Quantity").clicked() {
                     let id = format!("act_qty_{:x}", rand_id());
-                    app.creator.graph.add_node(Node::new(
-                        id,
-                        "Set Loot Quantity",
-                        NodeType::SetDropQuantity { min_amount: 10, max_amount: 30 },
-                    ).with_pos(450.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]));
+                    app.creator.graph.add_node(
+                        Node::new(
+                            id,
+                            "Set Loot Quantity",
+                            NodeType::SetDropQuantity {
+                                min_amount: 10,
+                                max_amount: 30,
+                            },
+                        )
+                        .with_pos(450.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]),
+                    );
                 }
                 if ui.button("Set Bounty Price").clicked() {
                     let id = format!("act_price_{:x}", rand_id());
-                    app.creator.graph.add_node(Node::new(
-                        id,
-                        "Set Bounty Price",
-                        NodeType::SetBountyPrice { price: 50000 },
-                    ).with_pos(450.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]));
+                    app.creator.graph.add_node(
+                        Node::new(
+                            id,
+                            "Set Bounty Price",
+                            NodeType::SetBountyPrice { price: 50000 },
+                        )
+                        .with_pos(450.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]),
+                    );
                 }
 
                 ui.separator();
                 ui.label(RichText::new("TARGET").small().strong().color(muted()));
                 if ui.button("Mod Target Config").clicked() {
                     let id = format!("target_{:x}", rand_id());
-                    app.creator.graph.add_node(Node::new(
-                        id,
-                        "Mod Configuration",
-                        NodeType::ModTarget {
-                            title: app.creator.graph.title.clone(),
-                            author: "Pailune Creator".into(),
-                            version: "1.0.0".into(),
-                            description: "Custom visual mod".into(),
-                        },
-                    ).with_pos(700.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]));
+                    app.creator.graph.add_node(
+                        Node::new(
+                            id,
+                            "Mod Configuration",
+                            NodeType::ModTarget {
+                                title: app.creator.graph.title.clone(),
+                                author: "Pailune Creator".into(),
+                                version: "1.0.0".into(),
+                                description: "Custom visual mod".into(),
+                            },
+                        )
+                        .with_pos(700.0 - app.creator.pan[0], 150.0 - app.creator.pan[1]),
+                    );
                 }
             });
 
@@ -185,7 +235,11 @@ pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     ui.separator();
 
     // 2. Main Area: Left Canvas + Optional Right/Bottom Diff Preview
-    let preview_height = if app.creator.show_diff_preview { 160.0 } else { 0.0 };
+    let preview_height = if app.creator.show_diff_preview {
+        160.0
+    } else {
+        0.0
+    };
     let canvas_height = (ui.available_height() - preview_height - 10.0).max(200.0);
 
     // Canvas Container
@@ -204,11 +258,16 @@ pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
 
 /// Renders the pannable, zoomable node graph canvas.
 fn render_canvas(ui: &mut egui::Ui, app: &mut PailuneApp, actions: &mut Vec<Action>) {
-    let (rect, response) = ui.allocate_exact_size(ui.available_size(), egui::Sense::click_and_drag());
+    let (rect, response) =
+        ui.allocate_exact_size(ui.available_size(), egui::Sense::click_and_drag());
     let painter = ui.painter_at(rect);
 
     // Canvas background
-    painter.rect_filled(rect, CornerRadius::ZERO, theme::card_frame(&ui.visuals()).fill);
+    painter.rect_filled(
+        rect,
+        CornerRadius::ZERO,
+        theme::card_frame(ui.visuals()).fill,
+    );
 
     // Panning & Zooming
     let scroll_delta = ui.input(|i| i.smooth_scroll_delta.y);
@@ -266,7 +325,8 @@ fn render_canvas(ui: &mut egui::Ui, app: &mut PailuneApp, actions: &mut Vec<Acti
     // Render Nodes
     for node in &mut app.creator.graph.nodes {
         let node_min = origin + Vec2::new(node.pos[0], node.pos[1]);
-        let estimated_height = 80.0 + (node.inputs.len().max(node.outputs.len()) as f32) * 26.0 + 30.0;
+        let estimated_height =
+            80.0 + (node.inputs.len().max(node.outputs.len()) as f32) * 26.0 + 30.0;
         let node_rect = Rect::from_min_size(node_min, egui::vec2(node_width, estimated_height));
 
         // Node card background
@@ -303,7 +363,10 @@ fn render_canvas(ui: &mut egui::Ui, app: &mut PailuneApp, actions: &mut Vec<Acti
         );
 
         // Header delete button
-        let del_rect = Rect::from_min_size(header_rect.max - Vec2::new(22.0, 22.0), egui::vec2(18.0, 18.0));
+        let del_rect = Rect::from_min_size(
+            header_rect.max - Vec2::new(22.0, 22.0),
+            egui::vec2(18.0, 18.0),
+        );
         if ui.put(del_rect, egui::Button::new("🗙").small()).clicked() {
             nodes_to_delete.push(node.id.clone());
         }
@@ -339,13 +402,18 @@ fn render_canvas(ui: &mut egui::Ui, app: &mut PailuneApp, actions: &mut Vec<Acti
             let sock_hit = Rect::from_center_size(sock_pos, egui::vec2(14.0, 14.0));
             if sock_hit.contains(pointer_pos) {
                 painter.circle_stroke(sock_pos, 8.0, Stroke::new(1.5, Color32::WHITE));
-                if ui.input(|i| i.pointer.button_clicked(egui::PointerButton::Primary)) {
-                    if let Some((from_node, from_sock, is_output)) = &app.creator.connecting_socket {
-                        if *is_output && from_node != &node.id {
-                            connections_to_add.push((from_node.clone(), from_sock.clone(), node.id.clone(), sock.id.clone()));
-                        }
-                        clear_connecting_socket = true;
+                if ui.input(|i| i.pointer.button_clicked(egui::PointerButton::Primary))
+                    && let Some((from_node, from_sock, is_output)) = &app.creator.connecting_socket
+                {
+                    if *is_output && from_node != &node.id {
+                        connections_to_add.push((
+                            from_node.clone(),
+                            from_sock.clone(),
+                            node.id.clone(),
+                            sock.id.clone(),
+                        ));
                     }
+                    clear_connecting_socket = true;
                 }
             }
         }
@@ -371,7 +439,10 @@ fn render_canvas(ui: &mut egui::Ui, app: &mut PailuneApp, actions: &mut Vec<Acti
     }
 
     for (from_node, from_sock, to_node, to_sock) in connections_to_add {
-        let _ = app.creator.graph.connect(&from_node, &from_sock, &to_node, &to_sock);
+        let _ = app
+            .creator
+            .graph
+            .connect(&from_node, &from_sock, &to_node, &to_sock);
     }
     if clear_connecting_socket {
         app.creator.connecting_socket = None;
@@ -412,31 +483,32 @@ fn render_canvas(ui: &mut egui::Ui, app: &mut PailuneApp, actions: &mut Vec<Acti
     }
 
     // Draw Active Connecting Wire
-    if let Some((from_node, from_sock, is_out)) = &app.creator.connecting_socket {
-        if *is_out {
-            if let Some(&p1) = output_socket_positions.get(&(from_node.clone(), from_sock.clone())) {
-                let p2 = pointer_pos;
-                let dx = (p2.x - p1.x).abs();
-                let offset_x = (dx * 0.5).max(40.0);
-                let c1 = p1 + Vec2::new(offset_x, 0.0);
-                let c2 = p2 - Vec2::new(offset_x, 0.0);
+    if let Some((from_node, from_sock, true)) = &app.creator.connecting_socket
+        && let Some(&p1) = output_socket_positions.get(&(from_node.clone(), from_sock.clone()))
+    {
+        let p2 = pointer_pos;
+        let dx = (p2.x - p1.x).abs();
+        let offset_x = (dx * 0.5).max(40.0);
+        let c1 = p1 + Vec2::new(offset_x, 0.0);
+        let c2 = p2 - Vec2::new(offset_x, 0.0);
 
-                let shape = egui::epaint::CubicBezierShape::from_points_stroke(
-                    [p1, c1, c2, p2],
-                    false,
-                    Color32::TRANSPARENT,
-                    Stroke::new(2.0, Color32::WHITE),
-                );
-                painter.add(shape);
-            }
-        }
+        let shape = egui::epaint::CubicBezierShape::from_points_stroke(
+            [p1, c1, c2, p2],
+            false,
+            Color32::TRANSPARENT,
+            Stroke::new(2.0, Color32::WHITE),
+        );
+        painter.add(shape);
     }
 }
 
 /// Renders specific parameter widgets inside a node frame.
 fn render_node_controls(ui: &mut egui::Ui, node: &mut Node) {
     match &mut node.node_type {
-        NodeType::ItemSource { item_name, match_mode } => {
+        NodeType::ItemSource {
+            item_name,
+            match_mode,
+        } => {
             ui.label(RichText::new("Item Name:").small());
             ui.text_edit_singleline(item_name);
             egui::ComboBox::from_id_salt(format!("match_{}", node.id))
@@ -483,7 +555,10 @@ fn render_node_controls(ui: &mut egui::Ui, node: &mut Node) {
             ui.label(RichText::new("Drop Chance:").small());
             ui.add(egui::Slider::new(rate_percent, 0.0..=100.0).suffix("%"));
         }
-        NodeType::SetDropQuantity { min_amount, max_amount } => {
+        NodeType::SetDropQuantity {
+            min_amount,
+            max_amount,
+        } => {
             ui.horizontal(|ui| {
                 ui.label(RichText::new("Min:").small());
                 ui.add(egui::DragValue::new(min_amount).speed(1.0));
@@ -495,7 +570,12 @@ fn render_node_controls(ui: &mut egui::Ui, node: &mut Node) {
             ui.label(RichText::new("Reward Coins:").small());
             ui.add(egui::DragValue::new(price).speed(100.0));
         }
-        NodeType::ModTarget { title, version, author, description } => {
+        NodeType::ModTarget {
+            title,
+            version,
+            author,
+            description,
+        } => {
             ui.label(RichText::new("Mod Title:").small());
             ui.text_edit_singleline(title);
             ui.horizontal(|ui| {
@@ -513,14 +593,27 @@ fn render_node_controls(ui: &mut egui::Ui, node: &mut Node) {
 /// Renders the real-time compiled diff preview panel.
 fn render_diff_preview(ui: &mut egui::Ui, app: &PailuneApp) {
     ui.horizontal(|ui| {
-        ui.label(RichText::new("🔍 Live Mod Diff Preview").strong().color(accent()));
-        ui.label(RichText::new("(Evaluated in real-time against verified table layouts)").small().color(muted()));
+        ui.label(
+            RichText::new("🔍 Live Mod Diff Preview")
+                .strong()
+                .color(accent()),
+        );
+        ui.label(
+            RichText::new("(Evaluated in real-time against verified table layouts)")
+                .small()
+                .color(muted()),
+        );
     });
 
     match compile(&app.creator.graph) {
         Ok(compiled) => {
             if compiled.field_patches.is_empty() {
-                ui.label(RichText::new("No active rules generated yet. Connect a Source to an Action node.").color(muted()));
+                ui.label(
+                    RichText::new(
+                        "No active rules generated yet. Connect a Source to an Action node.",
+                    )
+                    .color(muted()),
+                );
             } else {
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     for patch in &compiled.field_patches {

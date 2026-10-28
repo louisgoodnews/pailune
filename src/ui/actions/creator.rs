@@ -26,7 +26,10 @@ impl PailuneApp {
                 })?;
 
                 self.deploy_action(DeployAction::Apply)?;
-                let msg = format!("Applied visual mod '{}' ({}) to game", compiled.title, compiled.mod_name);
+                let msg = format!(
+                    "Applied visual mod '{}' ({}) to game",
+                    compiled.title, compiled.mod_name
+                );
                 self.creator.status_feedback = Some((msg.clone(), Level::Success));
                 Ok(Some(StatusLine::new(Level::Success, msg)))
             }
@@ -42,7 +45,12 @@ impl PailuneApp {
                 };
                 let export_dir = self.paths.exports.clone();
                 std::fs::create_dir_all(&export_dir).at(&export_dir)?;
-                let res = package_mod(&self.paths.staging, &compiled.mod_name, &export_dir, &export_meta)?;
+                let res = package_mod(
+                    &self.paths.staging,
+                    &compiled.mod_name,
+                    &export_dir,
+                    &export_meta,
+                )?;
                 let msg = format!("Exported visual mod to {}", res.archive_path.display());
                 self.creator.status_feedback = Some((msg.clone(), Level::Success));
                 Ok(Some(StatusLine::new(Level::Success, msg)))

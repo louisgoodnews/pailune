@@ -111,8 +111,8 @@ fn change_row(
 ) {
     ui.horizontal(|ui| {
         status_icon(ui, status);
-        if let Some(sug) = rebase {
-            if ui
+        if let Some(sug) = rebase
+            && ui
                 .button(
                     RichText::new(format!("⚡ Rebase +{}", sug.new_offset))
                         .color(accent())
@@ -123,13 +123,10 @@ fn change_row(
                     sug.old_offset, sug.new_offset
                 ))
                 .clicked()
-            {
-                if let Ok(updated) =
-                    document::rebase_offset(text, patch_idx, change_idx, sug.new_offset)
-                {
-                    *text = updated;
-                }
-            }
+            && let Ok(updated) =
+                document::rebase_offset(text, patch_idx, change_idx, sug.new_offset)
+        {
+            *text = updated;
         }
     });
     let (original, patched) = match &change.edit {

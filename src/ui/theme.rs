@@ -169,8 +169,16 @@ fn teal() -> Color32 {
 
 /// A small pill with tinted fill, subtle outline, and coloured text.
 pub fn badge(ui: &mut egui::Ui, text: &str, color: Color32) -> egui::Response {
-    let fill = color.linear_multiply(if LIGHT.load(Ordering::Relaxed) { 0.12 } else { 0.18 });
-    let stroke_color = color.linear_multiply(if LIGHT.load(Ordering::Relaxed) { 0.65 } else { 0.50 });
+    let fill = color.linear_multiply(if LIGHT.load(Ordering::Relaxed) {
+        0.12
+    } else {
+        0.18
+    });
+    let stroke_color = color.linear_multiply(if LIGHT.load(Ordering::Relaxed) {
+        0.65
+    } else {
+        0.50
+    });
     egui::Frame::new()
         .fill(fill)
         .stroke(Stroke::new(1.0, stroke_color))
@@ -185,8 +193,14 @@ pub fn badge(ui: &mut egui::Ui, text: &str, color: Color32) -> egui::Response {
 /// A styled panel/card container for grouping related content with palette-aware background and subtle border.
 pub fn card_frame(visuals: &egui::Visuals) -> egui::Frame {
     let (fill, stroke) = match visuals.dark_mode {
-        true => (rgb(0x1c, 0x1f, 0x24), Stroke::new(1.0, rgb(0x2b, 0x2f, 0x38))),
-        false => (rgb(0xfb, 0xfa, 0xf8), Stroke::new(1.0, rgb(0xe2, 0xe0, 0xd8))),
+        true => (
+            rgb(0x1c, 0x1f, 0x24),
+            Stroke::new(1.0, rgb(0x2b, 0x2f, 0x38)),
+        ),
+        false => (
+            rgb(0xfb, 0xfa, 0xf8),
+            Stroke::new(1.0, rgb(0xe2, 0xe0, 0xd8)),
+        ),
     };
     egui::Frame::new()
         .fill(fill)

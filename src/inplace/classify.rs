@@ -59,16 +59,24 @@ mod tests {
 
     #[test]
     fn classifies_weapon_and_socket_xml_as_inplace() {
-        assert!(is_inplace_candidate("gamedata/character/weapon/sword_01.xml"));
+        assert!(is_inplace_candidate(
+            "gamedata/character/weapon/sword_01.xml"
+        ));
         assert!(is_inplace_candidate("gamedata/item/socket/gem_slot.xml"));
     }
 
     #[test]
     fn excludes_data_tables_from_inplace() {
-        assert!(!is_inplace_candidate("gamedata/binarystaticinfo__/bin/iteminfo.pabgb"));
-        assert!(!is_inplace_candidate("gamedata/binarystaticinfo__/bin/iteminfo.pabgh"));
+        assert!(!is_inplace_candidate(
+            "gamedata/binarystaticinfo__/bin/iteminfo.pabgb"
+        ));
+        assert!(!is_inplace_candidate(
+            "gamedata/binarystaticinfo__/bin/iteminfo.pabgh"
+        ));
         assert!(!is_inplace_candidate("gamedata/sound/table.staticinfobody"));
-        assert!(!is_inplace_candidate("gamedata/character/weapon/data.pabgb"));
+        assert!(!is_inplace_candidate(
+            "gamedata/character/weapon/data.pabgb"
+        ));
     }
 
     #[test]

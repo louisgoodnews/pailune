@@ -10,7 +10,11 @@ use std::path::Path;
 /// Reads the last `limit` lines from `<game_dir>/bin64/<plugin_name>.log`
 /// or `<game_dir>/<plugin_name>.log`.
 pub fn read_plugin_log(game_dir: &Path, plugin_name: &str, limit: usize) -> Result<Vec<String>> {
-    let clean_name = plugin_name.trim().trim_end_matches(".asi").trim_end_matches(".dll").trim_end_matches(".log");
+    let clean_name = plugin_name
+        .trim()
+        .trim_end_matches(".asi")
+        .trim_end_matches(".dll")
+        .trim_end_matches(".log");
     if clean_name.is_empty() {
         return Ok(Vec::new());
     }
@@ -18,7 +22,9 @@ pub fn read_plugin_log(game_dir: &Path, plugin_name: &str, limit: usize) -> Resu
     let candidates = [
         game_dir.join("bin64").join(format!("{clean_name}.log")),
         game_dir.join(format!("{clean_name}.log")),
-        game_dir.join("bin64/plugins").join(format!("{clean_name}.log")),
+        game_dir
+            .join("bin64/plugins")
+            .join(format!("{clean_name}.log")),
     ];
 
     let log_file = candidates.into_iter().find(|p| p.exists());

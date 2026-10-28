@@ -421,7 +421,8 @@ fn nested_fields_and_table_index_rewriting() {
 
 #[test]
 fn shipped_dropsetinfo_layout_resolves_and_modifies_rates_and_amounts() {
-    let table = table("dropsetinfo").expect("dropsetinfo layout exists in shipped table-layouts.json");
+    let table =
+        table("dropsetinfo").expect("dropsetinfo layout exists in shipped table-layouts.json");
     assert_eq!(table.class, "DropSetInfo");
     assert_eq!(table.key_size, 4);
     assert!(table.partial);
@@ -528,7 +529,14 @@ fn shipped_dropsetinfo_layout_resolves_and_modifies_rates_and_amounts() {
         fields: Vec::new(),
     };
     let mut patched_body = body.clone();
-    let report = crate::patch::apply::apply_over(&mut patched_body, &patch, Some(&header), true, false, None);
+    let report = crate::patch::apply::apply_over(
+        &mut patched_body,
+        &patch,
+        Some(&header),
+        true,
+        false,
+        None,
+    );
     assert_eq!(report.applied, 4);
     assert!(report.failed.is_empty(), "{:?}", report.failed);
 
@@ -541,8 +549,8 @@ fn shipped_dropsetinfo_layout_resolves_and_modifies_rates_and_amounts() {
     // _dropInfoList field is decoded into JSON
     let list_field = &inspected.fields[2];
     assert_eq!(list_field.name, "_dropInfoList");
-    let parsed_json: serde_json::Value = serde_json::from_str(&list_field.value)
-        .expect("list:struct value decodes to valid JSON");
+    let parsed_json: serde_json::Value =
+        serde_json::from_str(&list_field.value).expect("list:struct value decodes to valid JSON");
     assert_eq!(parsed_json.as_array().unwrap().len(), 2);
 
     let elem0 = &parsed_json.as_array().unwrap()[0];

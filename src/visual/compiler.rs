@@ -30,7 +30,10 @@ impl CompiledMod {
     pub fn save_to_staging(&self, staging_root: &Path) -> Result<PathBuf> {
         let mod_dir = staging_root.join(&self.mod_name);
         fs::create_dir_all(&mod_dir).map_err(|e| {
-            PailuneError::Invalid(format!("could not create mod directory {}: {e}", mod_dir.display()))
+            PailuneError::Invalid(format!(
+                "could not create mod directory {}: {e}",
+                mod_dir.display()
+            ))
         })?;
 
         // 1. Write modinfo.json
@@ -100,7 +103,10 @@ impl CompiledMod {
                 "targets": targets_json
             });
 
-            let patch_filename = format!("{}.field.json", self.mod_name.to_lowercase().replace(' ', "_"));
+            let patch_filename = format!(
+                "{}.field.json",
+                self.mod_name.to_lowercase().replace(' ', "_")
+            );
             let patch_path = mod_dir.join(patch_filename);
             fs::write(&patch_path, serde_json::to_string_pretty(&doc)?)
                 .map_err(|e| PailuneError::Invalid(format!("failed to write patch file: {e}")))?;
@@ -152,7 +158,8 @@ pub fn compile(graph: &Graph) -> Result<CompiledMod> {
     for node in &graph.nodes {
         match &node.node_type {
             NodeType::SetItemStackLimit { max_stack } => {
-                let limit = resolve_numeric_input(graph, node, "override_val").unwrap_or(*max_stack as f64) as u64;
+                let limit = resolve_numeric_input(graph, node, "override_val")
+                    .unwrap_or(*max_stack as f64) as u64;
                 let sources = incoming_nodes(graph, &node.id, "item");
                 if sources.is_empty() {
                     // Default to Arrow if not connected
@@ -192,7 +199,8 @@ pub fn compile(graph: &Graph) -> Result<CompiledMod> {
                                         .entry("iteminfo.pabgb".into())
                                         .or_default()
                                         .push(intent);
-                                    notes.push(format!("{item_name}: set _maxStackCount = {limit}"));
+                                    notes
+                                        .push(format!("{item_name}: set _maxStackCount = {limit}"));
                                 }
                                 ItemMatchMode::Contains => {
                                     let intent = Intent {
@@ -236,11 +244,7 @@ pub fn compile(graph: &Graph) -> Result<CompiledMod> {
                 let rate_val = ((pct.clamp(0.0, 100.0) / 100.0) * 1_000_000.0) as u32;
                 let sources = incoming_nodes(graph, &node.id, "drop");
 
-                for src in if sources.is_empty() {
-                    vec![]
-                } else {
-                    sources
-                } {
+                for src in if sources.is_empty() { vec![] } else { sources } {
                     if let NodeType::DropSetSource { table_name, .. } = &src.node_type {
                         let intent = Intent {
                             entry: Some(table_name.clone()),
@@ -255,7 +259,9 @@ pub fn compile(graph: &Graph) -> Result<CompiledMod> {
                             .entry("dropsetinfo.pabgb".into())
                             .or_default()
                             .push(intent);
-                        notes.push(format!("{table_name}: set drop rate = {pct:.1}% ({rate_val})"));
+                        notes.push(format!(
+                            "{table_name}: set drop rate = {pct:.1}% ({rate_val})"
+                        ));
                     }
                 }
             }
@@ -263,15 +269,13 @@ pub fn compile(graph: &Graph) -> Result<CompiledMod> {
                 min_amount,
                 max_amount,
             } => {
-                let min_val = resolve_numeric_input(graph, node, "min").unwrap_or(*min_amount as f64) as u64;
-                let max_val = resolve_numeric_input(graph, node, "max").unwrap_or(*max_amount as f64) as u64;
+                let min_val =
+                    resolve_numeric_input(graph, node, "min").unwrap_or(*min_amount as f64) as u64;
+                let max_val =
+                    resolve_numeric_input(graph, node, "max").unwrap_or(*max_amount as f64) as u64;
                 let sources = incoming_nodes(graph, &node.id, "drop");
 
-                for src in if sources.is_empty() {
-                    vec![]
-                } else {
-                    sources
-                } {
+                for src in if sources.is_empty() { vec![] } else { sources } {
                     if let NodeType::DropSetSource { table_name, .. } = &src.node_type {
                         let min_intent = Intent {
                             entry: Some(table_name.clone()),
@@ -303,11 +307,7 @@ pub fn compile(graph: &Graph) -> Result<CompiledMod> {
                 let p = resolve_numeric_input(graph, node, "price").unwrap_or(*price as f64) as i64;
                 let sources = incoming_nodes(graph, &node.id, "record");
 
-                for src in if sources.is_empty() {
-                    vec![]
-                } else {
-                    sources
-                } {
+                for src in if sources.is_empty() { vec![] } else { sources } {
                     if let NodeType::WantedPriceSource { record_name } = &src.node_type {
                         let intent = Intent {
                             entry: Some(record_name.clone()),

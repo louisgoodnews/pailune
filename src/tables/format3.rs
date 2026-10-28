@@ -548,11 +548,8 @@ pub fn resolve(
                 }
             }
             if found.is_empty() {
-                if i.matches.is_some() {
-                    failed.push(format!(
-                        "no records matched the predicate {:?}",
-                        i.matches.as_ref().unwrap()
-                    ));
+                if let Some(m) = &i.matches {
+                    failed.push(format!("no records matched the predicate {:?}", m));
                 } else {
                     failed.push(format!("record {:?} / key {:?} not found", i.entry, i.key));
                 }

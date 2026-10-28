@@ -126,28 +126,21 @@ impl PailuneApp {
                 } else if let Ok(entries) = std::fs::read_dir(&mod_dir) {
                     for entry in entries.flatten() {
                         let p = entry.path();
-                        if p.extension().is_some_and(|e| e == "json") {
-                            if let Ok(text) = std::fs::read_to_string(&p) {
-                                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
-                                    if let Some(info) = val.get("modinfo") {
-                                        if let Some(a) = info.get("author").and_then(|v| v.as_str())
-                                        {
-                                            author = a.to_string();
-                                        }
-                                        if let Some(v) =
-                                            info.get("version").and_then(|v| v.as_str())
-                                        {
-                                            version = v.to_string();
-                                        }
-                                        if let Some(d) =
-                                            info.get("description").and_then(|v| v.as_str())
-                                        {
-                                            description = d.to_string();
-                                        }
-                                        break;
-                                    }
-                                }
+                        if p.extension().is_some_and(|e| e == "json")
+                            && let Ok(text) = std::fs::read_to_string(&p)
+                            && let Ok(val) = serde_json::from_str::<serde_json::Value>(&text)
+                            && let Some(info) = val.get("modinfo")
+                        {
+                            if let Some(a) = info.get("author").and_then(|v| v.as_str()) {
+                                author = a.to_string();
                             }
+                            if let Some(v) = info.get("version").and_then(|v| v.as_str()) {
+                                version = v.to_string();
+                            }
+                            if let Some(d) = info.get("description").and_then(|v| v.as_str()) {
+                                description = d.to_string();
+                            }
+                            break;
                         }
                     }
                 }

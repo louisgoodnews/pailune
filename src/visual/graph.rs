@@ -94,35 +94,19 @@ pub enum NodeType {
         item_filter: Option<String>,
     },
     /// Queries bounty prices from `wantedinfo`.
-    WantedPriceSource {
-        record_name: String,
-    },
+    WantedPriceSource { record_name: String },
     /// Constant numeric value.
-    NumberConstant {
-        value: f64,
-    },
+    NumberConstant { value: f64 },
     /// Mathematical transformation on input.
-    MathOperation {
-        op: MathOp,
-        operand: f64,
-    },
+    MathOperation { op: MathOp, operand: f64 },
     /// Modifies `_maxStackCount` in `iteminfo`.
-    SetItemStackLimit {
-        max_stack: u64,
-    },
+    SetItemStackLimit { max_stack: u64 },
     /// Modifies `_dropRate` in `DropSetInfo` (0.0 to 100.0 percent).
-    SetDropRate {
-        rate_percent: f64,
-    },
+    SetDropRate { rate_percent: f64 },
     /// Modifies `_minDropCount` and `_maxDropCount` in `DropSetInfo`.
-    SetDropQuantity {
-        min_amount: u64,
-        max_amount: u64,
-    },
+    SetDropQuantity { min_amount: u64, max_amount: u64 },
     /// Modifies `_increasePrice` in `wantedinfo`.
-    SetBountyPrice {
-        price: i64,
-    },
+    SetBountyPrice { price: i64 },
     /// Mod target and metadata configuration.
     ModTarget {
         title: String,
@@ -343,12 +327,8 @@ impl Graph {
         self.connections
             .retain(|c| !(c.to_node == to_node && c.to_socket == to_socket));
 
-        self.connections.push(Connection::new(
-            from_node,
-            from_socket,
-            to_node,
-            to_socket,
-        ));
+        self.connections
+            .push(Connection::new(from_node, from_socket, to_node, to_socket));
         Ok(())
     }
 
@@ -377,13 +357,18 @@ impl Graph {
 
     /// Evaluates topological order of nodes for execution.
     pub fn topological_order(&self) -> Result<Vec<&Node>> {
-        let mut in_degrees: HashMap<&str, usize> = self.nodes.iter().map(|n| (n.id.as_str(), 0)).collect();
+        let mut in_degrees: HashMap<&str, usize> =
+            self.nodes.iter().map(|n| (n.id.as_str(), 0)).collect();
         let mut adj: HashMap<&str, Vec<&str>> = HashMap::new();
 
         for c in &self.connections {
-            if in_degrees.contains_key(c.to_node.as_str()) && in_degrees.contains_key(c.from_node.as_str()) {
+            if in_degrees.contains_key(c.to_node.as_str())
+                && in_degrees.contains_key(c.from_node.as_str())
+            {
                 *in_degrees.get_mut(c.to_node.as_str()).unwrap() += 1;
-                adj.entry(c.from_node.as_str()).or_default().push(c.to_node.as_str());
+                adj.entry(c.from_node.as_str())
+                    .or_default()
+                    .push(c.to_node.as_str());
             }
         }
 
@@ -423,14 +408,23 @@ impl Graph {
 
         for c in &self.connections {
             if !node_ids.contains(c.from_node.as_str()) {
-                warnings.push(format!("connection references unknown source '{}'", c.from_node));
+                warnings.push(format!(
+                    "connection references unknown source '{}'",
+                    c.from_node
+                ));
             }
             if !node_ids.contains(c.to_node.as_str()) {
-                warnings.push(format!("connection references unknown target '{}'", c.to_node));
+                warnings.push(format!(
+                    "connection references unknown target '{}'",
+                    c.to_node
+                ));
             }
         }
 
-        let has_target = self.nodes.iter().any(|n| n.category == NodeCategory::Target);
+        let has_target = self
+            .nodes
+            .iter()
+            .any(|n| n.category == NodeCategory::Target);
         if !has_target {
             warnings.push("graph has no ModTarget node".into());
         }

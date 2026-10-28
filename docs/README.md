@@ -10,10 +10,14 @@
 | [decisions.md](decisions.md) | Contributors | Architecture decision records: what was chosen and why. |
 | [ux-principles.md](ux-principles.md) | Contributors | Evidence-based interface rules (R-01 … R-29) and where they live. |
 | [save-format.md](save-format.md) | Contributors | The save-game container and decoding options. |
-| [research/table-layouts.md](research/table-layouts.md) | Contributors | Deriving the game's table layouts for format-3 mods. |
-| [research/script-bridge.md](research/script-bridge.md) | Contributors | Whether scripts can run inside the game. |
 | [paz-format.md](paz-format.md) | Contributors | The game's archive formats as far as Pailune needs them. |
-| [audit.md](audit.md) · [roadmap.md](roadmap.md) · [board.md](board.md) | Maintainers | Findings, plan and status of every work item. |
+| [design/visual-mod-creator.md](design/visual-mod-creator.md) | Contributors | Visual node-based mod creator architecture and graph compiler. |
+| [design/in-place.md](design/in-place.md) | Contributors | In-place deployment route design, safety guarantees, and versioning. |
+| [research/engine-architecture.md](research/engine-architecture.md) | Contributors | BlackSpace Engine reverse engineering across 2M files and 36 pack groups. |
+| [research/asi-mods.md](research/asi-mods.md) | Contributors | ASI loader mechanisms, pattern scanning, MinGW/Rust cross-compilation. |
+| [research/table-layouts.md](research/table-layouts.md) | Contributors | Deriving the game's binary static info table layouts for format-3 mods. |
+| [research/script-bridge.md](research/script-bridge.md) | Contributors | Whether scripts can run inside the game. |
+| [audit.md](audit.md) · [roadmap.md](roadmap.md) · [board.md](board.md) · [priority-list.md](priority-list.md) | Maintainers | Findings, plan and status of every work item. |
 
 API documentation of the code itself: `cargo doc --no-deps --document-private-items --open`.
 Every function and constant outside tests carries rustdoc.

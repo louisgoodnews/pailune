@@ -111,11 +111,7 @@ pub fn ensure_base_backup(
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.extension().is_some_and(|e| e == "paz") {
-                    let rel = format!(
-                        "{}/{}",
-                        group.name,
-                        entry.file_name().to_string_lossy()
-                    );
+                    let rel = format!("{}/{}", group.name, entry.file_name().to_string_lossy());
                     let size = entry.metadata().map_or(0, |m| m.len());
                     let sha256 = sha256_file(&path).unwrap_or_default();
                     archives.push(Fingerprint { rel, size, sha256 });
@@ -162,10 +158,11 @@ pub fn build(
             continue;
         }
         if let Some((group_name, record)) = vanilla.locate(vpath) {
-            grouped
-                .entry(group_name.clone())
-                .or_default()
-                .push((vpath.clone(), source.clone(), record.flags));
+            grouped.entry(group_name.clone()).or_default().push((
+                vpath.clone(),
+                source.clone(),
+                record.flags,
+            ));
         } else {
             skipped.push(format!(
                 "{vpath}: in-place candidate not found in vanilla archives (cannot redirect)"
@@ -224,13 +221,22 @@ pub fn build(
         // Self-verification: confirm rewritten index parses and contains redirected entries
         let parsed = pamt::parse(&new_pamt)?;
         for (vpath, expected) in &redirects {
-            let record = parsed
-                .files
-                .get(vpath)
-                .ok_or_else(|| PailuneError::Archive(format!("verification failed: {vpath} missing")))?;
-            if (record.offset, record.stored_size, record.orig_size, record.flags, record.paz_index as u32)
-                != (expected.offset, expected.stored_size, expected.orig_size, expected.flags, archive_index)
-            {
+            let record = parsed.files.get(vpath).ok_or_else(|| {
+                PailuneError::Archive(format!("verification failed: {vpath} missing"))
+            })?;
+            if (
+                record.offset,
+                record.stored_size,
+                record.orig_size,
+                record.flags,
+                record.paz_index as u32,
+            ) != (
+                expected.offset,
+                expected.stored_size,
+                expected.orig_size,
+                expected.flags,
+                archive_index,
+            ) {
                 return Err(PailuneError::Archive(format!(
                     "verification failed: record mismatch for {vpath}"
                 )));
@@ -252,7 +258,11 @@ pub fn build(
         let new_pamt_crc = pa_hash(&new_pamt[12..]);
         version_files.push((format!("{group_name}/0.pamt"), new_pamt));
 
-        if let Some(g) = updated_papgt.groups.iter_mut().find(|g| g.name == group_name) {
+        if let Some(g) = updated_papgt
+            .groups
+            .iter_mut()
+            .find(|g| g.name == group_name)
+        {
             g.pamt_crc = new_pamt_crc;
         }
         affected_groups.push(group_name);
@@ -297,12 +307,11 @@ pub fn build(
 
 /// Restores vanilla base index files if an in-place version was active.
 pub fn revert(game_dir: &Path, store: &Store) -> Result<()> {
-    if store.has_base() {
-        if let Ok(Some(n)) = store.live_state(game_dir) {
-            if n > 0 {
-                store.restore(0, game_dir)?;
-            }
-        }
+    if store.has_base()
+        && let Ok(Some(n)) = store.live_state(game_dir)
+        && n > 0
+    {
+        store.restore(0, game_dir)?;
     }
     Ok(())
 }

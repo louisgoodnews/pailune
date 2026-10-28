@@ -68,10 +68,10 @@ pub fn show(ctx: &egui::Context, draft: &mut Option<SpawnProjectDraft>) -> Vec<A
                             .hint_text("Folder path (e.g. /home/user/projects)")
                             .desired_width(200.0),
                     );
-                    if ui.button("📁 Browse…").clicked() {
-                        if let Some(folder) = rfd::FileDialog::new().pick_folder() {
-                            d.location = folder.display().to_string();
-                        }
+                    if ui.button("📁 Browse…").clicked()
+                        && let Some(folder) = rfd::FileDialog::new().pick_folder()
+                    {
+                        d.location = folder.display().to_string();
                     }
                 });
                 ui.end_row();

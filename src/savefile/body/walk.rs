@@ -217,10 +217,11 @@ pub fn object(body: &Body, data: &[u8], index: usize) -> Result<Object> {
 pub fn enclosing_size_trailers(obj: &Object, at: usize) -> Vec<usize> {
     let mut trailers = Vec::new();
     fn recurse(obj: &Object, at: usize, trailers: &mut Vec<usize>) {
-        if let Some(size_at) = obj.size_at {
-            if obj.payload_start <= at && at <= size_at {
-                trailers.push(size_at);
-            }
+        if let Some(size_at) = obj.size_at
+            && obj.payload_start <= at
+            && at <= size_at
+        {
+            trailers.push(size_at);
         }
         for (_, value) in &obj.fields {
             match value {

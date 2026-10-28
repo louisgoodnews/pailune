@@ -188,7 +188,8 @@ fn deploy_archives(
             .map(|(_, target, _)| target.clone()),
     );
 
-    let papgt_bytes = match std::fs::read(crate::symlink::bak_path(&info.meta_dir.join("0.papgt"))) {
+    let papgt_bytes = match std::fs::read(crate::symlink::bak_path(&info.meta_dir.join("0.papgt")))
+    {
         Ok(b) => b,
         Err(_) => {
             let live = info.meta_dir.join("0.papgt");

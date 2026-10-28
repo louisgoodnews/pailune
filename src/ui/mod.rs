@@ -17,13 +17,13 @@ mod views;
 
 #[allow(unused_imports)]
 pub use intent::{
-    Action, BackupAction, Confirm, CreatorAction, DataBrowserAction, DeployAction, ModAction, ModListAction,
-    NexusAction, ProfileAction, SetupAction, Tab,
+    Action, BackupAction, Confirm, CreatorAction, DataBrowserAction, DeployAction, ModAction,
+    ModListAction, NexusAction, ProfileAction, SetupAction, Tab,
 };
 #[allow(unused_imports)]
 pub use state::{
-    ActiveFieldEdit, CreatorState, DataBrowserState, Incoming, JobState, JobView, LogState, ModsState,
-    NexusState, ProfilesState, SpawnProjectDraft,
+    ActiveFieldEdit, CreatorState, DataBrowserState, Incoming, JobState, JobView, LogState,
+    ModsState, NexusState, ProfilesState, SpawnProjectDraft,
 };
 
 use crate::backup::BackupStatus;
