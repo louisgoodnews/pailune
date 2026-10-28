@@ -106,9 +106,16 @@ A standalone project generator and development kit for creating Crimson Desert m
 
 ## Phase 18 — General Public Release
 
-- B-08 (step 2) Windows and macOS native deployment and packaging.
+- B-08 (step 2) Windows and macOS native deployment and packaging (deferred / optional).
 - A-21 Register Pailune with Nexus Mods (AUP agreement) for public distribution.
-- Release tagging, AppImage and archive distribution.
+- Release tagging, AppImage and Linux tarball distribution.
+
+## Phase 19 — Visual Mod Creator (No-Code Node Studio)
+
+A node-based, visual mod creation environment embedded inside Pailune for non-technical creators (`docs/design/visual-mod-creator.md`):
+1. **Node Graph Engine & IR Compiler** — graph state serialization (`graph.json`), topological evaluation, and compilation into verified Format-3.1 table patches and XML merge descriptors.
+2. **Interactive Node Canvas in egui** — pannable/zoomable canvas, color-coded typed sockets, bezier connection curves, and real-time diff preview against game tables.
+3. **Template Library & Instant Test Loop** — 1-click starter templates (*Mega Stacks*, *Loot Bounty*, *Crate Rewards*), live `⚡ Apply` & `▶ Launch` loop, and direct Nexus ZIP packaging.
 
 ## Owner tasks
 

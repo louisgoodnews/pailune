@@ -9,6 +9,8 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
+- [ ] Visual Mod Creator Phase 1: Core node graph engine & compiler (`docs/design/visual-mod-creator.md`, graph serialization, compilation to format-3 table patches and XML merge descriptors) — *M*
+- [ ] Visual Mod Creator Phase 2: Interactive node canvas GUI in egui (pan/zoom, typed sockets, bezier wires, live diff against game data browser) — *M*
 
 ## Backlog (large)
 

@@ -10,14 +10,31 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
-| **P1** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release (Nexus Mods API Acceptable Use Policy). |
+| **P1** | **Visual-1** | **Visual Mod Creator Phase 1: Core Node Graph Engine & Compiler** | **M** | Data structures, graph JSON schema, and compiler targeting format-3 table patches & XML descriptors. |
+| **P2** | **Visual-2** | **Visual Mod Creator Phase 2: Interactive Node Canvas GUI in egui** | **M** | Node graph canvas in egui, draggable nodes, color-coded sockets, bezier wires, live diff preview. |
+| **Owner** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release (Nexus Mods API Acceptable Use Policy). |
 | *Deferred* | *B-08* | *Windows & macOS Target Testing* | *L* | Optional / deferred until dedicated Windows/macOS test hardware is available. |
 
 ---
 
 ## Detailed Action Items & Rationales
 
-### Completed Features
+### Visual Modding Studio (Roadmap Phase 19)
+
+#### Visual-1 — Core Node Graph Engine & Compiler
+* **Size:** *M*.
+* **Rationale:**
+  * Define visual graph models (`Graph`, `Node`, `Socket`, `Connection`), JSON serialization, and deterministic compiler transforming visual rules into verified Format-3.1 table patches (`.field.json`) and XML merge descriptors.
+  * Designed in [`docs/design/visual-mod-creator.md`](file:///home/louisgoodnews/Dokumente/pailune/docs/design/visual-mod-creator.md).
+
+#### Visual-2 — Interactive Node Canvas GUI in egui
+* **Size:** *M*.
+* **Rationale:**
+  * Visual node graph interface with pannable/zoomable canvas, draggable nodes, typed socket connections, real-time live diff against the Game Data Browser, and one-click templates (*Mega Stacks*, *Loot Bounty*, *Crate Rewards*).
+
+---
+
+## Completed Features
 
 #### Linux Release Packaging (AppImage & Tarball)
 * **Status:** Completed & verified.
