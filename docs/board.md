@@ -20,9 +20,6 @@ Move a line between columns when its status changes.
   code refactoring — *M*
 - [ ] B-17 ASI mod creation (D-13), after B-16: research + decision record first, then templates,
   build/deploy, debug loop, packaging — *L*
-
-- [ ] B-07 (step 4) Save editing beyond fixed-size values: adding/removing items and list
-  entries (needs a body writer that rebuilds sizes and the table of contents) — *L*
 - [ ] B-08 (step 2) Windows/macOS: test on real installs (needs a Windows and a macOS machine); macOS app bundle with `nxm://` URL type — *L*
 - [ ] A-01 format 3, phase 2: names for large tables. Shapes are derivable (ItemInfo prefix done),
   names are not from data alone (message lists are incomplete). Next: in-game confirmation of the
@@ -84,6 +81,12 @@ Move a line between columns when its status changes.
   (`0o700`) and files (`0o600`/`0o700`) across zip, 7z, and rar. Prevents OS error 13 walk errors.
 - [x] Saves tab (slots, save backups, embedded editor); strict archive-index check on every Apply
   (`paz::pamt_check`, passes all vanilla groups); JMM compared (`research/jmm-comparison.md`).
+- [x] B-07 (step 4) Variable-length save editing (completed 2026-10-28): adding, duplicating, and
+  deleting items in dynamic lists (kinds 6/7, e.g. `InventorySaveData`, `ItemSaveData`) and counted
+  items (kinds 1/3); body rebuilder that recalculates all enclosing embedded object size trailers,
+  TOC entry offsets and sizes, stream size, container unpacked size, nonce, and HMAC-SHA256; GUI
+  list item duplication and deletion controls with confirmation and automatic backups; verified with
+  automated unit and integration tests.
 - [x] B-07 (step 3) Save editing (approved 2026-10-26): fixed-size values edited in the viewer,
   checked against the current bytes, re-encoded (fresh nonce, HMAC), read back before an atomic
   replace; exclusive job, refused while the game runs, all saves backed up first. Verified in

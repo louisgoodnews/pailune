@@ -231,10 +231,17 @@ fn creates_new_json_mod_with_metadata_and_opens_it() {
     // 3. Prompt closes, mod is registered and selected
     assert!(app.mods.create_mod.is_none());
     assert_eq!(app.mods.selected.as_deref(), Some("Carry Capacity 500"));
-    assert!(app.registry.mods.iter().any(|m| m.name == "Carry Capacity 500"));
+    assert!(
+        app.registry
+            .mods
+            .iter()
+            .any(|m| m.name == "Carry Capacity 500")
+    );
 
     // 4. Staged file is valid format 3 JSON patch
-    let staged_file = fx.staging.join("Carry Capacity 500/Carry Capacity 500.field.json");
+    let staged_file = fx
+        .staging
+        .join("Carry Capacity 500/Carry Capacity 500.field.json");
     assert!(staged_file.is_file());
     let text = fs::read_to_string(&staged_file).unwrap();
     let json = crate::patch::document::check(&text).expect("valid json mod");
@@ -275,10 +282,16 @@ fn data_browser_tab_and_record_inspection() {
     app.data_browser.body = body;
 
     // 3. Select record
-    app.dispatch(Action::DataBrowser(DataBrowserAction::SelectRecord(key as u64)));
+    app.dispatch(Action::DataBrowser(DataBrowserAction::SelectRecord(
+        key as u64,
+    )));
     assert_eq!(app.data_browser.selected_record, Some(key as u64));
 
-    let inspected = app.data_browser.inspected.as_ref().expect("inspected record");
+    let inspected = app
+        .data_browser
+        .inspected
+        .as_ref()
+        .expect("inspected record");
     assert_eq!(inspected.name, "target_01");
     assert_eq!(inspected.key, key as u64);
     assert_eq!(inspected.fields.len(), 3);
@@ -326,7 +339,10 @@ fn inject_change_from_browser_into_mod() {
     assert_eq!(app.mods.selected.as_deref(), Some("BountyBoost"));
 
     // 4. Staging file should contain the injected format-3 intent
-    let file = fx.staging.join("BountyBoost").join("BountyBoost.field.json");
+    let file = fx
+        .staging
+        .join("BountyBoost")
+        .join("BountyBoost.field.json");
     assert!(file.exists());
     let text = std::fs::read_to_string(&file).expect("read file");
     let json = crate::patch::document::check(&text).expect("valid format 3 mod");
@@ -341,8 +357,8 @@ fn inject_change_from_browser_into_mod() {
 
 #[test]
 fn dry_run_verifies_intents_and_detects_errors() {
-    use crate::patch::dry_run::{DryRunStatus, check_patch_data};
     use crate::patch::FilePatch;
+    use crate::patch::dry_run::{DryRunStatus, check_patch_data};
     use crate::tables::format3::Intent;
 
     let key = 0x0601u16;
@@ -424,7 +440,9 @@ fn package_mod_action_creates_distribution_archive() {
     }));
 
     // 2. Trigger PackageModPrompt
-    app.dispatch(Action::Mod(crate::ui::ModAction::PackageModPrompt("QuickLoot".into())));
+    app.dispatch(Action::Mod(crate::ui::ModAction::PackageModPrompt(
+        "QuickLoot".into(),
+    )));
     let draft = app.mods.package_mod.as_ref().expect("package draft");
     assert_eq!(draft.name, "QuickLoot");
     assert_eq!(draft.author, "Dev");
@@ -507,7 +525,8 @@ fn rebase_format2_offset_after_table_move() {
       }]
     }"#;
 
-    let rebased_json = crate::patch::document::rebase_offset(original_json, 0, 0, sug.new_offset).unwrap();
+    let rebased_json =
+        crate::patch::document::rebase_offset(original_json, 0, 0, sug.new_offset).unwrap();
     assert!(rebased_json.contains("\"rel_offset\": 4"));
 }
 

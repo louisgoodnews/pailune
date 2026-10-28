@@ -107,7 +107,9 @@ fn toolbar(ui: &mut egui::Ui) -> Vec<Action> {
             ),
             (
                 ui.button("🛠 SDK Project…")
-                    .on_hover_text("Spawn a new ASI plugin or JSON mod project with build templates & docs")
+                    .on_hover_text(
+                        "Spawn a new ASI plugin or JSON mod project with build templates & docs",
+                    )
                     .clicked(),
                 Action::Mod(ModAction::SpawnProjectPrompt),
             ),

@@ -99,7 +99,12 @@ fn mcp_spawns_and_exports_mod_project() {
         }),
     );
     assert_eq!(spawn["isError"], false, "{spawn}");
-    assert!(projects_dir.join("McpStamina").join("McpStamina.field.json").is_file());
+    assert!(
+        projects_dir
+            .join("McpStamina")
+            .join("McpStamina.field.json")
+            .is_file()
+    );
 
     let export = call(
         &mut server,
@@ -112,5 +117,11 @@ fn mcp_spawns_and_exports_mod_project() {
     );
     assert_eq!(export["isError"], false, "{export}");
     assert!(exports_dir.join("McpStamina-v1.0.zip").is_file());
-    assert!(server.paths.staging.join("McpStamina/McpStamina.field.json").is_file());
+    assert!(
+        server
+            .paths
+            .staging
+            .join("McpStamina/McpStamina.field.json")
+            .is_file()
+    );
 }

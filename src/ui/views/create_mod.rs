@@ -96,4 +96,3 @@ pub fn show(ctx: &egui::Context, draft: &mut Option<CreateModDraft>) -> Vec<Acti
     }
     actions
 }
-

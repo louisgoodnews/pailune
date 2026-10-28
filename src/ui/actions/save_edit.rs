@@ -1,7 +1,7 @@
 //! Editing a save from the viewer (B-07): typed values become checked
 //! changes, written by an exclusive job after confirmation.
 
-use crate::error::{PailuneError, Result};
+use crate::error::{IoContext, PailuneError, Result};
 use crate::jobs::JobKind;
 use crate::savefile::edit::{SaveEdit, parse_value};
 use crate::savefile::view::{Editable, Node};
@@ -22,7 +22,8 @@ fn editables(nodes: &[Node], out: &mut Vec<Editable>) {
 pub fn changes(view: &SaveView) -> Result<Vec<SaveEdit>> {
     let mut values = Vec::new();
     editables(&view.tree, &mut values);
-    view.edits
+    let mut out: Vec<SaveEdit> = view
+        .edits
         .iter()
         .filter_map(|(at, text)| values.iter().find(|v| v.at == *at).map(|v| (v, text)))
         .map(|(value, text)| {
@@ -36,7 +37,29 @@ pub fn changes(view: &SaveView) -> Result<Vec<SaveEdit>> {
             })
         })
         .filter(|edit| edit.as_ref().map_or(true, |e| e.new != e.old))
-        .collect()
+        .collect::<Result<Vec<_>>>()?;
+
+    if !view.list_ops.is_empty() {
+        let path = view.dir.join("save.save");
+        let bytes = std::fs::read(&path).at(&path)?;
+        let save = crate::savefile::decode(&bytes)?;
+        for op in &view.list_ops {
+            match op {
+                crate::ui::state::ListOp::Delete { list_at, index, .. } => {
+                    out.extend(crate::savefile::edit::delete_list_item_edits(
+                        &save.body, *list_at, *index,
+                    )?);
+                }
+                crate::ui::state::ListOp::Duplicate { list_at, index, .. } => {
+                    out.extend(crate::savefile::edit::duplicate_list_item_edits(
+                        &save.body, *list_at, *index,
+                    )?);
+                }
+            }
+        }
+    }
+
+    Ok(out)
 }
 
 impl PailuneApp {
@@ -64,6 +87,30 @@ impl PailuneApp {
             return Ok(None);
         };
         match action {
+            BackupAction::DeleteListItem {
+                list_at,
+                index,
+                label,
+            } => {
+                view.list_ops.push(crate::ui::state::ListOp::Delete {
+                    list_at,
+                    index,
+                    label,
+                });
+                Ok(None)
+            }
+            BackupAction::DuplicateListItem {
+                list_at,
+                index,
+                label,
+            } => {
+                view.list_ops.push(crate::ui::state::ListOp::Duplicate {
+                    list_at,
+                    index,
+                    label,
+                });
+                Ok(None)
+            }
             BackupAction::SaveEdits => {
                 let count = changes(view)?.len();
                 match count {
@@ -88,6 +135,7 @@ impl PailuneApp {
             }
             _ => {
                 view.edits.clear();
+                view.list_ops.clear();
                 Ok(None)
             }
         }

@@ -142,11 +142,17 @@ fn resolve_target_spans<'a>(
                 }
                 pos = sub_end;
             }
-            Err(format!("{}: subfield not found in {}", seg.field_name, field.name))
+            Err(format!(
+                "{}: subfield not found in {}",
+                seg.field_name, field.name
+            ))
         }
         Selector::Wildcard => {
             if !field.shape.starts_with("list") {
-                return Err(format!("{}: wildcard [*] only valid on list fields", field.name));
+                return Err(format!(
+                    "{}: wildcard [*] only valid on list fields",
+                    field.name
+                ));
             }
             let count = super::u32_at(payload, span.0).ok_or("truncated list")?;
             let mut pos = span.0 + 4;
@@ -215,7 +221,10 @@ fn resolve_target_spans<'a>(
         }
         Selector::Index(wanted_idx) => {
             if !field.shape.starts_with("list") {
-                return Err(format!("{}: indexing only valid on list fields", field.name));
+                return Err(format!(
+                    "{}: indexing only valid on list fields",
+                    field.name
+                ));
             }
             let count = super::u32_at(payload, span.0).ok_or("truncated list")?;
             if *wanted_idx >= count {
@@ -312,7 +321,12 @@ pub(crate) fn change(
             .map(|(p, _)| p)
             .collect();
         return match (hits.as_slice(), old.len() == new.len()) {
-            ([one], true) => Ok(vec![at(*one, old, new, format!("{}: raw replace", record.name))]),
+            ([one], true) => Ok(vec![at(
+                *one,
+                old,
+                new,
+                format!("{}: raw replace", record.name),
+            )]),
             (_, false) => Err("raw replace must keep the length".into()),
             ([], _) => Err(format!("{}: old bytes not found", record.name)),
             _ => Err(format!(
@@ -340,16 +354,13 @@ pub(crate) fn change(
     let spans = spans(table, payload).ok_or("record does not match the layout")?;
     let top_span = spans[index];
 
-    let targets = resolve_target_spans(
-        top_field,
-        top_span,
-        payload,
-        &segments,
-        &record.name,
-    )?;
+    let targets = resolve_target_spans(top_field, top_span, payload, &segments, &record.name)?;
 
     if targets.is_empty() {
-        return Err(format!("{}: field matched no targets in record {}", name, record.name));
+        return Err(format!(
+            "{}: field matched no targets in record {}",
+            name, record.name
+        ));
     }
 
     let mut changes = Vec::with_capacity(targets.len());
@@ -446,7 +457,9 @@ fn filter_by_matches<'a>(
                         if let Some(val) = n.as_u64() {
                             let b4 = (val as u32).to_le_bytes();
                             let b8 = val.to_le_bytes();
-                            if payload.windows(4).any(|w| w == b4) || payload.windows(8).any(|w| w == b8) {
+                            if payload.windows(4).any(|w| w == b4)
+                                || payload.windows(8).any(|w| w == b8)
+                            {
                                 found_value = true;
                             }
                         }
@@ -458,7 +471,9 @@ fn filter_by_matches<'a>(
                             {
                                 let b4 = (val as u32).to_le_bytes();
                                 let b8 = val.to_le_bytes();
-                                if payload.windows(4).any(|w| w == b4) || payload.windows(8).any(|w| w == b8) {
+                                if payload.windows(4).any(|w| w == b4)
+                                    || payload.windows(8).any(|w| w == b8)
+                                {
                                     found_value = true;
                                     break;
                                 }
@@ -534,7 +549,10 @@ pub fn resolve(
             }
             if found.is_empty() {
                 if i.matches.is_some() {
-                    failed.push(format!("no records matched the predicate {:?}", i.matches.as_ref().unwrap()));
+                    failed.push(format!(
+                        "no records matched the predicate {:?}",
+                        i.matches.as_ref().unwrap()
+                    ));
                 } else {
                     failed.push(format!("record {:?} / key {:?} not found", i.entry, i.key));
                 }

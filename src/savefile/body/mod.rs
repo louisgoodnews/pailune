@@ -46,6 +46,8 @@ pub struct TocEntry {
 pub struct Body {
     pub types: Vec<TypeDef>,
     pub toc: Vec<TocEntry>,
+    pub toc_offset: usize,
+    pub stream_size: u32,
 }
 
 /// A little-endian reader over the body.
@@ -109,7 +111,8 @@ pub fn parse(body: &[u8]) -> Result<Body> {
             name = c.text()?;
         }
     }
-    let (_zero, entries, _stream) = (c.u32()?, c.u32()?, c.u32()?);
+    let toc_offset = c.pos;
+    let (_zero, entries, stream) = (c.u32()?, c.u32()?, c.u32()?);
     let toc = (0..entries)
         .map(|_| {
             let class = c.u32()?;
@@ -121,7 +124,12 @@ pub fn parse(body: &[u8]) -> Result<Body> {
             })
         })
         .collect::<Result<Vec<_>>>()?;
-    Ok(Body { types, toc })
+    Ok(Body {
+        types,
+        toc,
+        toc_offset,
+        stream_size: stream,
+    })
 }
 
 #[cfg(test)]

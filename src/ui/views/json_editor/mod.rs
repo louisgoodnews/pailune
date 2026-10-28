@@ -212,7 +212,14 @@ fn editor(
                 };
             }
             summary(ui, &checked, draft.dry_run.as_ref());
-            actions.extend(buttons(ui, &mut draft, &saved, checked.is_ok(), path, entry));
+            actions.extend(buttons(
+                ui,
+                &mut draft,
+                &saved,
+                checked.is_ok(),
+                path,
+                entry,
+            ));
             match (&checked, draft.raw) {
                 (Ok(json), false) => {
                     changes::show(ui, id, &mut draft.text, json, draft.dry_run.as_ref())

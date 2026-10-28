@@ -120,6 +120,8 @@ fn hostile_nesting_is_an_error_not_a_crash() {
             }],
         }],
         toc: Vec::new(),
+        toc_offset: 0,
+        stream_size: 0,
     };
     // Top-level header, then 1000 embedded objects each containing the next.
     let mut data = vec![1, 0, 1, 0, 0, 0, 0];

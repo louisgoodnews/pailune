@@ -15,6 +15,7 @@ use std::sync::Arc;
 struct Walk<'a> {
     searching: bool,
     edits: &'a mut BTreeMap<usize, String>,
+    actions: &'a mut Vec<Action>,
 }
 
 /// One editable value: its field name and a text field. Accent while
@@ -74,6 +75,39 @@ fn hits(node: &Node, needle: &str) -> Hits {
 }
 
 fn node(ui: &mut egui::Ui, n: &Node, hit: &Hits, path: &str, walk: &mut Walk) {
+    if let Some(item) = &n.list_item {
+        ui.horizontal(|ui| {
+            if ui
+                .small_button("📋 Duplicate")
+                .on_hover_text("Duplicate this item")
+                .clicked()
+            {
+                walk.actions
+                    .push(Action::Backup(BackupAction::DuplicateListItem {
+                        list_at: item.list_at,
+                        index: item.index,
+                        label: format!("duplicate item #{} in list", item.index),
+                    }));
+            }
+            if ui
+                .small_button("🗑 Delete")
+                .on_hover_text("Delete this item from the list")
+                .clicked()
+            {
+                walk.actions
+                    .push(Action::Backup(BackupAction::DeleteListItem {
+                        list_at: item.list_at,
+                        index: item.index,
+                        label: format!("delete item #{} from list", item.index),
+                    }));
+            }
+            egui::CollapsingHeader::new(&n.label)
+                .id_salt(path)
+                .open(walk.searching.then_some(true))
+                .show(ui, |ui| level(ui, &n.children, &hit.children, path, walk));
+        });
+        return;
+    }
     match (&n.edit, n.children.is_empty()) {
         (Some(value), _) => value_field(ui, value, walk.edits),
         (None, true) => drop(ui.label(&n.label)),
@@ -136,7 +170,7 @@ fn edit_bar(ui: &mut egui::Ui, view: &mut SaveView) -> Vec<Action> {
             value_field(ui, &coins, &mut view.edits);
         });
     }
-    let pending = view.edits.len();
+    let pending = view.edits.len() + view.list_ops.len();
     let changes = match pending {
         0 => Ok(Vec::new()),
         _ => crate::ui::actions::save_changes(view),
@@ -195,8 +229,8 @@ pub fn panel(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     });
     ui.label(
         RichText::new(
-            "Change values, then Save changes — all saves are backed up first. Numbers like \
-             item or quest keys refer to the game's data tables.",
+            "Change values or list items, then Save changes — all saves are backed up first. \
+             Numbers like item or quest keys refer to the game's data tables.",
         )
         .color(muted()),
     );
@@ -211,6 +245,7 @@ pub fn panel(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
     let mut walk = Walk {
         searching: !needle.is_empty(),
         edits: &mut view.edits,
+        actions: &mut actions,
     };
     egui::ScrollArea::vertical()
         .auto_shrink([false, false])

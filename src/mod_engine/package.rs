@@ -103,7 +103,11 @@ pub fn package_mod(
             "# {}\n\n**Version:** {}\n**Author:** {}\n\n{}\n\n## Installation\n\nInstall using the **Pailune** mod manager or extract directly into your Crimson Desert installation.\n",
             meta.name.trim(),
             version_str,
-            if meta.author.trim().is_empty() { "Unknown" } else { meta.author.trim() },
+            if meta.author.trim().is_empty() {
+                "Unknown"
+            } else {
+                meta.author.trim()
+            },
             meta.description.trim()
         );
         fs::write(&readme_path, content).at(&readme_path)?;
@@ -142,9 +146,7 @@ pub fn package_mod(
 
     zip.finish()?;
 
-    let total_bytes = fs::metadata(&archive_path)
-        .map(|m| m.len())
-        .unwrap_or(0);
+    let total_bytes = fs::metadata(&archive_path).map(|m| m.len()).unwrap_or(0);
 
     Ok(PackageResult {
         archive_path,

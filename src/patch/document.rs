@@ -67,7 +67,12 @@ pub fn set(text: &str, slot: Slot, value: Value) -> Result<String, String> {
 }
 
 /// Updates the relative offset of a format-2 change in a JSON patch document.
-pub fn rebase_offset(text: &str, patch: usize, change: usize, new_offset: u64) -> Result<String, String> {
+pub fn rebase_offset(
+    text: &str,
+    patch: usize,
+    change: usize,
+    new_offset: u64,
+) -> Result<String, String> {
     let mut root: Value =
         serde_json::from_str(text.trim_start_matches('\u{feff}')).map_err(|err| err.to_string())?;
     let change_obj = root

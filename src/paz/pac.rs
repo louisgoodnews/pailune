@@ -105,7 +105,10 @@ mod tests {
 
         assert_eq!(decoded.len(), orig_size);
         assert_eq!(&decoded[0..4], b"PAR ");
-        assert_eq!(&decoded[HEADER_SIZE..HEADER_SIZE + sec0_raw.len()], &sec0_raw[..]);
+        assert_eq!(
+            &decoded[HEADER_SIZE..HEADER_SIZE + sec0_raw.len()],
+            &sec0_raw[..]
+        );
         assert_eq!(&decoded[HEADER_SIZE + sec0_raw.len()..], &sec1_raw[..]);
 
         // Verify updated header in decoded file has stored_size == orig_size

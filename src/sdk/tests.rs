@@ -75,7 +75,8 @@ fn test_export_scaffolded_project() {
     };
 
     let report = scaffold_project(&cfg).expect("scaffold");
-    let pkg = export_project(&report.project_dir, &exports_dir, Some(&staging_dir)).expect("export");
+    let pkg =
+        export_project(&report.project_dir, &exports_dir, Some(&staging_dir)).expect("export");
 
     assert!(pkg.archive_path.is_file());
     assert!(pkg.file_count >= 2);

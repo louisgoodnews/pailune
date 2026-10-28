@@ -427,20 +427,35 @@ pub fn export_project(
     };
 
     // 2. Prepare staging bundle directory
-    let temp_bundle = tempfile::tempdir().map_err(|e| PailuneError::Invalid(e.to_string()))?;
-    let bundle_dir = temp_bundle.path().join(&mod_name);
+    let temp_bundle = std::env::temp_dir().join(format!(
+        "pailune-export-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+    ));
+    let bundle_dir = temp_bundle.join(&mod_name);
     fs::create_dir_all(&bundle_dir).at(&bundle_dir)?;
 
-    let is_asi = project_dir.join("Cargo.toml").exists() || project_dir.join("CMakeLists.txt").exists();
+    let is_asi =
+        project_dir.join("Cargo.toml").exists() || project_dir.join("CMakeLists.txt").exists();
 
     if is_asi {
         // Look for compiled binary
         let clean_name = crate::mod_engine::install::sanitize_name(&mod_name);
         let candidate_bins = [
-            project_dir.join("target/x86_64-pc-windows-gnu/release").join(format!("{clean_name}.dll")),
-            project_dir.join("target/x86_64-pc-windows-gnu/release").join(format!("{clean_name}.asi")),
-            project_dir.join("target/release").join(format!("{clean_name}.dll")),
-            project_dir.join("target/release").join(format!("{clean_name}.asi")),
+            project_dir
+                .join("target/x86_64-pc-windows-gnu/release")
+                .join(format!("{clean_name}.dll")),
+            project_dir
+                .join("target/x86_64-pc-windows-gnu/release")
+                .join(format!("{clean_name}.asi")),
+            project_dir
+                .join("target/release")
+                .join(format!("{clean_name}.dll")),
+            project_dir
+                .join("target/release")
+                .join(format!("{clean_name}.asi")),
             project_dir.join(format!("{clean_name}.asi")),
             project_dir.join(format!("{clean_name}.dll")),
         ];
@@ -499,13 +514,17 @@ pub fn export_project(
     }
 
     // Package into output directory
-    let res = package_mod(temp_bundle.path(), &mod_name, output_dir, &meta)?;
+    let res = package_mod(&temp_bundle, &mod_name, output_dir, &meta)?;
 
     // Optional direct staging in Pailune
     if let Some(staging_dir) = stage_to {
         let target_staged = staging_dir.join(&mod_name);
         fs::create_dir_all(&target_staged).at(&target_staged)?;
-        for entry in walkdir::WalkDir::new(&bundle_dir).min_depth(1).into_iter().flatten() {
+        for entry in walkdir::WalkDir::new(&bundle_dir)
+            .min_depth(1)
+            .into_iter()
+            .flatten()
+        {
             let p = entry.path();
             if p.is_file() {
                 let rel = p.strip_prefix(&bundle_dir).unwrap();
@@ -518,5 +537,6 @@ pub fn export_project(
         }
     }
 
+    let _ = fs::remove_dir_all(&temp_bundle);
     Ok(res)
 }

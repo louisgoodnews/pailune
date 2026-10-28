@@ -244,4 +244,16 @@ pub enum BackupAction {
     /// Write them (confirmed).
     WriteSaveEdits,
     DiscardSaveEdits,
+    /// Queue a list item deletion.
+    DeleteListItem {
+        list_at: usize,
+        index: usize,
+        label: String,
+    },
+    /// Queue a list item duplication.
+    DuplicateListItem {
+        list_at: usize,
+        index: usize,
+        label: String,
+    },
 }

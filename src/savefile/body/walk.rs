@@ -29,18 +29,28 @@ pub enum Value {
     },
     /// Counted items (kinds 1 and 3), raw.
     Items {
+        at: usize,
+        count_at: usize,
         count: u32,
+        element_size: usize,
         data: Vec<u8>,
     },
     Object(Box<Object>),
-    List(Vec<Object>),
+    List {
+        at: usize,
+        count_at: usize,
+        items: Vec<Object>,
+    },
 }
 
-/// A decoded object: its type and present fields `(field index, value)`.
+/// A decoded object: its type, present fields `(field index, value)`, byte span and size trailer.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Object {
     pub class: u32,
     pub fields: Vec<(usize, Value)>,
+    pub span: std::ops::Range<usize>,
+    pub payload_start: usize,
+    pub size_at: Option<usize>,
 }
 
 fn bad(what: &str) -> PailuneError {
@@ -79,34 +89,48 @@ fn fields(
                 bytes: c.take(size)?.to_vec(),
             },
             1 if size > 0 => {
+                let at = c.pos;
                 let count = c.u32()?;
                 Value::Items {
+                    at,
+                    count_at: at,
                     count,
+                    element_size: size,
                     data: c.take(count as usize * size)?.to_vec(),
                 }
             }
             3 if size > 0 => {
+                let at = c.pos;
                 if c.take(1)? != [0] {
                     return Err(bad("array tag"));
                 }
+                let count_at = c.pos;
                 let count = c.u32()?;
                 Value::Items {
+                    at,
+                    count_at,
                     count,
+                    element_size: size,
                     data: c.take(count as usize * size)?.to_vec(),
                 }
             }
             4 | 5 => Value::Object(Box::new(embedded(body, c, f.kind == 5, depth + 1)?)),
             6 | 7 => {
+                let at = c.pos;
                 if c.take(1)? != [0] {
                     return Err(bad("list tag"));
                 }
+                let count_at = c.pos;
                 let count = c.u32()?;
                 c.take(13)?;
-                Value::List(
-                    (0..count)
-                        .map(|_| embedded(body, c, false, depth + 1))
-                        .collect::<Result<_>>()?,
-                )
+                let items = (0..count)
+                    .map(|_| embedded(body, c, false, depth + 1))
+                    .collect::<Result<Vec<_>>>()?;
+                Value::List {
+                    at,
+                    count_at,
+                    items,
+                }
             }
             _ => return Err(bad("unknown field kind")),
         };
@@ -121,6 +145,7 @@ fn embedded(body: &Body, c: &mut Cursor, probe: bool, depth: usize) -> Result<Ob
     if depth > MAX_DEPTH {
         return Err(bad("objects nested too deeply"));
     }
+    let obj_start = c.pos;
     if probe {
         // Kind 5: up to 8 bytes may precede the header; take the first
         // position with a plausible mask length.
@@ -141,12 +166,19 @@ fn embedded(body: &Body, c: &mut Cursor, probe: bool, depth: usize) -> Result<Ob
     let mask = c.take(mask_len)?.to_vec();
     let class = u32::from(c.u16()?);
     c.take(1 + 4 + 4 + 4)?;
-    let start = c.pos;
+    let payload_start = c.pos;
     c.u32()?;
     let fields = fields(body, c, class, &mask, depth)?;
+    let size_pos = c.pos;
     let size = c.u32()? as usize;
-    match size == c.pos - 4 - start {
-        true => Ok(Object { class, fields }),
+    match size == c.pos - 4 - payload_start {
+        true => Ok(Object {
+            class,
+            fields,
+            span: obj_start..c.pos,
+            payload_start,
+            size_at: Some(size_pos),
+        }),
         false => Err(bad("embedded size")),
     }
 }
@@ -173,7 +205,35 @@ pub fn object(body: &Body, data: &[u8], index: usize) -> Result<Object> {
         true => Ok(Object {
             class: entry.class,
             fields,
+            span: start..end,
+            payload_start: start,
+            size_at: None,
         }),
         false => Err(bad("bytes left over")),
     }
+}
+
+/// Offsets of all embedded object size trailers that enclose the body position `at`.
+pub fn enclosing_size_trailers(obj: &Object, at: usize) -> Vec<usize> {
+    let mut trailers = Vec::new();
+    fn recurse(obj: &Object, at: usize, trailers: &mut Vec<usize>) {
+        if let Some(size_at) = obj.size_at {
+            if obj.payload_start <= at && at <= size_at {
+                trailers.push(size_at);
+            }
+        }
+        for (_, value) in &obj.fields {
+            match value {
+                Value::Object(child) => recurse(child, at, trailers),
+                Value::List { items, .. } => {
+                    for item in items {
+                        recurse(item, at, trailers);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    recurse(obj, at, &mut trailers);
+    trailers
 }

@@ -62,7 +62,9 @@ impl PailuneApp {
             BackupAction::InspectSave(dir) => self.open_save(dir),
             BackupAction::SaveEdits
             | BackupAction::WriteSaveEdits
-            | BackupAction::DiscardSaveEdits => self.save_edit_action(action),
+            | BackupAction::DiscardSaveEdits
+            | BackupAction::DeleteListItem { .. }
+            | BackupAction::DuplicateListItem { .. } => self.save_edit_action(action),
             BackupAction::CloseSaveView => {
                 self.save_view = None;
                 Ok(None)

@@ -2,8 +2,8 @@
 //! and inspecting individual records.
 
 use crate::error::Result;
-use crate::ui::intent::DataBrowserAction;
 use crate::ui::PailuneApp;
+use crate::ui::intent::DataBrowserAction;
 
 impl PailuneApp {
     /// Dispatches Data Browser actions.
@@ -79,11 +79,14 @@ impl PailuneApp {
     ) -> Result<Option<crate::ui::StatusLine>> {
         let clean = crate::mod_engine::install::sanitize_name(mod_name);
         if clean.is_empty() {
-            return Err(crate::error::PailuneError::Invalid("Mod name cannot be empty".into()));
+            return Err(crate::error::PailuneError::Invalid(
+                "Mod name cannot be empty".into(),
+            ));
         }
         let mod_dir = self.paths.staging.join(&clean);
-        std::fs::create_dir_all(&mod_dir)
-            .map_err(|e| crate::error::PailuneError::Invalid(format!("Could not create mod directory: {e}")))?;
+        std::fs::create_dir_all(&mod_dir).map_err(|e| {
+            crate::error::PailuneError::Invalid(format!("Could not create mod directory: {e}"))
+        })?;
 
         // Find existing JSON patch file in staging folder, or create new format-3 file
         let mut target_file = None;
@@ -99,10 +102,12 @@ impl PailuneApp {
 
         let file_path = target_file.unwrap_or_else(|| mod_dir.join(format!("{clean}.field.json")));
         let mut doc: serde_json::Value = if file_path.exists() {
-            let text = std::fs::read_to_string(&file_path)
-                .map_err(|e| crate::error::PailuneError::Invalid(format!("Could not read mod file: {e}")))?;
-            serde_json::from_str(&text)
-                .map_err(|e| crate::error::PailuneError::Invalid(format!("Invalid JSON in mod file: {e}")))?
+            let text = std::fs::read_to_string(&file_path).map_err(|e| {
+                crate::error::PailuneError::Invalid(format!("Could not read mod file: {e}"))
+            })?;
+            serde_json::from_str(&text).map_err(|e| {
+                crate::error::PailuneError::Invalid(format!("Invalid JSON in mod file: {e}"))
+            })?
         } else {
             serde_json::json!({
                 "format": 3,
@@ -137,11 +142,15 @@ impl PailuneApp {
             if doc.get("targets").is_none() {
                 doc["targets"] = serde_json::json!([]);
             }
-            let targets = doc["targets"].as_array_mut()
-                .ok_or_else(|| crate::error::PailuneError::Invalid("targets is not an array".into()))?;
+            let targets = doc["targets"].as_array_mut().ok_or_else(|| {
+                crate::error::PailuneError::Invalid("targets is not an array".into())
+            })?;
 
             let target_idx = match targets.iter().position(|t| {
-                t.get("file").or_else(|| t.get("target")).and_then(|f| f.as_str()) == Some(&game_file)
+                t.get("file")
+                    .or_else(|| t.get("target"))
+                    .and_then(|f| f.as_str())
+                    == Some(&game_file)
             }) {
                 Some(idx) => idx,
                 None => {
@@ -153,13 +162,17 @@ impl PailuneApp {
                 }
             };
 
-            let intents = targets[target_idx]["intents"].as_array_mut()
-                .ok_or_else(|| crate::error::PailuneError::Invalid("intents is not an array".into()))?;
+            let intents = targets[target_idx]["intents"]
+                .as_array_mut()
+                .ok_or_else(|| {
+                    crate::error::PailuneError::Invalid("intents is not an array".into())
+                })?;
 
             let existing_idx = intents.iter().position(|i| {
                 i.get("field").and_then(|f| f.as_str()) == Some(field)
                     && (i.get("key").and_then(|k| k.as_u64()) == Some(record_key)
-                        || (!record_name.is_empty() && i.get("entry").and_then(|e| e.as_str()) == Some(record_name)))
+                        || (!record_name.is_empty()
+                            && i.get("entry").and_then(|e| e.as_str()) == Some(record_name)))
             });
 
             match existing_idx {
@@ -188,10 +201,14 @@ impl PailuneApp {
                 if doc.get("targets").is_none() {
                     doc["targets"] = serde_json::json!([]);
                 }
-                let targets = doc["targets"].as_array_mut()
-                    .ok_or_else(|| crate::error::PailuneError::Invalid("targets is not an array".into()))?;
+                let targets = doc["targets"].as_array_mut().ok_or_else(|| {
+                    crate::error::PailuneError::Invalid("targets is not an array".into())
+                })?;
                 let target_idx = match targets.iter().position(|t| {
-                    t.get("file").or_else(|| t.get("target")).and_then(|f| f.as_str()) == Some(&game_file)
+                    t.get("file")
+                        .or_else(|| t.get("target"))
+                        .and_then(|f| f.as_str())
+                        == Some(&game_file)
                 }) {
                     Some(idx) => idx,
                     None => {
@@ -202,8 +219,11 @@ impl PailuneApp {
                         targets.len() - 1
                     }
                 };
-                let intents = targets[target_idx]["intents"].as_array_mut()
-                    .ok_or_else(|| crate::error::PailuneError::Invalid("intents is not an array".into()))?;
+                let intents = targets[target_idx]["intents"]
+                    .as_array_mut()
+                    .ok_or_else(|| {
+                        crate::error::PailuneError::Invalid("intents is not an array".into())
+                    })?;
                 let entry_val = if record_name.is_empty() {
                     serde_json::Value::Null
                 } else {
@@ -221,10 +241,14 @@ impl PailuneApp {
                 if doc.get("patches").is_none() {
                     doc["patches"] = serde_json::json!([]);
                 }
-                let patches = doc["patches"].as_array_mut()
-                    .ok_or_else(|| crate::error::PailuneError::Invalid("patches is not an array".into()))?;
+                let patches = doc["patches"].as_array_mut().ok_or_else(|| {
+                    crate::error::PailuneError::Invalid("patches is not an array".into())
+                })?;
                 let patch_idx = match patches.iter().position(|p| {
-                    p.get("game_file").or_else(|| p.get("file")).and_then(|f| f.as_str()) == Some(&game_file)
+                    p.get("game_file")
+                        .or_else(|| p.get("file"))
+                        .and_then(|f| f.as_str())
+                        == Some(&game_file)
                 }) {
                     Some(idx) => idx,
                     None => {
@@ -235,8 +259,11 @@ impl PailuneApp {
                         patches.len() - 1
                     }
                 };
-                let changes = patches[patch_idx]["changes"].as_array_mut()
-                    .ok_or_else(|| crate::error::PailuneError::Invalid("changes is not an array".into()))?;
+                let changes = patches[patch_idx]["changes"]
+                    .as_array_mut()
+                    .ok_or_else(|| {
+                        crate::error::PailuneError::Invalid("changes is not an array".into())
+                    })?;
                 let orig_val = match original_hex.is_empty() {
                     true => serde_json::Value::Null,
                     false => serde_json::json!(original_hex),
@@ -251,8 +278,9 @@ impl PailuneApp {
         }
 
         let json_text = crate::patch::document::pretty(&doc);
-        std::fs::write(&file_path, json_text)
-            .map_err(|e| crate::error::PailuneError::Invalid(format!("Could not write mod file: {e}")))?;
+        std::fs::write(&file_path, json_text).map_err(|e| {
+            crate::error::PailuneError::Invalid(format!("Could not write mod file: {e}"))
+        })?;
 
         let now = crate::db::now();
         let staging = self.paths.staging.clone();
@@ -343,4 +371,3 @@ impl PailuneApp {
         }
     }
 }
-

@@ -10,6 +10,26 @@ pub struct Node {
     pub children: Vec<Node>,
     /// Set for values that can be changed in place.
     pub edit: Option<Editable>,
+    /// Set for items in a dynamic list (can be deleted or duplicated).
+    pub list_item: Option<ListItem>,
+    /// Set for dynamic lists.
+    pub list: Option<ListInfo>,
+}
+
+/// One item of a dynamic list (kinds 6 and 7).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ListItem {
+    pub list_at: usize,
+    pub index: usize,
+    pub count: u32,
+}
+
+/// A dynamic list header.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ListInfo {
+    pub list_at: usize,
+    pub count: u32,
+    pub item_type: String,
 }
 
 /// A fixed-size value of the body that can be changed without moving
@@ -70,6 +90,8 @@ pub fn tree(body: &Body, object: &Object) -> Vec<Node> {
                 label: format!("{} = {text}", field.name),
                 children: Vec::new(),
                 edit: None,
+                list_item: None,
+                list: None,
             };
             match value {
                 Value::Scalar { at, bytes } => Node {
@@ -79,15 +101,21 @@ pub fn tree(body: &Body, object: &Object) -> Vec<Node> {
                         type_name: field.type_name.clone(),
                         bytes: bytes.clone(),
                     }),
+                    list_item: None,
+                    list: None,
                     ..leaf(scalar(&field.type_name, bytes))
                 },
-                Value::Items { count, data } => leaf(items(&field.type_name, *count, data)),
+                Value::Items { count, data, .. } => leaf(items(&field.type_name, *count, data)),
                 Value::Object(child) => Node {
                     label: format!("{} ({})", field.name, body.types[child.class as usize].name),
                     children: tree(body, child),
                     edit: None,
+                    list_item: None,
+                    list: None,
                 },
-                Value::List(list) => Node {
+                Value::List {
+                    at, items: list, ..
+                } => Node {
                     label: format!("{} [{}]", field.name, list.len()),
                     children: list
                         .iter()
@@ -96,9 +124,21 @@ pub fn tree(body: &Body, object: &Object) -> Vec<Node> {
                             label: format!("#{n} {}", body.types[child.class as usize].name),
                             children: tree(body, child),
                             edit: None,
+                            list_item: Some(ListItem {
+                                list_at: *at,
+                                index: n,
+                                count: list.len() as u32,
+                            }),
+                            list: None,
                         })
                         .collect(),
                     edit: None,
+                    list_item: None,
+                    list: Some(ListInfo {
+                        list_at: *at,
+                        count: list.len() as u32,
+                        item_type: field.type_name.clone(),
+                    }),
                 },
             }
         })
@@ -112,10 +152,11 @@ pub fn find(body: &Body, object: &Object, name: &str) -> Option<String> {
         Value::Scalar { bytes, .. } if def.fields[*i].name == name => {
             Some(scalar(&def.fields[*i].type_name, bytes))
         }
-        Value::Items { count, data } if def.fields[*i].name == name => {
+        Value::Items { count, data, .. } if def.fields[*i].name == name => {
             Some(items(&def.fields[*i].type_name, *count, data))
         }
         Value::Object(child) => find(body, child, name),
+        Value::List { items: list, .. } => list.iter().find_map(|child| find(body, child, name)),
         _ => None,
     })
 }

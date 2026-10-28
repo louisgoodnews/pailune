@@ -26,7 +26,11 @@ pub fn encode(field: &Field, size: usize, new: &Value) -> std::result::Result<Ve
                     let dummy_field = Field {
                         name: field.name.clone(),
                         shape: format!("fixed:{elem_size}"),
-                        meaning: if field.meaning == "list" { "int".into() } else { field.meaning.clone() },
+                        meaning: if field.meaning == "list" {
+                            "int".into()
+                        } else {
+                            field.meaning.clone()
+                        },
                         offset: "proven".into(),
                         name_certain: true,
                         subfields: Vec::new(),
@@ -41,7 +45,9 @@ pub fn encode(field: &Field, size: usize, new: &Value) -> std::result::Result<Ve
     }
 
     // Shipped layouts only have 1-8 byte scalars (and 12-byte vec3); anything else is refused.
-    if (!((1..=8).contains(&size) || (field.meaning == "vec3" && size == 12))) || (field.meaning == "bool" && size != 1) {
+    if (!((1..=8).contains(&size) || (field.meaning == "vec3" && size == 12)))
+        || (field.meaning == "bool" && size != 1)
+    {
         return bad(&format!("unsupported field size {size}"));
     }
     let int = |v: i128| -> std::result::Result<Vec<u8>, String> {

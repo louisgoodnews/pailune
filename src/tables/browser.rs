@@ -203,4 +203,3 @@ mod tests {
         assert_eq!(inspected.raw_hex, "deadbeef");
     }
 }
-

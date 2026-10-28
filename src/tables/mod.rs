@@ -60,7 +60,8 @@ impl Field {
     /// Whether mods may change this field by name.
     pub fn editable(&self) -> bool {
         (self.offset == "proven" && self.name_certain && self.shape.starts_with("fixed:"))
-            || (self.shape.starts_with("list") && (self.offset == "proven" || self.offset == "inferred"))
+            || (self.shape.starts_with("list")
+                && (self.offset == "proven" || self.offset == "inferred"))
             || self.shape == "struct"
     }
 }

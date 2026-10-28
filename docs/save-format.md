@@ -5,15 +5,21 @@ Status 2026-10-26: **container and body fully decoded by Pailune's own implement
 re-encrypting the decrypted payload reproduces each file byte for byte, and every top-level
 object (1 881 in total) decodes with no byte left over.
 
-**Editing (2026-10-26, `src/savefile/edit.rs`):** fixed-size values (kinds 0/2) are changed in
-place, so offsets and the table of contents stay valid. The body is re-compressed (LZ4; output
-differs slightly from the game's encoder, which the format allows), encrypted with a fresh nonce
-(SHA-256 of the old nonce and the new body), the HMAC recomputed, and the result decoded and
-compared before it replaces the file. Verified in memory on the 5 current slots: exactly the
-edited byte differs after the round trip. **UNVERIFIED in game** whether the game accepts a
-rewritten `save.save` next to an unchanged `lobby.save`. Copper coins: `ItemSaveData` with
-`_itemKey = 1` (`Money_Copper`), amount in `_stackCount`. Steam Auto-Cloud keeps a copy under
-`Steam/userdata/<id>/3321460/ac/WinAppDataLocal/…`.
+**Editing (2026-10-26, updated 2026-10-28 for variable lengths, `src/savefile/edit.rs`):**
+Supports both fixed-size in-place modifications and variable-length edits (adding, duplicating,
+and deleting items in dynamic lists such as `InventorySaveData` / `ItemSaveData`, as well as
+counted items of kinds 1 and 3). When lengths change:
+- All enclosing embedded object `size: u32` trailers are shifted and recalculated.
+- Top-level TOC entry sizes are updated.
+- All subsequent TOC entry offsets are shifted.
+- The TOC header `stream_size` is updated.
+- The body is re-compressed (LZ4 block), container `uncompressed` and `payload` sizes updated,
+  encrypted with a fresh nonce derived from SHA-256 of the old nonce and the new body, HMAC-SHA256
+  recomputed, and the rewritten save decoded in memory and structural validity verified across all
+  TOC entries with `body::walk::object` before atomic file replacement. Automatic backup precedes
+  any save modification. Verified in memory and unit tests. Copper coins: `ItemSaveData` with
+  `_itemKey = 1` (`Money_Copper`), amount in `_stackCount`. Steam Auto-Cloud keeps a copy under
+  `Steam/userdata/<id>/3321460/ac/WinAppDataLocal/…`.
 
 ## Files
 

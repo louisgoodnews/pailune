@@ -61,9 +61,14 @@ impl DataPaths {
 
     /// Creates every directory in the layout.
     pub fn create_dirs(&self) -> Result<()> {
-        [&self.staging, &self.downloads, &self.mod_logs, &self.exports]
-            .into_iter()
-            .try_for_each(|dir| fs::create_dir_all(dir).at(dir))
+        [
+            &self.staging,
+            &self.downloads,
+            &self.mod_logs,
+            &self.exports,
+        ]
+        .into_iter()
+        .try_for_each(|dir| fs::create_dir_all(dir).at(dir))
     }
 }
 

@@ -69,7 +69,12 @@ pub fn check_patch_data(
             continue;
         };
 
-        let (changes, errs) = format3::resolve(&patch.game_file, header_bytes, data, std::slice::from_ref(intent));
+        let (changes, errs) = format3::resolve(
+            &patch.game_file,
+            header_bytes,
+            data,
+            std::slice::from_ref(intent),
+        );
         if !errs.is_empty() || changes.is_empty() {
             let reason = match errs.is_empty() {
                 true => "Record or field could not be resolved".to_string(),
@@ -94,7 +99,9 @@ pub fn check_patch_data(
             };
             let end = at.saturating_add(span_len);
             if end > data.len() {
-                intents.push(DryRunStatus::Failed("Resolved offset beyond file bounds".into()));
+                intents.push(DryRunStatus::Failed(
+                    "Resolved offset beyond file bounds".into(),
+                ));
                 intent_ok = false;
                 break;
             }
@@ -118,7 +125,9 @@ pub fn check_patch_data(
 
     for (c, change) in patch.changes.iter().enumerate() {
         let Some(ref f) = frame else {
-            changes.push(DryRunStatus::Failed("Anchor signature not found in file".into()));
+            changes.push(DryRunStatus::Failed(
+                "Anchor signature not found in file".into(),
+            ));
             continue;
         };
 
@@ -147,7 +156,10 @@ pub fn check_patch_data(
                 }
             }
             Edit::Replace { original, patched } => {
-                if is_table && original.as_ref().is_some_and(|o| o.len() != patched.len()) && header.is_none() {
+                if is_table
+                    && original.as_ref().is_some_and(|o| o.len() != patched.len())
+                    && header.is_none()
+                {
                     changes.push(DryRunStatus::Failed(
                         "Changes to data tables without an index must keep their length".into(),
                     ));
@@ -167,7 +179,11 @@ pub fn check_patch_data(
                     if data.get(at..end) != Some(orig.as_slice()) {
                         // Check if bytes moved within this record
                         let mut found_rebase = None;
-                        if let Anchor::Entry { ref name, rel_offset } = change.anchor {
+                        if let Anchor::Entry {
+                            ref name,
+                            rel_offset,
+                        } = change.anchor
+                        {
                             if let Some(ref anchors) = f.anchors {
                                 if let Some(&name_at) = anchors.get(name) {
                                     let search_end = (name_at + 16384).min(data.len());
@@ -244,25 +260,30 @@ pub fn check_mod(game_dir: &Path, json_mod: &JsonMod) -> ModDryRun {
             .unwrap_or("");
 
         // Check if table in archive group 0008
-        let patch_res = if let Ok((header, body)) = crate::tables::browser::read_table_raw(game_dir, stem) {
-            check_patch_data(patch, Some(&header), &body, true)
-        } else if let Ok(data) = std::fs::read(game_dir.join(&patch.game_file)) {
-            check_patch_data(patch, None, &data, false)
-        } else {
-            PatchDryRun {
-                file_name: patch.game_file.clone(),
-                file_found: false,
-                changes: vec![
-                    DryRunStatus::Skipped("Game file not found in archives or game folder".into());
-                    patch.changes.len()
-                ],
-                intents: vec![
-                    DryRunStatus::Skipped("Game file not found in archives or game folder".into());
-                    patch.fields.len()
-                ],
-                rebases: std::collections::HashMap::new(),
-            }
-        };
+        let patch_res =
+            if let Ok((header, body)) = crate::tables::browser::read_table_raw(game_dir, stem) {
+                check_patch_data(patch, Some(&header), &body, true)
+            } else if let Ok(data) = std::fs::read(game_dir.join(&patch.game_file)) {
+                check_patch_data(patch, None, &data, false)
+            } else {
+                PatchDryRun {
+                    file_name: patch.game_file.clone(),
+                    file_found: false,
+                    changes: vec![
+                        DryRunStatus::Skipped(
+                            "Game file not found in archives or game folder".into()
+                        );
+                        patch.changes.len()
+                    ],
+                    intents: vec![
+                        DryRunStatus::Skipped(
+                            "Game file not found in archives or game folder".into()
+                        );
+                        patch.fields.len()
+                    ],
+                    rebases: std::collections::HashMap::new(),
+                }
+            };
 
         for status in &patch_res.changes {
             match status {

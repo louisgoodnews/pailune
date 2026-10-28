@@ -68,8 +68,9 @@ impl PailuneApp {
                         "a mod named '{clean_name}' already exists in staging"
                     )));
                 }
-                std::fs::create_dir_all(&mod_dir)
-                    .map_err(|e| PailuneError::Invalid(format!("could not create mod directory: {e}")))?;
+                std::fs::create_dir_all(&mod_dir).map_err(|e| {
+                    PailuneError::Invalid(format!("could not create mod directory: {e}"))
+                })?;
                 let doc = serde_json::json!({
                     "format": 3,
                     "modinfo": {
@@ -129,13 +130,18 @@ impl PailuneApp {
                             if let Ok(text) = std::fs::read_to_string(&p) {
                                 if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
                                     if let Some(info) = val.get("modinfo") {
-                                        if let Some(a) = info.get("author").and_then(|v| v.as_str()) {
+                                        if let Some(a) = info.get("author").and_then(|v| v.as_str())
+                                        {
                                             author = a.to_string();
                                         }
-                                        if let Some(v) = info.get("version").and_then(|v| v.as_str()) {
+                                        if let Some(v) =
+                                            info.get("version").and_then(|v| v.as_str())
+                                        {
                                             version = v.to_string();
                                         }
-                                        if let Some(d) = info.get("description").and_then(|v| v.as_str()) {
+                                        if let Some(d) =
+                                            info.get("description").and_then(|v| v.as_str())
+                                        {
                                             description = d.to_string();
                                         }
                                         break;
@@ -230,7 +236,13 @@ impl PailuneApp {
                     let now = crate::db::now();
                     let scan = registry::scan(&self.paths.staging)?;
                     self.update_registry(|r| Ok(registry::merge(r, &scan, now)))?;
-                    let _ = crate::db::mods::record_install(&self.conn, &clean_name, "created", None, now);
+                    let _ = crate::db::mods::record_install(
+                        &self.conn,
+                        &clean_name,
+                        "created",
+                        None,
+                        now,
+                    );
                     self.select(clean_name.clone())?;
                 }
 

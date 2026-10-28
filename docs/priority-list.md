@@ -11,7 +11,6 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
 | **P1** | **A-01** | **In-Game Test Batch 1 (Tests 2–4 Verification)** | **Owner** | Completes validation of table overlay patching in game (hunting, drops, coin crates). |
-| **P1** | **B-07** | **Variable-Length Save Editing (Step 4)** | **L** | Extends the verified fixed-size save editor to add/remove inventory items and dynamic lists. |
 | **P2** | **D-14** | **In-Place Route for Non-Overlay Game Files** | **M** | Already built and tested (`inplace::store`), ready to wire if dialogue audio/weapon XML mods require it. |
 | **P2** | **B-17** | **ASI Mod Creation: Research & Templates** | **Research / M** | Scaffolds native ASI plugin development with compiler toolchain and debug loop. |
 | **P3** | **Polish** | **Pre-Release Polish: GUI Redesign & Final Code Refactoring** | **M** | Aesthetic redesign, typography, visual hierarchy, and performance/memory optimization pass. |
@@ -31,17 +30,16 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
   * Re-verifies in-game that the per-table archive group architecture correctly injects multi-table modifications without engine side-effects.
   * Validates hunting drops, drop rates, and crate coin rewards defined in [`local/test-mods/TESTING.md`](file:///home/louisgoodnews/Dokumente/pailune/local/test-mods/TESTING.md).
 
-#### 2. B-07 (Step 4) — Variable-Length Save Editing
-* **Status:** Scheduled Backlog.
-* **Size:** *L*.
-* **Rationale:**
-  * Expands the verified save editor to support adding and removing inventory items and dynamic lists with table-of-contents recalculation and length rebuilds.
-* **Target Areas:**
-  * [`src/save_edit/`](file:///home/louisgoodnews/Dokumente/pailune/src/save_edit/): Dynamic body writer and TOC offset rebuilder.
-
----
-
 ### Completed Features
+
+#### B-07 (Step 4) — Variable-Length Save Editing
+* **Status:** Completed & verified with automated tests.
+* **Size:** *L*.
+* **Implementation Summary:**
+  * Extended `src/savefile/edit.rs` to support arbitrary variable-length edits, dynamic list item modifications (deletion, duplication, addition for kinds 6/7), and counted items (kinds 1/3).
+  * Implemented automatic recalculation of enclosing embedded object `size: u32` trailers, top-level TOC entry offsets and sizes, TOC header `stream_size`, and container header (`uncompressed`, `payload`, fresh nonce, and HMAC-SHA256).
+  * Added UI list controls in `src/ui/views/save_view.rs` (Duplicate and Delete actions on list items) integrated into the staging and confirmation pipeline.
+  * Verified with unit and UI integration tests (`variable_length_edit_shifts_subsequent_objects_and_toc`, `list_item_operations_delete_duplicate_add`, and UI action flow).
 
 #### A-01 — Format 3.1 Table Patches (Phase 2 Nested Fields & Table Rewriting)
 * **Status:** Completed & verified with automated tests.

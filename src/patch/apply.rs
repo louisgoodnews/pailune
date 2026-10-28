@@ -217,7 +217,10 @@ pub fn apply_over(
             drop(data.splice(r.at..r.at + span, patched.iter().copied()));
         }
     });
-    if is_table && !shifts.is_empty() && let Some(h) = header {
+    if is_table
+        && !shifts.is_empty()
+        && let Some(h) = header
+    {
         report.rewritten_header = super::table::rewrite_index(h, &shifts);
     }
     report.applied = valid.len();

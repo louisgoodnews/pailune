@@ -226,7 +226,17 @@ pub fn show(
                     };
                     let status = pdr.and_then(|d| d.changes.get(c));
                     let rebase = pdr.and_then(|d| d.rebases.get(&c));
-                    change_row(ui, id.with((p, c)), text, slot, p, c, change, status, rebase);
+                    change_row(
+                        ui,
+                        id.with((p, c)),
+                        text,
+                        slot,
+                        p,
+                        c,
+                        change,
+                        status,
+                        rebase,
+                    );
                 });
                 patch.fields.iter().enumerate().for_each(|(i, intent)| {
                     let slot = Slot::Intent {

@@ -164,20 +164,24 @@ pub fn show(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
         ui.separator();
 
         // Column 3: Record Details / Inspector
-        ui.allocate_ui(egui::vec2(ui.available_width(), ui.available_height()), |ui| {
-            ui.vertical(|ui| {
-                ui.heading("Inspector");
-                ui.separator();
-                match &app.data_browser.inspected {
-                    Some(rec) => actions.extend(render_inspector(ui, app, rec)),
-                    None => {
-                        ui.label(
-                            RichText::new("Select a record to inspect its values.").color(muted()),
-                        );
+        ui.allocate_ui(
+            egui::vec2(ui.available_width(), ui.available_height()),
+            |ui| {
+                ui.vertical(|ui| {
+                    ui.heading("Inspector");
+                    ui.separator();
+                    match &app.data_browser.inspected {
+                        Some(rec) => actions.extend(render_inspector(ui, app, rec)),
+                        None => {
+                            ui.label(
+                                RichText::new("Select a record to inspect its values.")
+                                    .color(muted()),
+                            );
+                        }
                     }
-                }
-            });
-        });
+                });
+            },
+        );
     });
 
     actions
@@ -310,11 +314,7 @@ fn render_inspector(ui: &mut egui::Ui, app: &PailuneApp, rec: &InspectedRecord) 
                         } else {
                             rel_off_str.parse().unwrap_or(0)
                         };
-                    let stem = app
-                        .data_browser
-                        .selected_table
-                        .clone()
-                        .unwrap_or_default();
+                    let stem = app.data_browser.selected_table.clone().unwrap_or_default();
                     actions.push(Action::DataBrowser(DataBrowserAction::AddChangeToMod {
                         mod_name: current_target.clone(),
                         table_stem: stem,
@@ -462,4 +462,3 @@ fn render_inspector(ui: &mut egui::Ui, app: &PailuneApp, rec: &InspectedRecord) 
 
     actions
 }
-

@@ -265,7 +265,10 @@ fn records_chosen_by_match_predicate() {
     };
     let (_, failed) = resolve("wantedinfo.pabgb", &header, &body, &[nested]);
     assert_eq!(failed.len(), 1);
-    assert!(failed[0].contains("no such field in WantedInfo"), "{failed:?}");
+    assert!(
+        failed[0].contains("no such field in WantedInfo"),
+        "{failed:?}"
+    );
 }
 
 #[test]
@@ -379,7 +382,8 @@ fn nested_fields_and_table_index_rewriting() {
     let helm_record = &all_records[0];
 
     let layout_res: std::result::Result<&Table, String> = Ok(&table);
-    let changes = format3::change(&layout_res, &body, helm_record, &intent).expect("changes produced");
+    let changes =
+        format3::change(&layout_res, &body, helm_record, &intent).expect("changes produced");
     // Should produce 2 changes (one for elem 0, one for elem 1)
     assert_eq!(changes.len(), 2);
     // Elem 0 had tags len = 4 + 2*4 = 12 bytes; new is 4 bytes [0, 0, 0, 0] (delta = -8)

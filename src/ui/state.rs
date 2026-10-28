@@ -154,6 +154,21 @@ pub struct ProfilesState {
     pub option_drafts: BTreeMap<String, String>,
 }
 
+/// A pending operation on a dynamic list item.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ListOp {
+    Delete {
+        list_at: usize,
+        index: usize,
+        label: String,
+    },
+    Duplicate {
+        list_at: usize,
+        index: usize,
+        label: String,
+    },
+}
+
 /// An open save in the viewer and the values typed into it.
 #[derive(Debug, Clone, Default)]
 pub struct SaveView {
@@ -164,6 +179,8 @@ pub struct SaveView {
     pub query: String,
     /// Typed text per body offset, while it differs from the save.
     pub edits: std::collections::BTreeMap<usize, String>,
+    /// Pending list item operations.
+    pub list_ops: Vec<ListOp>,
 }
 
 /// Requests only the window can carry out, collected while dispatching
