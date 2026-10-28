@@ -97,4 +97,3 @@ pub fn show(ctx: &egui::Context, draft: &mut Option<PackageMetadata>) -> Vec<Act
 
     actions
 }
-

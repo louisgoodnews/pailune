@@ -37,8 +37,10 @@ pub fn decode(vpath: &str, record: &FileRecord, mut stored: Vec<u8>) -> Result<V
             super::dds::decode(&stored, record.orig_size as usize)
                 .map_err(|e| PailuneError::Archive(format!("{vpath}: {e}")))
         }
-        // Other partial files (`.pac` meshes) stored uncompressed are the
-        // file itself; compressed ones are not understood yet.
+        Compression::DdsPartial if vpath.ends_with(".pac") => {
+            super::pac::decode(&stored, record.orig_size as usize)
+                .map_err(|e| PailuneError::Archive(format!("{vpath}: {e}")))
+        }
         Compression::DdsPartial if stored.len() == record.orig_size as usize => Ok(stored),
         Compression::DdsPartial => Err(PailuneError::Archive(format!(
             "{vpath}: compressed partial storage of this file type is not supported yet"

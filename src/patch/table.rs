@@ -74,6 +74,41 @@ impl TableIndex {
     }
 }
 
+/// Rewrites a table header index by shifting record offsets.
+/// `shifts` contains `(splice_offset, delta)` where each delta applies to any
+/// record offset originally located strictly after `splice_offset`.
+pub fn rewrite_index(header: &[u8], shifts: &[(usize, i64)]) -> Option<Vec<u8>> {
+    let count = |size: usize| -> Option<usize> {
+        let b = header.get(..size)?;
+        Some(match size {
+            1 => b[0] as usize,
+            2 => u16::from_le_bytes([b[0], b[1]]) as usize,
+            _ => u32::from_le_bytes([b[0], b[1], b[2], b[3]]) as usize,
+        })
+    };
+    let (cs, ks, n) = [2usize, 4, 1]
+        .iter()
+        .flat_map(|cs| [4usize, 2, 8, 12].iter().map(move |ks| (*cs, *ks)))
+        .find_map(|(cs, ks)| {
+            let n = count(cs)?;
+            (n > 0 && header.len() == cs + n * (ks + 4)).then_some((cs, ks, n))
+        })?;
+
+    let mut new_header = header.to_vec();
+    for i in 0..n {
+        let pos = cs + i * (ks + 4) + ks;
+        let orig_offset = u32_at(header, pos)? as usize;
+        let delta: i64 = shifts
+            .iter()
+            .filter(|(at, _)| orig_offset > *at)
+            .map(|(_, d)| *d)
+            .sum();
+        let new_offset = (orig_offset as i64 + delta).max(0) as u32;
+        new_header[pos..pos + 4].copy_from_slice(&new_offset.to_le_bytes());
+    }
+    Some(new_header)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -107,5 +142,11 @@ mod tests {
         assert_eq!(anchors["Sword"], 4 + 4 + 5);
         assert_eq!(body[anchors["Shield"] + 1], 9);
         assert_eq!(parse_index(&[1, 2, 3]), None);
+
+        // Test rewrite_index with length change on record 7
+        let rewritten = rewrite_index(&header, &[(10, -2)]).unwrap();
+        let new_idx = parse_index(&rewritten).unwrap();
+        assert_eq!(new_idx.offsets[0], 0);
+        assert_eq!(new_idx.offsets[1], (a.len() - 2) as u32);
     }
 }

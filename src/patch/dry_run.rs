@@ -147,9 +147,9 @@ pub fn check_patch_data(
                 }
             }
             Edit::Replace { original, patched } => {
-                if is_table && original.as_ref().is_some_and(|o| o.len() != patched.len()) {
+                if is_table && original.as_ref().is_some_and(|o| o.len() != patched.len()) && header.is_none() {
                     changes.push(DryRunStatus::Failed(
-                        "Changes to data tables must keep their length".into(),
+                        "Changes to data tables without an index must keep their length".into(),
                     ));
                     continue;
                 }

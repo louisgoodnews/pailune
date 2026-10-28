@@ -253,7 +253,7 @@ fn records_chosen_by_match_predicate() {
     assert_eq!(failed.len(), 1);
     assert!(failed[0].contains("no records matched"), "{failed:?}");
 
-    // 4. Nested field intent returns descriptive unsupported message
+    // 4. Nested field intent reports error if root field doesn't exist
     let nested = Intent {
         entry: None,
         key: None,
@@ -261,9 +261,156 @@ fn records_chosen_by_match_predicate() {
         op: "set".into(),
         new: serde_json::json!(1),
         old: None,
-        matches: Some(serde_json::json!({"x": 1})),
+        matches: Some(serde_json::json!({"increase_price": 2000})),
     };
     let (_, failed) = resolve("wantedinfo.pabgb", &header, &body, &[nested]);
     assert_eq!(failed.len(), 1);
-    assert!(failed[0].contains("nested fields (format 3.1) are not supported yet"), "{failed:?}");
+    assert!(failed[0].contains("no such field in WantedInfo"), "{failed:?}");
+}
+
+#[test]
+fn nested_fields_and_table_index_rewriting() {
+    // Construct a table with a list of structs:
+    // Record layout:
+    // _isBlocked: bool (fixed:1)
+    // prefabs: list:struct
+    //   subfield 0: name (fixed:4, e.g. id hash)
+    //   subfield 1: tags (list:4)
+    let tag_field = Field {
+        name: "tags".into(),
+        shape: "list:4".into(),
+        meaning: "int".into(),
+        offset: "proven".into(),
+        name_certain: true,
+        subfields: Vec::new(),
+    };
+    let id_field = Field {
+        name: "id".into(),
+        shape: "fixed:4".into(),
+        meaning: "int".into(),
+        offset: "proven".into(),
+        name_certain: true,
+        subfields: Vec::new(),
+    };
+    let prefabs_field = Field {
+        name: "prefabs".into(),
+        shape: "list:struct".into(),
+        meaning: "list".into(),
+        offset: "proven".into(),
+        name_certain: true,
+        subfields: vec![id_field, tag_field],
+    };
+    let blocked_field = Field {
+        name: "_isBlocked".into(),
+        shape: "fixed:1".into(),
+        meaning: "bool".into(),
+        offset: "proven".into(),
+        name_certain: true,
+        subfields: Vec::new(),
+    };
+
+    let table = Table {
+        class: "CustomGearInfo".into(),
+        key_size: 4,
+        records: 2,
+        partial: false,
+        fields: vec![blocked_field, prefabs_field],
+    };
+
+    // Build Record 1 (key 10, name "Helm"):
+    // _isBlocked: 0
+    // prefabs count: 2
+    //   elem 0: id=101, tags count=2 [1, 2]
+    //   elem 1: id=102, tags count=1 [9]
+    let mut r1_payload = Vec::new();
+    r1_payload.push(0u8); // _isBlocked
+    r1_payload.extend_from_slice(&2u32.to_le_bytes()); // prefabs count = 2
+    // elem 0:
+    r1_payload.extend_from_slice(&101u32.to_le_bytes()); // id
+    r1_payload.extend_from_slice(&2u32.to_le_bytes()); // tags count = 2
+    r1_payload.extend_from_slice(&1u32.to_le_bytes()); // tag 1
+    r1_payload.extend_from_slice(&2u32.to_le_bytes()); // tag 2
+    // elem 1:
+    r1_payload.extend_from_slice(&102u32.to_le_bytes()); // id
+    r1_payload.extend_from_slice(&1u32.to_le_bytes()); // tags count = 1
+    r1_payload.extend_from_slice(&9u32.to_le_bytes()); // tag 9
+
+    // Build Record 2 (key 20, name "Boots"):
+    let mut r2_payload = Vec::new();
+    r2_payload.push(1u8);
+    r2_payload.extend_from_slice(&0u32.to_le_bytes()); // prefabs count = 0
+
+    let mut body = Vec::new();
+    let mut header = vec![2u16.to_le_bytes()[0], 2u16.to_le_bytes()[1]]; // count = 2
+
+    // Record 1 in body
+    header.extend_from_slice(&10u32.to_le_bytes());
+    header.extend_from_slice(&(body.len() as u32).to_le_bytes());
+    body.extend_from_slice(&10u32.to_le_bytes());
+    body.extend_from_slice(&(4u32).to_le_bytes()); // name_len = 4
+    body.extend_from_slice(b"Helm");
+    body.extend_from_slice(&r1_payload);
+
+    // Record 2 in body
+    header.extend_from_slice(&20u32.to_le_bytes());
+    let r2_start_in_body = body.len() as u32;
+    header.extend_from_slice(&r2_start_in_body.to_le_bytes());
+    body.extend_from_slice(&20u32.to_le_bytes());
+    body.extend_from_slice(&(5u32).to_le_bytes()); // name_len = 5
+    body.extend_from_slice(b"Boots");
+    body.extend_from_slice(&r2_payload);
+
+    // Verify spans
+    let spans1 = spans(&table, &r1_payload).expect("r1 spans match");
+    assert_eq!(spans1.len(), 2);
+
+    // Test resolving nested intent: "prefabs[*].tags" -> new: []
+    let intent = Intent {
+        entry: Some("Helm".into()),
+        key: None,
+        field: Some("prefabs[*].tags".into()),
+        op: "set".into(),
+        new: serde_json::json!([]),
+        old: None,
+        matches: None,
+    };
+
+    let all_records = records(&header, &body).unwrap();
+    let helm_record = &all_records[0];
+
+    let layout_res: std::result::Result<&Table, String> = Ok(&table);
+    let changes = format3::change(&layout_res, &body, helm_record, &intent).expect("changes produced");
+    // Should produce 2 changes (one for elem 0, one for elem 1)
+    assert_eq!(changes.len(), 2);
+    // Elem 0 had tags len = 4 + 2*4 = 12 bytes; new is 4 bytes [0, 0, 0, 0] (delta = -8)
+    // Elem 1 had tags len = 4 + 1*4 = 8 bytes; new is 4 bytes [0, 0, 0, 0] (delta = -4)
+
+    // Now apply changes to body using apply_over
+    let patch = crate::patch::FilePatch {
+        game_file: "customgearinfo.staticinfobody".into(),
+        signature: None,
+        changes,
+        fields: Vec::new(),
+    };
+
+    let mut patched_body = body.clone();
+    let report = crate::patch::apply::apply_over(
+        &mut patched_body,
+        &patch,
+        Some(&header),
+        true,
+        false,
+        None,
+    );
+
+    assert_eq!(report.applied, 2);
+    assert!(report.failed.is_empty(), "{:?}", report.failed);
+    assert!(report.rewritten_header.is_some());
+
+    let new_header = report.rewritten_header.unwrap();
+    let new_idx = crate::patch::table::parse_index(&new_header).unwrap();
+    assert_eq!(new_idx.offsets[0], 0);
+    // Total reduction = 8 + 4 = 12 bytes
+    assert_eq!(new_idx.offsets[1], r2_start_in_body - 12);
+    assert_eq!(patched_body.len(), body.len() - 12);
 }

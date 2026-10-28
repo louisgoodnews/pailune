@@ -48,15 +48,249 @@ fn same_name(a: &str, b: &str) -> bool {
     norm(a) == norm(b)
 }
 
-/// Turns one intent into a change, or explains why it cannot be applied.
+#[derive(Debug, Clone, PartialEq)]
+enum Selector {
+    None,
+    Wildcard,
+    Index(usize),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct Segment {
+    field_name: String,
+    selector: Selector,
+}
+
+fn parse_segments(path: &str) -> Vec<Segment> {
+    path.split('.')
+        .filter(|p| !p.is_empty())
+        .map(|part| {
+            if let Some(open) = part.find('[')
+                && let Some(close) = part.find(']')
+                && close > open
+            {
+                let name = &part[..open];
+                let idx_str = &part[open + 1..close];
+                let selector = if idx_str == "*" {
+                    Selector::Wildcard
+                } else if let Ok(idx) = idx_str.parse::<usize>() {
+                    Selector::Index(idx)
+                } else {
+                    Selector::None
+                };
+                Segment {
+                    field_name: name.to_string(),
+                    selector,
+                }
+            } else {
+                Segment {
+                    field_name: part.to_string(),
+                    selector: Selector::None,
+                }
+            }
+        })
+        .collect()
+}
+
+struct TargetSpan<'a> {
+    field: &'a super::Field,
+    start: usize,
+    end: usize,
+    label: String,
+}
+
+fn resolve_target_spans<'a>(
+    field: &'a super::Field,
+    span: (usize, usize),
+    payload: &[u8],
+    segments: &[Segment],
+    label: &str,
+) -> std::result::Result<Vec<TargetSpan<'a>>, String> {
+    if segments.is_empty() {
+        return Ok(vec![TargetSpan {
+            field,
+            start: span.0,
+            end: span.1,
+            label: label.to_string(),
+        }]);
+    }
+
+    let seg = &segments[0];
+    match &seg.selector {
+        Selector::None => {
+            if segments.len() == 1 && same_name(&field.name, &seg.field_name) {
+                return Ok(vec![TargetSpan {
+                    field,
+                    start: span.0,
+                    end: span.1,
+                    label: format!("{label}.{}", field.name),
+                }]);
+            }
+            // Navigate down into subfields
+            let mut pos = span.0;
+            for sub in &field.subfields {
+                let sub_end = super::skip_field(sub, payload, pos)
+                    .ok_or_else(|| format!("{}: failed to skip subfield in struct", sub.name))?;
+                if same_name(&sub.name, &seg.field_name) {
+                    return resolve_target_spans(
+                        sub,
+                        (pos, sub_end),
+                        payload,
+                        &segments[1..],
+                        &format!("{label}.{}", sub.name),
+                    );
+                }
+                pos = sub_end;
+            }
+            Err(format!("{}: subfield not found in {}", seg.field_name, field.name))
+        }
+        Selector::Wildcard => {
+            if !field.shape.starts_with("list") {
+                return Err(format!("{}: wildcard [*] only valid on list fields", field.name));
+            }
+            let count = super::u32_at(payload, span.0).ok_or("truncated list")?;
+            let mut pos = span.0 + 4;
+            let mut results = Vec::new();
+
+            for idx in 0..count {
+                if field.shape == "list:struct" {
+                    let elem_start = pos;
+                    if segments.len() == 1 {
+                        let mut elem_end = elem_start;
+                        for sub in &field.subfields {
+                            elem_end = super::skip_field(sub, payload, elem_end)
+                                .ok_or("failed to skip struct subfield")?;
+                        }
+                        pos = elem_end;
+                        results.push(TargetSpan {
+                            field,
+                            start: elem_start,
+                            end: elem_end,
+                            label: format!("{label}[{idx}]"),
+                        });
+                    } else {
+                        let next_seg = &segments[1];
+                        let mut sub_pos = elem_start;
+                        let mut matched = false;
+                        for sub in &field.subfields {
+                            let sub_end = super::skip_field(sub, payload, sub_pos)
+                                .ok_or("failed to skip struct subfield")?;
+                            if same_name(&sub.name, &next_seg.field_name) {
+                                let sub_targets = resolve_target_spans(
+                                    sub,
+                                    (sub_pos, sub_end),
+                                    payload,
+                                    &segments[1..],
+                                    &format!("{label}[{idx}].{}", sub.name),
+                                )?;
+                                results.extend(sub_targets);
+                                matched = true;
+                            }
+                            sub_pos = sub_end;
+                        }
+                        if !matched {
+                            return Err(format!(
+                                "{}: subfield not found in struct elements of {}",
+                                next_seg.field_name, field.name
+                            ));
+                        }
+                        pos = sub_pos;
+                    }
+                } else {
+                    let elem_shape = field.shape.strip_prefix("list:").unwrap_or("4");
+                    let elem_end = super::skip(elem_shape, payload, pos)
+                        .ok_or("failed to skip list element")?;
+                    if segments.len() == 1 {
+                        results.push(TargetSpan {
+                            field,
+                            start: pos,
+                            end: elem_end,
+                            label: format!("{label}[{idx}]"),
+                        });
+                    }
+                    pos = elem_end;
+                }
+            }
+            Ok(results)
+        }
+        Selector::Index(wanted_idx) => {
+            if !field.shape.starts_with("list") {
+                return Err(format!("{}: indexing only valid on list fields", field.name));
+            }
+            let count = super::u32_at(payload, span.0).ok_or("truncated list")?;
+            if *wanted_idx >= count {
+                return Ok(Vec::new());
+            }
+            let mut pos = span.0 + 4;
+            for idx in 0..count {
+                if field.shape == "list:struct" {
+                    let elem_start = pos;
+                    let mut elem_end = elem_start;
+                    for sub in &field.subfields {
+                        elem_end = super::skip_field(sub, payload, elem_end)
+                            .ok_or("failed to skip struct subfield")?;
+                    }
+                    pos = elem_end;
+                    if idx == *wanted_idx {
+                        if segments.len() == 1 {
+                            return Ok(vec![TargetSpan {
+                                field,
+                                start: elem_start,
+                                end: elem_end,
+                                label: format!("{label}[{idx}]"),
+                            }]);
+                        } else {
+                            let next_seg = &segments[1];
+                            let mut sub_pos = elem_start;
+                            for sub in &field.subfields {
+                                let sub_end = super::skip_field(sub, payload, sub_pos)
+                                    .ok_or("failed to skip struct subfield")?;
+                                if same_name(&sub.name, &next_seg.field_name) {
+                                    return resolve_target_spans(
+                                        sub,
+                                        (sub_pos, sub_end),
+                                        payload,
+                                        &segments[1..],
+                                        &format!("{label}[{idx}].{}", sub.name),
+                                    );
+                                }
+                                sub_pos = sub_end;
+                            }
+                            return Err(format!(
+                                "{}: subfield not found in struct element of {}",
+                                next_seg.field_name, field.name
+                            ));
+                        }
+                    }
+                } else {
+                    let elem_shape = field.shape.strip_prefix("list:").unwrap_or("4");
+                    let elem_end = super::skip(elem_shape, payload, pos)
+                        .ok_or("failed to skip list element")?;
+                    if idx == *wanted_idx && segments.len() == 1 {
+                        return Ok(vec![TargetSpan {
+                            field,
+                            start: pos,
+                            end: elem_end,
+                            label: format!("{label}[{idx}]"),
+                        }]);
+                    }
+                    pos = elem_end;
+                }
+            }
+            Ok(Vec::new())
+        }
+    }
+}
+
+/// Turns one intent into changes, or explains why it cannot be applied.
 /// Raw replaces need only record boundaries; `set` needs a verified
 /// layout (`layout` explains why there is none).
-fn change(
+pub(crate) fn change(
     layout: &std::result::Result<&Table, String>,
     body: &[u8],
     record: &super::Record,
     i: &Intent,
-) -> std::result::Result<Change, String> {
+) -> std::result::Result<Vec<Change>, String> {
     let payload = &body[record.payload..record.end];
     let at = |offset: usize, original: Vec<u8>, patched: Vec<u8>, label: String| Change {
         anchor: Anchor::Offset((record.payload + offset) as u64),
@@ -78,7 +312,7 @@ fn change(
             .map(|(p, _)| p)
             .collect();
         return match (hits.as_slice(), old.len() == new.len()) {
-            ([one], true) => Ok(at(*one, old, new, format!("{}: raw replace", record.name))),
+            ([one], true) => Ok(vec![at(*one, old, new, format!("{}: raw replace", record.name))]),
             (_, false) => Err("raw replace must keep the length".into()),
             ([], _) => Err(format!("{}: old bytes not found", record.name)),
             _ => Err(format!(
@@ -92,37 +326,54 @@ fn change(
     }
     let table = layout.as_ref().map_err(String::clone)?;
     let name = i.field.as_deref().ok_or("an intent without a field")?;
+    let segments = parse_segments(name);
+    if segments.is_empty() {
+        return Err("an intent without a field".into());
+    }
+    let top_seg = &segments[0];
     let index = table
         .fields
         .iter()
-        .position(|f| same_name(&f.name, name))
+        .position(|f| same_name(&f.name, &top_seg.field_name))
         .ok_or_else(|| format!("{name}: no such field in {}", table.class))?;
-    let field = &table.fields[index];
-    if !field.editable() {
-        return Err(format!(
-            "{}: the layout of this field is not proven yet, so it is not changed",
-            field.name
+    let top_field = &table.fields[index];
+    let spans = spans(table, payload).ok_or("record does not match the layout")?;
+    let top_span = spans[index];
+
+    let targets = resolve_target_spans(
+        top_field,
+        top_span,
+        payload,
+        &segments,
+        &record.name,
+    )?;
+
+    if targets.is_empty() {
+        return Err(format!("{}: field matched no targets in record {}", name, record.name));
+    }
+
+    let mut changes = Vec::with_capacity(targets.len());
+    for t in targets {
+        if !t.field.editable() {
+            return Err(format!(
+                "{}: the layout of this field is not proven yet, so it is not changed",
+                t.field.name
+            ));
+        }
+        let bytes = super::value::encode(t.field, t.end - t.start, &i.new)?;
+        changes.push(at(
+            t.start,
+            payload[t.start..t.end].to_vec(),
+            bytes,
+            t.label,
         ));
     }
-    let (start, end) = spans(table, payload).ok_or("record does not match the layout")?[index];
-    let bytes = super::value::encode(field, end - start, &i.new)?;
-    Ok(at(
-        start,
-        payload[start..end].to_vec(),
-        bytes,
-        format!("{}.{}", record.name, field.name),
-    ))
+    Ok(changes)
 }
 
 /// Why Pailune cannot carry out an intent of a newer format revision yet.
-fn unsupported(i: &Intent) -> Option<String> {
-    let field = i.field.as_deref().unwrap_or_default();
-    match field.contains(['[', '.']) {
-        true => Some(format!(
-            "{field}: nested fields (format 3.1) are not supported yet"
-        )),
-        false => None,
-    }
+fn unsupported(_i: &Intent) -> Option<String> {
+    None
 }
 
 fn value_matches(actual: &Value, expected: &Value) -> bool {
@@ -175,16 +426,52 @@ fn filter_by_matches<'a>(
                 }
                 continue;
             }
-            let index = table
+            let maybe_idx = table
                 .fields
                 .iter()
-                .position(|f| same_name(&f.name, field_name))
-                .ok_or_else(|| format!("{field_name}: no such field in {}", table.class))?;
-            let field = &table.fields[index];
-            let (start, end) = spans[index];
-            let actual = super::value::decode(field, &payload[start..end])?;
-            if !value_matches(&actual, expected) {
-                continue 'record;
+                .position(|f| same_name(&f.name, field_name));
+            if let Some(index) = maybe_idx {
+                let field = &table.fields[index];
+                let (start, end) = spans[index];
+                let actual = super::value::decode(field, &payload[start..end])?;
+                if !value_matches(&actual, expected) {
+                    continue 'record;
+                }
+            } else if table.partial {
+                // Heuristic search for partial tables when filtering by unmapped fields:
+                // Check if any expected integer values exist in the payload
+                let mut found_value = false;
+                match expected {
+                    Value::Number(n) => {
+                        if let Some(val) = n.as_u64() {
+                            let b4 = (val as u32).to_le_bytes();
+                            let b8 = val.to_le_bytes();
+                            if payload.windows(4).any(|w| w == b4) || payload.windows(8).any(|w| w == b8) {
+                                found_value = true;
+                            }
+                        }
+                    }
+                    Value::Array(items) => {
+                        for item in items {
+                            if let Value::Number(n) = item
+                                && let Some(val) = n.as_u64()
+                            {
+                                let b4 = (val as u32).to_le_bytes();
+                                let b8 = val.to_le_bytes();
+                                if payload.windows(4).any(|w| w == b4) || payload.windows(8).any(|w| w == b8) {
+                                    found_value = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+                if !found_value {
+                    continue 'record;
+                }
+            } else {
+                return Err(format!("{field_name}: no such field in {}", table.class));
             }
         }
         matched.push(r);
@@ -256,14 +543,14 @@ pub fn resolve(
             if i.matches.is_some() {
                 for r in found {
                     match change(&layout, body, r, i) {
-                        Ok(c) => ok.push(c),
+                        Ok(cs) => ok.extend(cs),
                         Err(why) => failed.push(why),
                     }
                 }
             } else {
                 match found.as_slice() {
                     [one] => match change(&layout, body, one, i) {
-                        Ok(c) => ok.push(c),
+                        Ok(cs) => ok.extend(cs),
                         Err(why) => failed.push(why),
                     },
                     _ => failed.push(format!(

@@ -10,15 +10,13 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
-| **P1** | **A-01** | **Format 3.1 Table Patches (Phase 1 `match` done; Phase 2 nested fields)** | **L** (phased) | Resolves active warnings and failed patch applications seen on popular mods (*Character Creator*). |
 | **P1** | **A-01** | **In-Game Test Batch 1 (Tests 2–4 Verification)** | **Owner** | Completes validation of table overlay patching in game (hunting, drops, coin crates). |
-| **P2** | **A-01** | **Compressed Type-1 `.pac` Meshes** | **M** | Decodes the remaining 2,914 compressed meshes in the archives for complete inspection & patching. |
-| **P3** | **B-07** | **Variable-Length Save Editing (Step 4)** | **L** | Extends the verified fixed-size save editor to add/remove inventory items and dynamic lists. |
-| **P3** | **D-14** | **In-Place Route for Non-Overlay Game Files** | **M** | Already built and tested (`inplace::store`), ready to wire if dialogue audio/weapon XML mods require it. |
-| **P3** | **B-17** | **ASI Mod Creation: Research & Templates** | **Research / M** | Scaffolds native ASI plugin development with compiler toolchain and debug loop. |
-| **P4** | **Polish** | **Pre-Release Polish: GUI Redesign & Final Code Refactoring** | **M** | Aesthetic redesign, typography, visual hierarchy, and performance/memory optimization pass. |
-| **P5** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
-| **P5** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
+| **P1** | **B-07** | **Variable-Length Save Editing (Step 4)** | **L** | Extends the verified fixed-size save editor to add/remove inventory items and dynamic lists. |
+| **P2** | **D-14** | **In-Place Route for Non-Overlay Game Files** | **M** | Already built and tested (`inplace::store`), ready to wire if dialogue audio/weapon XML mods require it. |
+| **P2** | **B-17** | **ASI Mod Creation: Research & Templates** | **Research / M** | Scaffolds native ASI plugin development with compiler toolchain and debug loop. |
+| **P3** | **Polish** | **Pre-Release Polish: GUI Redesign & Final Code Refactoring** | **M** | Aesthetic redesign, typography, visual hierarchy, and performance/memory optimization pass. |
+| **P4** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
+| **P4** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
 
 ---
 
@@ -26,24 +24,41 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 ### Tier 1: Immediate & Compatibility (P1)
 
-#### 1. A-01 — Format 3.1 Table Patches (`match` record selector & nested fields)
-* **Status:** Phase 1 (`match` predicate evaluation) completed and verified; Phase 2 (nested field traversal & table rewriting) in Backlog.
-* **Size:** *L* (phased).
-* **Rationale:**
-  * Predicate selection is now functional across tables. Phase 2 extends layout resolution to nested record arrays (`prefab_data_list[*].tribe_gender_list`) and table length rebuilds.
-* **Target Areas:**
-  * [`src/tables/format3.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/format3.rs): Nested field navigation and table re-indexing.
-
-#### 2. Owner Task — In-Game Test Batch 1 (Tests 2–4 Verification)
+#### 1. Owner Task — In-Game Test Batch 1 (Tests 2–4 Verification)
 * **Status:** Owner column in `board.md` (Test 1 Arrow Stacks confirmed; tests 2–4 pending).
 * **Size:** Owner validation.
 * **Rationale:**
   * Re-verifies in-game that the per-table archive group architecture correctly injects multi-table modifications without engine side-effects.
   * Validates hunting drops, drop rates, and crate coin rewards defined in [`local/test-mods/TESTING.md`](file:///home/louisgoodnews/Dokumente/pailune/local/test-mods/TESTING.md).
 
+#### 2. B-07 (Step 4) — Variable-Length Save Editing
+* **Status:** Scheduled Backlog.
+* **Size:** *L*.
+* **Rationale:**
+  * Expands the verified save editor to support adding and removing inventory items and dynamic lists with table-of-contents recalculation and length rebuilds.
+* **Target Areas:**
+  * [`src/save_edit/`](file:///home/louisgoodnews/Dokumente/pailune/src/save_edit/): Dynamic body writer and TOC offset rebuilder.
+
 ---
 
 ### Completed Features
+
+#### A-01 — Format 3.1 Table Patches (Phase 2 Nested Fields & Table Rewriting)
+* **Status:** Completed & verified with automated tests.
+* **Size:** *L* (phased).
+* **Implementation Summary:**
+  * Added recursive nested field path parsing and resolution (`resolve_target_spans`) supporting property traversal (`parent.child`), array indexing (`list[0].field`), and wildcards (`list[*].field`).
+  * Supported variable length field encoding in `super::value::encode` including empty arrays (`new: []` -> `[0, 0, 0, 0]`) and typed lists.
+  * Implemented table header/index offset rewriting (`crate::patch::table::rewrite_index`) and wired it into `apply_over` (`ApplyReport.rewritten_header`) and `overlay/patches.rs` so subsequent record offsets shift accurately and the companion header index is packed into the overlay group.
+  * Added partial layout heuristic search in `filter_by_matches` for unmapped fields (e.g. `equip_type_info`).
+
+#### A-01 — Compressed Type-1 `.pac` Meshes
+* **Status:** Completed & verified with automated tests against local game files.
+* **Size:** *M*.
+* **Implementation Summary:**
+  * Implemented full decoding in `src/paz/pac.rs` (`extract::decode`).
+  * Parses the 80-byte `.pac` file header (`PAR ` magic, version, timestamp, up to 8 section size pairs `(stored_size, orig_size)`).
+  * Decompresses each compressed section with LZ4 block decompression (`lz4_flex::block::decompress`), updates `stored_size = orig_size` in the decoded header, and outputs the clean uncompressed `.pac` mesh format.
 
 #### B-18 — Pailune Modding SDK (Phase 16)
 * **Status:** Completed & verified with automated tests.
@@ -55,16 +70,19 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 ---
 
-### Tier 4: Engine Completeness & Utility Depth (P4)
+### Tier 2: Non-Overlay Game Files & ASI Scaffolding (P2)
 
-#### 5. A-01 — Compressed Type-1 `.pac` Meshes
+#### 3. D-14 — In-Place Route for Non-Overlay Game Files
 * **Size:** *M*.
 * **Rationale:**
-  * Decodes the remaining 2,914 3D mesh assets stored in compressed type-1 containers.
+  * Pre-built machinery (`inplace::store`) ready for non-overlay audio or socket XML mods if needed.
 
-#### 6. B-07 (Step 4) — Variable-Length Save Editing
-* **Size:** *L*.
+#### 4. B-17 — ASI Mod Creation: Research & Templates
+* **Size:** *Research / M*.
 * **Rationale:**
+  * Scaffolds native ASI plugin development with compiler toolchain and debug loop.
+
+---
   * Expands the verified save editor to support adding and removing inventory items and dynamic lists with table-of-contents recalculation.
 
 #### 7. D-14 — In-Place Route for Non-Overlay Game Files

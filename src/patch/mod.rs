@@ -76,4 +76,6 @@ pub struct ApplyReport {
     pub already: usize,
     /// Labels (or offsets) of changes that could not be applied, with reasons.
     pub failed: Vec<String>,
+    /// Updated companion table header/index when table changes altered record lengths.
+    pub rewritten_header: Option<Vec<u8>>,
 }

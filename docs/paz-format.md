@@ -589,16 +589,22 @@ format or size, update PATHC (§6.3).
 
 ---
 
-### 7.5 Type 1 outside textures: `.pac` meshes (2026-10-26, read-only scan)
+### 7.5 Type 1 outside textures: `.pac` meshes (VERIFIED 2026-10-28)
 
 Type 1 is not texture-only. On build 2.3.2, 12 961 `.pac` meshes use flags `0x0001`; 10 047 of
 them are stored uncompressed (`stored_size == orig_size`), and their bytes are the plain file
-(magic `PAR `, then a small header of section sizes). Two meshes are stored with flags `0x0000`
+(magic `PAR `, then an 80-byte header of section size pairs). Two meshes are stored with flags `0x0000`
 (`6_object/tools/cd_t0000_carddeck_0001.pac`, `…/cd_t9999_knowledgeimage_background_texture.pac`),
-so the game's mesh loader accepts plain storage. The compressed variant (2 914 meshes) is not
-decoded yet. Pailune therefore stores new or replaced non-texture files whose siblings use type 1
-**plain** (flags with compression 0, encryption kept), and reads uncompressed type-1 meshes as
-they are. **UNVERIFIED in game** (first user: *Character Creator*, 69 new head meshes).
+so the game's mesh loader accepts plain storage.
+
+The compressed variant (2 914 meshes on 2.3.2, 3 550 on newer builds) is decoded in `src/paz/pac.rs`:
+* 80-byte header: `PAR ` magic, version, 8-byte timestamp/signature, followed by up to 8 section
+  pairs at `16..80` (`u32 stored_size, u32 orig_size`).
+* Each section with `stored_size < orig_size` is decompressed using LZ4-block decompression
+  (`lz4_flex::block::decompress(slice, orig_size)`). Raw sections (`stored_size == orig_size`) are
+  copied directly.
+* In the decoded file header, `stored_size` is stamped with `orig_size` so the resulting `.pac` file
+  matches the uncompressed on-disk format expected by tools and the game engine.
 
 ---
 

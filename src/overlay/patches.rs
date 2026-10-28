@@ -155,6 +155,10 @@ pub fn apply_all(
                         unmodded.get(&vpath).map(Vec::as_slice),
                     );
                     report.failed.extend(unresolved);
+                    let mut header = header;
+                    if let Some(rewritten) = report.rewritten_header {
+                        header = Some(rewritten);
+                    }
                     let ok = report.failed.is_empty();
                     let mut message = format!(
                         "{vpath}: {} applied, {} already applied, {} failed",
@@ -175,7 +179,7 @@ pub fn apply_all(
                         if let Some((path, bytes)) = companion
                             && !packed.contains_key(&path)
                         {
-                            files.entry(path).or_insert(bytes);
+                            files.insert(path, bytes);
                         }
                         files.insert(vpath, data);
                     }

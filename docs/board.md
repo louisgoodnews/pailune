@@ -16,11 +16,6 @@ Move a line between columns when its status changes.
   audio, weapon/socket XML). Parts built and tested (`paz::pamt_edit`, `inplace::store`), not
   wired; wire when such a file type is confirmed to need it — *M*
 
-- [ ] A-01 format 3.1 (phase 2): nested fields (`prefab_data_list[*].…`) and list values that
-  change a record's length (table rewrite with new index offsets). Needed by *Character Creator*'s
-  "Equip All Armor"; needs the full ItemInfo layout first — *L*
-- [ ] A-01 compressed type-1 `.pac` meshes (2 914 in the game): decode for reading and patching — *M*
-
 - [ ] Pre-release polish (roadmap phase 17): GUI aesthetic redesign and final pre-release
   code refactoring — *M*
 - [ ] B-17 ASI mod creation (D-13), after B-16: research + decision record first, then templates,
@@ -45,6 +40,13 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] A-01 compressed type-1 `.pac` meshes: full decoding support in `src/paz/pac.rs` (`extract::decode`).
+  Decompresses multi-section `PAR ` mesh archives with per-section LZ4 block decompression and updates
+  stored sizes in the 80-byte header to match original section lengths.
+- [x] A-01 format 3.1 (phase 2: nested fields & table rewriting): nested field navigation (`parent.child`,
+  `list[*].field`, `list[0].field`), `[]` empty list encoding, and table header index rewriting
+  (`table::rewrite_index`, `apply_over` with `ApplyReport.rewritten_header`) to adjust subsequent record
+  offsets when table records change length.
 - [x] B-18 Pailune Modding SDK (roadmap phase 16): project generator via CLI/MCP (`spawn_mod_project`,
   `export_mod_project`) and GUI wizard (`SpawnProjectPrompt`) for new ASI or JSON projects; scaffolding
   at target directory with metadata, author, and description; bundled MinGW cross-compile libraries and

@@ -135,8 +135,8 @@ pub fn apply_over(
                     original: Some(o),
                     patched,
                 },
-            ) if is_table && o.len() != patched.len() => {
-                Err("changes to data tables must keep their length".into())
+            ) if is_table && o.len() != patched.len() && header.is_none() => {
+                Err("changes to data tables without an index must keep their length".into())
             }
             (Some(at), Edit::Replace { original, patched }) => {
                 let span = original.as_ref().map_or(patched.len(), Vec::len);
@@ -200,14 +200,26 @@ pub fn apply_over(
         };
     }
     // Highest offset first: size changes never move offsets still to apply.
+    let mut shifts: Vec<(usize, i64)> = Vec::new();
     valid.sort_by_key(|r| std::cmp::Reverse(r.at));
     valid.iter().for_each(|r| match &r.change.edit {
-        Edit::Insert { bytes } => drop(data.splice(r.at..r.at, bytes.iter().copied())),
+        Edit::Insert { bytes } => {
+            if is_table {
+                shifts.push((r.at, bytes.len() as i64));
+            }
+            drop(data.splice(r.at..r.at, bytes.iter().copied()))
+        }
         Edit::Replace { original, patched } => {
             let span = original.as_ref().map_or(patched.len(), Vec::len);
+            if is_table && span != patched.len() {
+                shifts.push((r.at, patched.len() as i64 - span as i64));
+            }
             drop(data.splice(r.at..r.at + span, patched.iter().copied()));
         }
     });
+    if is_table && !shifts.is_empty() && let Some(h) = header {
+        report.rewritten_header = super::table::rewrite_index(h, &shifts);
+    }
     report.applied = valid.len();
     report
 }

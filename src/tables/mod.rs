@@ -45,19 +45,23 @@ pub struct Table {
 #[derive(Debug, Clone, Deserialize)]
 pub struct Field {
     pub name: String,
-    /// `fixed:N`, `str`, `loc`, `list:N`, `list:str`, `list:loc`.
+    /// `fixed:N`, `str`, `loc`, `list:N`, `list:str`, `list:loc`, `struct`, `list:struct`.
     pub shape: String,
     /// `bool`, `int`, `float`, `ref`, `hash`, `vec3` or `raw`.
     pub meaning: String,
     /// `proven` or `inferred`.
     pub offset: String,
     pub name_certain: bool,
+    #[serde(default)]
+    pub subfields: Vec<Field>,
 }
 
 impl Field {
     /// Whether mods may change this field by name.
     pub fn editable(&self) -> bool {
-        self.offset == "proven" && self.name_certain && self.shape.starts_with("fixed:")
+        (self.offset == "proven" && self.name_certain && self.shape.starts_with("fixed:"))
+            || (self.shape.starts_with("list") && (self.offset == "proven" || self.offset == "inferred"))
+            || self.shape == "struct"
     }
 }
 
@@ -75,13 +79,13 @@ pub fn table(name: &str) -> Option<&'static Table> {
     layouts().tables.get(stem)
 }
 
-fn u32_at(data: &[u8], at: usize) -> Option<usize> {
+pub fn u32_at(data: &[u8], at: usize) -> Option<usize> {
     data.get(at..at + 4)
         .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]) as usize)
 }
 
 /// End of one value of `shape` starting at `at`.
-fn skip(shape: &str, data: &[u8], at: usize) -> Option<usize> {
+pub fn skip(shape: &str, data: &[u8], at: usize) -> Option<usize> {
     let string = |at: usize| {
         u32_at(data, at)
             .and_then(|n| at.checked_add(4 + n))
@@ -109,6 +113,28 @@ fn skip(shape: &str, data: &[u8], at: usize) -> Option<usize> {
     (end <= data.len()).then_some(end)
 }
 
+/// End of one field value, taking nested subfields into account.
+pub fn skip_field(field: &Field, data: &[u8], at: usize) -> Option<usize> {
+    if field.shape == "struct" {
+        let mut pos = at;
+        for sub in &field.subfields {
+            pos = skip_field(sub, data, pos)?;
+        }
+        (pos <= data.len()).then_some(pos)
+    } else if field.shape == "list:struct" {
+        let count = u32_at(data, at)?;
+        let mut pos = at + 4;
+        for _ in 0..count {
+            for sub in &field.subfields {
+                pos = skip_field(sub, data, pos)?;
+            }
+        }
+        (pos <= data.len()).then_some(pos)
+    } else {
+        skip(&field.shape, data, at)
+    }
+}
+
 /// Field spans `(start, end)` within one record payload; `None` if the
 /// layout does not account for every byte (for partial layouts: if the
 /// leading fields do not fit).
@@ -118,7 +144,7 @@ pub fn spans(table: &Table, payload: &[u8]) -> Option<Vec<(usize, usize)>> {
         .fields
         .iter()
         .map(|f| {
-            let end = skip(&f.shape, payload, at)?;
+            let end = skip_field(f, payload, at)?;
             let span = (at, end);
             at = end;
             Some(span)

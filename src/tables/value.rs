@@ -3,11 +3,45 @@
 use super::Field;
 use serde_json::Value;
 
-/// Bytes of `new` for a fixed field of `size` bytes.
+/// Bytes of `new` for a fixed or list field of `size` bytes.
 pub fn encode(field: &Field, size: usize, new: &Value) -> std::result::Result<Vec<u8>, String> {
     let bad = |what: &str| Err(format!("{}: {what}", field.name));
-    // Shipped layouts only have 1-8 byte scalars; anything else is refused.
-    if !(1..=8).contains(&size) || (field.meaning == "bool" && size != 1) {
+
+    if field.shape.starts_with("list") {
+        match new {
+            Value::Array(items) if items.is_empty() => return Ok(vec![0u8; 4]),
+            Value::Null => return Ok(vec![0u8; 4]),
+            Value::Array(items) => {
+                let elem_shape = field.shape.strip_prefix("list:").unwrap_or("4");
+                let elem_size: usize = match elem_shape {
+                    "1" => 1,
+                    "2" => 2,
+                    "4" => 4,
+                    "8" => 8,
+                    _ => return bad(&format!("unsupported list element shape {elem_shape}")),
+                };
+                let mut out = Vec::with_capacity(4 + items.len() * elem_size);
+                out.extend_from_slice(&(items.len() as u32).to_le_bytes());
+                for item in items {
+                    let dummy_field = Field {
+                        name: field.name.clone(),
+                        shape: format!("fixed:{elem_size}"),
+                        meaning: if field.meaning == "list" { "int".into() } else { field.meaning.clone() },
+                        offset: "proven".into(),
+                        name_certain: true,
+                        subfields: Vec::new(),
+                    };
+                    let encoded = encode(&dummy_field, elem_size, item)?;
+                    out.extend_from_slice(&encoded);
+                }
+                return Ok(out);
+            }
+            _ => return bad("expects a JSON array for list field"),
+        }
+    }
+
+    // Shipped layouts only have 1-8 byte scalars (and 12-byte vec3); anything else is refused.
+    if (!((1..=8).contains(&size) || (field.meaning == "vec3" && size == 12))) || (field.meaning == "bool" && size != 1) {
         return bad(&format!("unsupported field size {size}"));
     }
     let int = |v: i128| -> std::result::Result<Vec<u8>, String> {
