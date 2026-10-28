@@ -8,3 +8,4 @@ Icon=pailune
 Terminal=false
 Categories=Game;Utility;
 StartupWMClass=pailune
+MimeType=x-scheme-handler/nxm;

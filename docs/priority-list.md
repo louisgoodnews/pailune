@@ -10,8 +10,7 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
-| **P1** | **Packaging** | **Linux Release Packaging (AppImage & Tarball)** | **S** | Pailune's primary platform is Linux; finalize binary release artifacts, AppImage bundling, and `.desktop` metadata. |
-| **P2** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release. |
+| **P1** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release (Nexus Mods API Acceptable Use Policy). |
 | *Deferred* | *B-08* | *Windows & macOS Target Testing* | *L* | Optional / deferred until dedicated Windows/macOS test hardware is available. |
 
 ---
@@ -19,6 +18,16 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 ## Detailed Action Items & Rationales
 
 ### Completed Features
+
+#### Linux Release Packaging (AppImage & Tarball)
+* **Status:** Completed & verified.
+* **Size:** *S*.
+* **Implementation Summary:**
+  * Created automated Linux release distribution pipeline in [`packaging/dist.sh`](file:///home/louisgoodnews/Dokumente/pailune/packaging/dist.sh).
+  * Generates stripped release distribution tarball (`target/dist/pailune-v0.1.0-x86_64-unknown-linux-gnu.tar.gz`) containing binary, licenses, README, and desktop assets, along with `SHA256SUMS`.
+  * Updated [`packaging/appimage.sh`](file:///home/louisgoodnews/Dokumente/pailune/packaging/appimage.sh) to stage `Pailune.AppDir` with 256x256 high-resolution icon conversion via `rsvg-convert` and `.DirIcon` link, and builds standalone `.AppImage` when `appimagetool` is available.
+  * Enhanced [`packaging/install.sh`](file:///home/louisgoodnews/Dokumente/pailune/packaging/install.sh) with dual-mode installation (installs from either release tarball or git repo to `~/.local/bin`, `~/.local/share/applications`, and `~/.local/share/icons`).
+  * Unified packaging assets under Pailune naming: [`packaging/pailune.desktop`](file:///home/louisgoodnews/Dokumente/pailune/packaging/pailune.desktop) with `MimeType=x-scheme-handler/nxm;`, [`packaging/pailune.svg`](file:///home/louisgoodnews/Dokumente/pailune/packaging/pailune.svg), and [`packaging/pailune.appdata.xml`](file:///home/louisgoodnews/Dokumente/pailune/packaging/pailune.appdata.xml).
 
 #### A-01 — Table Schema Expansion (DropSetInfo)
 * **Status:** Completed & verified with automated tests.

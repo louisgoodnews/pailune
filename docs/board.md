@@ -9,7 +9,6 @@ Move a line between columns when its status changes.
 
 ## Next (small first)
 
-- [ ] Linux release packaging (AppImage, standalone distribution tarball, `.desktop` entry & iconography) — *S*
 
 ## Backlog (large)
 
@@ -23,6 +22,11 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] Linux release packaging: automated release distribution pipeline (`packaging/dist.sh`),
+  standalone distribution tarball (`pailune-v<version>-x86_64-unknown-linux-gnu.tar.gz`) with stripped release
+  binary and SHA256 checksums, AppImage AppDir staging with 256x256 icon conversion (`packaging/appimage.sh`),
+  dual-mode installation script (`packaging/install.sh`), and unified desktop entry and metadata (`packaging/pailune.desktop`
+  with `x-scheme-handler/nxm;`, `packaging/pailune.svg`, `packaging/pailune.appdata.xml`).
 - [x] A-01 format 3, phase 2: Table schema expansion (`DropSetInfo` in `data/table-layouts.json` and `src/tables/`).
   Decodes 14-byte header and 64-byte `_dropInfoList` (`list:struct`) with verified subfields (`_entryType`,
   `_itemKey`, `_dropRate` with 1,000,000 = 100%, `_minDropCount`, `_maxDropCount`). Supports wildcard (`[*]`)
