@@ -8,6 +8,7 @@ pub mod collection_preview;
 pub mod collections;
 pub mod confirm;
 pub mod create_mod;
+pub mod creator;
 pub mod data_browser;
 pub mod guide;
 pub mod header;

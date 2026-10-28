@@ -2,6 +2,7 @@
 
 mod backups;
 mod collections;
+mod creator;
 mod data_browser;
 mod deploy;
 mod guide;
@@ -48,6 +49,7 @@ impl PailuneApp {
             Action::Notice(action) => self.notice_action(action),
             Action::ModList(action) => self.modlist_action(action),
             Action::DataBrowser(action) => self.data_browser_action(action),
+            Action::Creator(action) => self.creator_action(action),
             Action::SwitchTab(tab) => {
                 self.tab = tab;
                 // The game writes saves while Pailune runs: read them fresh.

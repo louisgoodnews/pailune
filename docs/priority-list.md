@@ -10,7 +10,6 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
-| **P1** | **Visual-2** | **Visual Mod Creator Phase 2: Interactive Node Canvas GUI in egui** | **M** | Node graph canvas in egui, draggable nodes, color-coded sockets, bezier wires, live diff preview. |
 | **Owner** | **A-21** | **Nexus Mods API Registration** | **Admin** | Administrative prerequisite before public general release (Nexus Mods API Acceptable Use Policy). |
 | *Deferred* | *B-08* | *Windows & macOS Target Testing* | *L* | Optional / deferred until dedicated Windows/macOS test hardware is available. |
 
@@ -18,18 +17,26 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 ## Detailed Action Items & Rationales
 
-### Visual Modding Studio (Roadmap Phase 19)
-
-#### Visual-2 — Interactive Node Canvas GUI in egui
-* **Size:** *M*.
-* **Rationale:**
-  * Visual node graph interface with pannable/zoomable canvas, draggable nodes, typed socket connections, real-time live diff against the Game Data Browser, and one-click templates (*Mega Stacks*, *Loot Bounty*, *Crate Rewards*).
+*(All current development action items on the roadmap up through Phase 19 are implemented and verified.)*
 
 ---
 
 ## Completed Features
 
 ### Visual Modding Studio (Roadmap Phase 19)
+
+#### Visual-2 — Interactive Node Canvas GUI in egui
+* **Status:** Completed & verified with automated tests.
+* **Size:** *M*.
+* **Implementation Summary:**
+  * Implemented interactive node graph canvas in [`src/ui/views/creator.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/ui/views/creator.rs) with background grid, smooth panning and mouse-wheel zooming (`zoom` with clamped range [0.5, 2.0]).
+  * Built styled node cards with category-coded header badges (`Source`, `Operator`, `Action`, `Target`), inline parameter inputs, and drag handle.
+  * Designed typed sockets with color-coding (`ItemRef`, `DropTableRef`, `Number`, `Boolean`, `Text`) and click-to-connect / right-click-cancel interaction.
+  * Implemented cubic bezier spline wire rendering connecting output sockets to input sockets with horizontal tangent smoothing.
+  * Implemented real-time live diff preview panel showing table targets and format-3 intents before deployment.
+  * Integrated starter template loader (*Mega Stacks*, *Hunting & Animal Yields*, *Crate Coin Rewards*) and dynamic node spawning menu.
+  * Added "Apply & Deploy" and "Export to ZIP" action pipeline in [`src/ui/actions/creator.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/ui/actions/creator.rs).
+  * Added comprehensive UI integration tests in [`src/tests/ui.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tests/ui.rs) (full suite: 187 passed, 0 failed, 26 ignored).
 
 #### Visual-1 — Core Node Graph Engine & Compiler
 * **Status:** Completed & verified with automated tests.

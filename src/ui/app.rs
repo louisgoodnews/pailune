@@ -2,7 +2,7 @@
 
 use super::guide::GuideState;
 use super::{
-    Action, DataBrowserState, Level, LogState, ModsState, NexusState, PailuneApp, ProfilesState,
+    Action, CreatorState, DataBrowserState, Level, LogState, ModsState, NexusState, PailuneApp, ProfilesState,
     SettingsDraft, StatusLine, Tab,
 };
 use super::{theme, views};
@@ -95,6 +95,7 @@ impl PailuneApp {
             },
             log: LogState::default(),
             data_browser: DataBrowserState::default(),
+            creator: CreatorState::default(),
             jobs: Vec::new(),
             launch_after: None,
             last_poll: Instant::now(),
@@ -200,6 +201,7 @@ impl eframe::App for PailuneApp {
                 Tab::Mods => views::mod_list::show(ui, self),
                 Tab::Saves => views::saves::show(ui, self),
                 Tab::DataBrowser => views::data_browser::show(ui, self),
+                Tab::Creator => views::creator::show(ui, self),
                 Tab::Profiles => views::profiles::show(ui, self),
                 Tab::Nexus => views::nexus::show(ui, self),
                 Tab::Log => views::log::show(ui, self),

@@ -231,3 +231,31 @@ pub struct ActiveFieldEdit {
     pub rel_offset: usize,
     pub original_hex: String,
 }
+
+/// Visual node-based mod creator state.
+#[derive(Debug, Clone)]
+pub struct CreatorState {
+    pub graph: crate::visual::Graph,
+    pub pan: [f32; 2],
+    pub zoom: f32,
+    pub selected_node: Option<String>,
+    pub dragging_node: Option<String>,
+    pub connecting_socket: Option<(String, String, bool)>,
+    pub show_diff_preview: bool,
+    pub status_feedback: Option<(String, super::Level)>,
+}
+
+impl Default for CreatorState {
+    fn default() -> Self {
+        Self {
+            graph: crate::visual::templates::mega_stacks(999),
+            pan: [0.0, 0.0],
+            zoom: 1.0,
+            selected_node: None,
+            dragging_node: None,
+            connecting_socket: None,
+            show_diff_preview: true,
+            status_feedback: None,
+        }
+    }
+}

@@ -17,12 +17,12 @@ mod views;
 
 #[allow(unused_imports)]
 pub use intent::{
-    Action, BackupAction, Confirm, DataBrowserAction, DeployAction, ModAction, ModListAction,
+    Action, BackupAction, Confirm, CreatorAction, DataBrowserAction, DeployAction, ModAction, ModListAction,
     NexusAction, ProfileAction, SetupAction, Tab,
 };
 #[allow(unused_imports)]
 pub use state::{
-    ActiveFieldEdit, DataBrowserState, Incoming, JobState, JobView, LogState, ModsState,
+    ActiveFieldEdit, CreatorState, DataBrowserState, Incoming, JobState, JobView, LogState, ModsState,
     NexusState, ProfilesState, SpawnProjectDraft,
 };
 
@@ -102,6 +102,7 @@ pub struct PailuneApp {
     pub nexus: NexusState,
     pub log: LogState,
     pub data_browser: DataBrowserState,
+    pub creator: CreatorState,
     /// An ASI loader is installed but Steam's launch options leave it off.
     pub loader_off: bool,
     /// Toasts and the notification center.

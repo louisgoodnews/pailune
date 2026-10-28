@@ -12,6 +12,8 @@ pub enum Tab {
     Saves,
     /// Read-only game data table browser.
     DataBrowser,
+    /// Visual node-based mod creator studio.
+    Creator,
     Profiles,
     Nexus,
     Log,
@@ -178,6 +180,17 @@ pub enum Action {
     Ask(Confirm),
     Dismiss,
     DataBrowser(DataBrowserAction),
+    Creator(CreatorAction),
+}
+
+/// Visual mod creator intents.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CreatorAction {
+    ApplyGraph,
+    ExportZip,
+    LoadTemplate(String),
+    ClearGraph,
+    DeleteNode(String),
 }
 
 /// Game data browser intents.

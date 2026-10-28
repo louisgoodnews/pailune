@@ -566,3 +566,87 @@ fn spawn_project_modal_action_creates_project_and_stages() {
     assert!(app.paths.staging.join("HudMinimap").is_dir());
     assert_eq!(app.mods.selected.as_deref(), Some("HudMinimap"));
 }
+
+#[test]
+fn visual_creator_template_actions_and_manipulation() {
+    let fx = fixture();
+    let mut app = app(&fx);
+
+    // Initial state has mega_stacks template
+    assert_eq!(app.creator.graph.title, "Mega Stacks");
+
+    // 1. Switch template to loot_bounty
+    app.dispatch(Action::Creator(crate::ui::CreatorAction::LoadTemplate(
+        "loot_bounty".into(),
+    )));
+    assert_eq!(app.creator.graph.title, "Hunting & Animal Yields");
+
+    // 2. Switch template to crate_coins
+    app.dispatch(Action::Creator(crate::ui::CreatorAction::LoadTemplate(
+        "crate_coins".into(),
+    )));
+    assert_eq!(app.creator.graph.title, "Crate Coin Rewards");
+
+    // 3. Delete a node
+    let first_node_id = app.creator.graph.nodes[0].id.clone();
+    app.dispatch(Action::Creator(crate::ui::CreatorAction::DeleteNode(
+        first_node_id.clone(),
+    )));
+    assert!(app.creator.graph.nodes.iter().all(|n| n.id != first_node_id));
+
+    // 4. Clear graph
+    app.dispatch(Action::Creator(crate::ui::CreatorAction::ClearGraph));
+    assert!(app.creator.graph.nodes.is_empty());
+    assert!(app.creator.graph.connections.is_empty());
+}
+
+#[test]
+fn visual_creator_export_zip_action() {
+    let fx = fixture();
+    let mut app = app(&fx);
+
+    // Use default mega stacks template
+    app.dispatch(Action::Creator(crate::ui::CreatorAction::ExportZip));
+
+    // Verify zip created in exports
+    assert!(app.paths.exports.is_dir());
+    let mut zips: Vec<_> = std::fs::read_dir(&app.paths.exports)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "zip"))
+        .collect();
+    assert_eq!(zips.len(), 1);
+    let zip_path = zips.pop().unwrap().path();
+    assert!(zip_path.file_name().unwrap().to_str().unwrap().contains("Mega Stacks"));
+
+    // Verify zip contents
+    let file = std::fs::File::open(&zip_path).unwrap();
+    let mut archive = zip::ZipArchive::new(file).unwrap();
+    let names: Vec<String> = (0..archive.len())
+        .map(|i| archive.by_index(i).unwrap().name().unwrap().to_string())
+        .collect();
+    assert!(names.contains(&"modinfo.json".to_string()));
+    assert!(names.contains(&"graph.json".to_string()));
+    assert!(names.iter().any(|n| n.ends_with(".field.json")));
+}
+
+#[test]
+fn visual_creator_apply_graph_action() {
+    let fx = fixture();
+    let mut app = app(&fx);
+
+    // Apply graph
+    app.dispatch(Action::Creator(crate::ui::CreatorAction::ApplyGraph));
+
+    // Staging folder created
+    let mod_dir = app.paths.staging.join("Mega Stacks");
+    assert!(mod_dir.is_dir());
+    assert!(mod_dir.join("modinfo.json").is_file());
+    assert!(mod_dir.join("graph.json").is_file());
+    assert!(mod_dir.join("mega_stacks.field.json").is_file());
+
+    // Registered and enabled in registry
+    let entry = app.registry.mods.iter().find(|m| m.name == "Mega Stacks");
+    assert!(entry.is_some());
+    assert!(entry.unwrap().enabled);
+}

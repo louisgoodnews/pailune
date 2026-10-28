@@ -5,11 +5,11 @@ Move a line between columns when its status changes.
 
 ## In progress
 
-- (nothing — waiting on the owner's in-game test batch 1)
+- (nothing — ready for next priority item)
 
 ## Next (small first)
 
-- [ ] Visual Mod Creator Phase 2: Interactive node canvas GUI in egui (pan/zoom, typed sockets, bezier wires, live diff against game data browser, template loader) — *M*
+- (see priority-list.md)
 
 ## Backlog (large)
 
@@ -23,6 +23,10 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] Visual Mod Creator Phase 2: Interactive node canvas GUI in egui (`src/ui/views/creator.rs`, `src/ui/actions/creator.rs`).
+  Interactive node graph canvas with smooth pan/zoom, draggable node cards, typed socket hit-testing, cubic bezier wire connections,
+  node deletion and connection management, starter template dropdown (*Mega Stacks*, *Hunting & Animal Yields*, *Crate Coin Rewards*),
+  add node menu, live format-3 diff preview panel, one-click "Apply & Deploy", game launch shortcut, and direct "Export to ZIP" packaging.
 - [x] Visual Mod Creator Phase 1: Core node graph engine & compiler (`src/visual/`).
   Data models (`Graph`, `Node`, `Socket`, `Connection`, `NodeType`), JSON serialization (`graph.json`),
   topological execution sorting with cycle detection, socket type safety enforcement, deterministic compiler
