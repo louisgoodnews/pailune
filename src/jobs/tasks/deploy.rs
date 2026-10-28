@@ -49,14 +49,26 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
     let mut manifest = db::links::load(conn)?;
     let mut journal = DbJournal { conn };
     undeploy::undeploy(&mut manifest, &mut journal)?;
+    let store = crate::inplace::Store {
+        root: ctx.paths.game_backup.clone(),
+    };
+    crate::inplace::revert(&info.game_dir, &store)?;
     snapshot::ensure_meta_backup(&info)?;
     let (registry, revision) = db::mods::load_with_revision(conn)?;
     let mut link_plan = plan::build(&ctx.config, &ctx.paths.staging, &registry)?;
-    let overlay = build_overlay(ctx, &info, &registry)?;
+    let mut input = overlay::collect::collect(&ctx.paths.staging, &registry)?;
+    let (inplace_plan, overlay) = deploy_archives(ctx, &info, &mut input)?;
+    if let Some(ip) = &inplace_plan {
+        link_plan.ops.extend(ip.links.clone());
+    }
     link_plan
         .ops
         .extend(overlay.iter().flat_map(|o| o.links.clone()));
-    let owned = [ctx.paths.staging.as_path(), ctx.paths.overlay.as_path()];
+    let owned = [
+        ctx.paths.staging.as_path(),
+        ctx.paths.overlay.as_path(),
+        ctx.paths.game_backup.as_path(),
+    ];
     let report = deploy::deploy(&link_plan, &owned, &mut manifest, &mut journal)?;
     db::mods::set_deployed_revision(conn, Some(revision))?;
     let enabled: Vec<&ModEntry> = registry.mods.iter().filter(|m| m.enabled).collect();
@@ -76,6 +88,23 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
     if waiting > 0 {
         text.push_str(&format!(
             " — {waiting} mod(s) contain textures, JSON patches or unplaced files that were skipped"
+        ));
+    }
+    if let Some(ip) = &inplace_plan {
+        ip.skipped.iter().for_each(|reason| {
+            ctx.journal(
+                conn,
+                Event::new(Severity::Warn, EventKind::Deploy, None, reason.clone()),
+            )
+        });
+        text.push_str(&format!(
+            " — in-place: {} file(s) redirected in group(s) {}{}",
+            ip.file_count,
+            ip.groups.join(", "),
+            match ip.skipped.len() {
+                0 => String::new(),
+                n => format!(", {n} skipped (see Log)"),
+            }
         ));
     }
     if let Some(o) = &overlay {
@@ -132,20 +161,95 @@ pub(super) fn redeploy(ctx: &JobContext, conn: &mut Connection) -> Result<String
     Ok(text)
 }
 
-/// Builds Pailune's archive overlay when enabled mods need one.
-fn build_overlay(
+/// Deploys in-place archives and archive overlay groups.
+fn deploy_archives(
     ctx: &JobContext,
     info: &crate::steam::SteamInfo,
-    registry: &crate::mod_engine::model::Registry,
-) -> Result<Option<OverlayPlan>> {
-    let input = overlay::collect::collect(&ctx.paths.staging, registry)?;
-    match input.is_empty() {
-        true => {
-            let _ = std::fs::remove_dir_all(&ctx.paths.overlay);
-            Ok(None)
-        }
-        false => overlay::build::build(info, &input, &ctx.paths.overlay).map(Some),
+    input: &mut overlay::OverlayInput,
+) -> Result<(Option<crate::inplace::InPlacePlan>, Option<OverlayPlan>)> {
+    if input.is_empty() && input.inplace.is_empty() {
+        let _ = std::fs::remove_dir_all(&ctx.paths.overlay);
+        return Ok((None, None));
     }
+
+    use crate::error::IoContext;
+    let store = crate::inplace::Store {
+        root: ctx.paths.game_backup.clone(),
+    };
+
+    let patch_mods = overlay::patches::read_all(&input.patches);
+    let mut wanted = overlay::patches::wanted(&patch_mods);
+    wanted.paths.extend(input.packs.keys().cloned());
+    wanted.paths.extend(input.inplace.keys().cloned());
+    wanted.paths.extend(
+        input
+            .text_patches
+            .iter()
+            .map(|(_, target, _)| target.clone()),
+    );
+
+    let papgt_bytes = match std::fs::read(crate::symlink::bak_path(&info.meta_dir.join("0.papgt"))) {
+        Ok(b) => b,
+        Err(_) => {
+            let live = info.meta_dir.join("0.papgt");
+            std::fs::read(&live).at(&live)?
+        }
+    };
+    let base = crate::paz::vanilla::load_cached(&info.game_dir, &papgt_bytes, &wanted)?;
+
+    let mut inplace_files = std::collections::BTreeMap::new();
+    for (vpath, source) in std::mem::take(&mut input.inplace) {
+        if base.locate(&vpath).is_some() {
+            inplace_files.insert(vpath, source);
+        } else {
+            input.packs.insert(vpath, source);
+        }
+    }
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as i64;
+
+    let (inplace_plan, current_papgt_bytes) = if !inplace_files.is_empty() {
+        let plan = crate::inplace::build(
+            &info.game_dir,
+            &store,
+            &info.meta_dir,
+            &base,
+            &inplace_files,
+            now,
+        )?;
+        let serialized_papgt = crate::paz::papgt::serialize(&plan.papgt)?;
+        (Some(plan), serialized_papgt)
+    } else {
+        (None, papgt_bytes)
+    };
+
+    let overlay_plan = if !input.is_empty() {
+        let pathc = if input.packs.keys().any(|v| v.ends_with(".dds")) {
+            Some(
+                std::fs::read(crate::symlink::bak_path(&info.meta_dir.join("0.pathc")))
+                    .or_else(|_| std::fs::read(info.meta_dir.join("0.pathc")))
+                    .at(&info.meta_dir.join("0.pathc"))?,
+            )
+        } else {
+            None
+        };
+        let plan = overlay::build::build_from(
+            info,
+            &current_papgt_bytes,
+            pathc.as_deref(),
+            input,
+            &ctx.paths.overlay,
+        )?;
+        Some(plan)
+    } else {
+        let _ = std::fs::remove_dir_all(&ctx.paths.overlay);
+        None
+    };
+
+    Ok((inplace_plan, overlay_plan))
 }
 
 /// 1-based load-order position of a mod.
@@ -168,6 +272,10 @@ pub fn unlink_all(ctx: &JobContext) -> Result<JobOutput> {
     let mut manifest = db::links::load(&conn)?;
     let report = undeploy::undeploy(&mut manifest, &mut DbJournal { conn: &conn })?;
     db::mods::set_deployed_revision(&conn, None)?;
+    let store = crate::inplace::Store {
+        root: ctx.paths.game_backup.clone(),
+    };
+    crate::inplace::revert(&ctx.steam().game_dir, &store)?;
     let text = summarise(ctx, &conn, EventKind::Unlink, "Unlinked", &report);
     ctx.journal(
         &conn,
@@ -183,6 +291,10 @@ pub fn clean_slate(ctx: &JobContext) -> Result<JobOutput> {
     require_game(&info)?;
     let mut manifest = db::links::load(&conn)?;
     let report = reset::clean_slate(&info, &mut manifest, &mut DbJournal { conn: &conn })?;
+    let store = crate::inplace::Store {
+        root: ctx.paths.game_backup.clone(),
+    };
+    crate::inplace::revert(&info.game_dir, &store)?;
     db::mods::update(&mut conn, |r| {
         Ok(crate::mod_engine::registry::with_all(r, false))
     })?;

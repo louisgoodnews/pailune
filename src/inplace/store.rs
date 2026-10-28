@@ -96,11 +96,16 @@ pub struct Store {
 }
 
 impl Store {
-    fn folder(&self, number: u32) -> PathBuf {
+    pub fn folder(&self, number: u32) -> PathBuf {
         match number {
             0 => self.root.join("base"),
             n => self.root.join("versions").join(n.to_string()),
         }
+    }
+
+    /// Whether the base backup (0) exists.
+    pub fn has_base(&self) -> bool {
+        self.folder(0).join("manifest.json").exists()
     }
 
     /// The manifest of the base (0) or a version.

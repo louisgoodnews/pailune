@@ -11,7 +11,6 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 | Rank | ID | Item | Size | Primary Rationale |
 |:---:|:---|:---|:---:|:---|
 | **P1** | **A-01** | **In-Game Test Batch 1 (Tests 2–4 Verification)** | **Owner** | Completes validation of table overlay patching in game (hunting, drops, coin crates). |
-| **P2** | **D-14** | **In-Place Route for Non-Overlay Game Files** | **M** | Already built and tested (`inplace::store`), ready to wire if dialogue audio/weapon XML mods require it. |
 | **P2** | **B-17** | **ASI Mod Creation: Research & Templates** | **Research / M** | Scaffolds native ASI plugin development with compiler toolchain and debug loop. |
 | **P3** | **Polish** | **Pre-Release Polish: GUI Redesign & Final Code Refactoring** | **M** | Aesthetic redesign, typography, visual hierarchy, and performance/memory optimization pass. |
 | **P4** | **B-08** | **Windows & macOS Real-Install Testing** | **L** | Platform validation requiring dedicated external test hardware and macOS packaging. |
@@ -31,6 +30,16 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
   * Validates hunting drops, drop rates, and crate coin rewards defined in [`local/test-mods/TESTING.md`](file:///home/louisgoodnews/Dokumente/pailune/local/test-mods/TESTING.md).
 
 ### Completed Features
+
+#### D-14 — In-Place Route for Non-Overlay Game Files
+* **Status:** Completed & verified with automated tests.
+* **Size:** *M*.
+* **Implementation Summary:**
+  * Implemented classifier (`is_inplace_candidate` in `src/inplace/classify.rs`) for dialogue audio (`.wem`, `.bnk`, `.pck`, `sound/`, `audio/`) and weapon/socket placement XML (`gamedata/item/socket/*.xml`, `gamedata/character/weapon/*.xml`).
+  * Enforced strict boundary keeping data tables (`*.pabgb`, `*.pabgh`, `*.paseq`, etc.) on the overlay route.
+  * Implemented in-place build pipeline (`src/inplace/build.rs`): packs entries into 16-byte aligned entries, stores content-addressed `<sha256>.paz` in `game-backup/archives/`, links as `<group>/<k>.paz`, updates `0.pamt` with `pamt_edit::redirect`, and updates `pamt_crc` in `0.papgt`.
+  * Wired full backup lifecycle: base snapshot (0) taken once per game build, version snapshots (1..N) recorded on each apply, and atomic reversion to pristine vanilla on `unlink_all` and `clean_slate`.
+  * Integrated seamlessly with deployment pipeline in `src/jobs/tasks/deploy.rs`, supporting mixed in-place and overlay deployments.
 
 #### B-07 (Step 4) — Variable-Length Save Editing
 * **Status:** Completed & verified with automated tests.
@@ -68,30 +77,13 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 ---
 
-### Tier 2: Non-Overlay Game Files & ASI Scaffolding (P2)
+### Tier 2: ASI Scaffolding & Native Toolchain (P2)
 
-#### 3. D-14 — In-Place Route for Non-Overlay Game Files
-* **Size:** *M*.
-* **Rationale:**
-  * Pre-built machinery (`inplace::store`) ready for non-overlay audio or socket XML mods if needed.
-
-#### 4. B-17 — ASI Mod Creation: Research & Templates
+#### 2. B-17 — ASI Mod Creation: Research & Templates
 * **Size:** *Research / M*.
 * **Rationale:**
-  * Scaffolds native ASI plugin development with compiler toolchain and debug loop.
+  * Scaffolds native ASI plugin development with MinGW compiler toolchain and debug loop.
 
----
-  * Expands the verified save editor to support adding and removing inventory items and dynamic lists with table-of-contents recalculation.
-
-#### 7. D-14 — In-Place Route for Non-Overlay Game Files
-* **Size:** *M*.
-* **Rationale:**
-  * Pre-built machinery (`inplace::store`) ready for non-overlay audio or socket XML mods if needed.
-
-#### 8. B-17 — ASI Mod Scaffolding Toolkit
-* **Size:** *Research / M*.
-* **Rationale:**
-  * Scaffolds native ASI plugin development with compiler toolchain and debug loop.
 
 ---
 
@@ -172,13 +164,7 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 ### Tier 4: Contingent & Subsequent Projects (P4)
 
-#### 7. D-14 — In-Place Route for Non-Overlay Files
-* **Size:** *M*.
-* **Rationale:**
-  * Underlying machinery (`inplace::store` and `paz::pamt_edit`) is fully built and tested.
-  * Remains on standby until an active mod targets non-overlay audio or socket XML assets that the game engine strictly refuses to read from archive overlays.
-
-#### 8. B-17 — ASI Mod Creation Toolkit
+#### 4. B-17 — ASI Mod Creation Toolkit
 * **Size:** *Research / L*.
 * **Rationale:**
   * Follows Phase 15 JSON mod creation. Scaffolds C++/Rust native code projects with MinGW toolchains, loader hooking contracts, and integrated log viewing.

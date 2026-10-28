@@ -2,6 +2,7 @@
 
 use super::OverlayInput;
 use crate::error::Result;
+use crate::inplace::is_inplace_candidate;
 use crate::mod_engine::model::Registry;
 use crate::mod_engine::plan::{Placement, deployable_files, text_target, virtual_path};
 use std::path::Path;
@@ -19,7 +20,10 @@ pub fn collect(staging: &Path, registry: &Registry) -> Result<OverlayInput> {
                 .for_each(|f| match f.place {
                     Placement::Pack => {
                         if let Some(vpath) = virtual_path(&f.rel) {
-                            let replaced = input.packs.insert(vpath, f.source);
+                            let replaced = match is_inplace_candidate(&vpath) {
+                                true => input.inplace.insert(vpath, f.source),
+                                false => input.packs.insert(vpath, f.source),
+                            };
                             input.conflicts += usize::from(replaced.is_some());
                         }
                     }

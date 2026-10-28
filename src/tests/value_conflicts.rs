@@ -48,6 +48,9 @@ fn json_mods_changing_the_same_value_conflict_and_the_later_wins() {
     let mut app = app(&fx);
     app.dispatch(Action::Mod(ModAction::ImportPaths(vec![
         fx.sources.join("Arrow Test"),
+    ])));
+    settle(&mut app);
+    app.dispatch(Action::Mod(ModAction::ImportPaths(vec![
         fx.sources.join("Stacks"),
     ])));
     settle(&mut app);

@@ -5,7 +5,7 @@ use super::reader::Reader;
 use crate::error::{PailuneError, Result};
 
 /// One registered pack group (directory such as `0000`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct GroupEntry {
     /// May be absent on disk (optional voice/language packs).
     pub is_optional: bool,
@@ -16,7 +16,7 @@ pub struct GroupEntry {
 }
 
 /// The whole table. Unknown header fields are preserved verbatim.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Papgt {
     pub unknown0: u32,
     pub unknown1: u16,

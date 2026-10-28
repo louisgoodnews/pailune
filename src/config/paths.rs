@@ -24,6 +24,8 @@ pub struct DataPaths {
     pub backups: PathBuf,
     /// Backups of the game's save files.
     pub save_backups: PathBuf,
+    /// In-place backups of game files and content-addressed archive storage.
+    pub game_backup: PathBuf,
     /// Packaged mod distribution archives ready for upload/sharing.
     pub exports: PathBuf,
     /// Rolling application log files.
@@ -50,6 +52,7 @@ impl DataPaths {
             trash: data.join("trash"),
             backups: data.join("backups"),
             save_backups: data.join("save-backups"),
+            game_backup: data.join("game-backup"),
             exports: data.join("exports"),
             logs: data.join("logs"),
             mod_logs: data.join("logs").join("mods"),
@@ -66,6 +69,7 @@ impl DataPaths {
             &self.downloads,
             &self.mod_logs,
             &self.exports,
+            &self.game_backup,
         ]
         .into_iter()
         .try_for_each(|dir| fs::create_dir_all(dir).at(dir))

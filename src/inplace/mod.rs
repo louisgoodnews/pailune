@@ -9,7 +9,14 @@
 //! only the ones of that Apply, so rolling back to it restores the whole
 //! state; files a version no longer changes are stored with their base bytes.
 
+pub mod build;
+pub mod classify;
 pub mod store;
+
+#[allow(unused_imports)]
+pub use build::{InPlacePlan, build, ensure_base_backup, revert};
+pub use classify::is_inplace_candidate;
+pub use store::Store;
 
 #[cfg(test)]
 mod tests;

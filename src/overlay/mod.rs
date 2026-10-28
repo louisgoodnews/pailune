@@ -28,6 +28,8 @@ use std::path::PathBuf;
 pub struct OverlayInput {
     /// Virtual path → staged file (later mods win).
     pub packs: BTreeMap<String, PathBuf>,
+    /// In-place files: virtual path → staged file.
+    pub inplace: BTreeMap<String, PathBuf>,
     /// Prebuilt group folders, in load order.
     pub prebuilt: Vec<PathBuf>,
     /// Byte-patch JSON files `(mod name, file)`, in load order.

@@ -107,6 +107,7 @@ fn prebuilt_crc(group: &Path) -> Result<u32> {
 /// Builds the overlay into `out_dir` and returns the links that deploy it.
 /// Requires the vanilla `meta/0.papgt.bak` snapshot; nothing in the game
 /// directory is touched here.
+#[allow(dead_code)]
 pub fn build(info: &SteamInfo, input: &OverlayInput, out_dir: &Path) -> Result<OverlayPlan> {
     let textures = input.packs.keys().any(|v| is_texture(v));
     let pathc = match textures {
@@ -133,6 +134,7 @@ pub fn build_from(
     let patch_mods = super::patches::read_all(&input.patches);
     let mut wanted = super::patches::wanted(&patch_mods);
     wanted.paths.extend(input.packs.keys().cloned());
+    wanted.paths.extend(input.inplace.keys().cloned());
     wanted.paths.extend(
         input
             .text_patches

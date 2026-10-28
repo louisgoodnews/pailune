@@ -12,10 +12,6 @@ Move a line between columns when its status changes.
 
 ## Backlog (large)
 
-- [ ] D-14 in-place route: only for files the engine reads outside overlays (per DMM: dialogue
-  audio, weapon/socket XML). Parts built and tested (`paz::pamt_edit`, `inplace::store`), not
-  wired; wire when such a file type is confirmed to need it — *M*
-
 - [ ] Pre-release polish (roadmap phase 17): GUI aesthetic redesign and final pre-release
   code refactoring — *M*
 - [ ] B-17 ASI mod creation (D-13), after B-16: research + decision record first, then templates,
@@ -37,6 +33,13 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] D-14 in-place route for non-overlay game files: full deployment and backup integration.
+  Routes dialogue/cutscene audio (`.wem`, `.bnk`, `.pck`, `sound/`, `audio/`) and weapon/socket placement XML
+  (`gamedata/item/socket/*.xml`, `gamedata/character/weapon/*.xml`) through vanilla group indices without modifying
+  the large vanilla `.paz` archives. Appends entries into newly created, symlinked `<k>.paz` archives in Pailune's
+  content-addressed store (`~/.local/share/pailune/game-backup/archives/`), redirects records in `0.pamt`, and updates
+  `0.papgt`. Safe base snapshot (0) captured on first apply, version backups on each in-place deployment, and exact
+  atomic restore to vanilla on `unlink_all` or `clean_slate`. Data tables continue to use the overlay route.
 - [x] A-01 compressed type-1 `.pac` meshes: full decoding support in `src/paz/pac.rs` (`extract::decode`).
   Decompresses multi-section `PAR ` mesh archives with per-section LZ4 block decompression and updates
   stored sizes in the 80-byte header to match original section lengths.
