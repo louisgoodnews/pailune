@@ -43,6 +43,66 @@ impl PailuneApp {
                 self.mods.readme = None;
                 Ok(None)
             }
+            ModAction::CreateModPrompt => {
+                self.mods.create_mod = Some(crate::ui::state::CreateModDraft::default());
+                Ok(None)
+            }
+            ModAction::CloseCreateMod => {
+                self.mods.create_mod = None;
+                Ok(None)
+            }
+            ModAction::CreateMod {
+                name,
+                author,
+                version,
+                description,
+            } => {
+                self.mods.create_mod = None;
+                let clean_name = crate::mod_engine::install::sanitize_name(&name);
+                if clean_name.is_empty() {
+                    return Err(PailuneError::Invalid("mod name cannot be empty".into()));
+                }
+                let mod_dir = self.paths.staging.join(&clean_name);
+                if mod_dir.exists() {
+                    return Err(PailuneError::Invalid(format!(
+                        "a mod named '{clean_name}' already exists in staging"
+                    )));
+                }
+                std::fs::create_dir_all(&mod_dir)
+                    .map_err(|e| PailuneError::Invalid(format!("could not create mod directory: {e}")))?;
+                let doc = serde_json::json!({
+                    "format": 3,
+                    "modinfo": {
+                        "title": clean_name,
+                        "author": author.trim(),
+                        "version": match version.trim().is_empty() {
+                            true => "1.0",
+                            false => version.trim(),
+                        },
+                        "description": description.trim(),
+                    },
+                    "targets": []
+                });
+                let file_path = mod_dir.join(format!("{clean_name}.field.json"));
+                let json_text = crate::patch::document::pretty(&doc);
+                std::fs::write(&file_path, json_text)
+                    .map_err(|e| PailuneError::Invalid(format!("could not write mod file: {e}")))?;
+                let now = crate::db::now();
+                let staging = self.paths.staging.clone();
+                let scan = registry::scan(&staging)?;
+                self.update_registry(|r| Ok(registry::merge(r, &scan, now)))?;
+                crate::db::mods::record_install(&self.conn, &clean_name, "created", None, now)?;
+                self.select(clean_name.clone())?;
+                self.notices.push(
+                    Level::Success,
+                    "Mod created",
+                    &format!("Created '{clean_name}' with a format-3 JSON patch document"),
+                );
+                Ok(Some(StatusLine::new(
+                    Level::Success,
+                    format!("Created mod '{clean_name}'"),
+                )))
+            }
             ModAction::ImportFolder => Ok(Some(
                 self.import(rfd::FileDialog::new().pick_folder().into_iter().collect()),
             )),

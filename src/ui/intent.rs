@@ -55,6 +55,17 @@ pub enum ModAction {
     RestoreDeleted(String),
     /// Delete a trash entry for good.
     PurgeDeleted(String),
+    /// Open the wizard to create a new JSON mod in staging.
+    CreateModPrompt,
+    /// Close the create mod wizard.
+    CloseCreateMod,
+    /// Create a new JSON mod in staging with metadata.
+    CreateMod {
+        name: String,
+        author: String,
+        version: String,
+        description: String,
+    },
     Rescan,
 }
 

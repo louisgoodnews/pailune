@@ -7,6 +7,7 @@ pub mod banner;
 pub mod collection_preview;
 pub mod collections;
 pub mod confirm;
+pub mod create_mod;
 pub mod guide;
 pub mod header;
 pub mod incoming;

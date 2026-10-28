@@ -207,6 +207,7 @@ impl eframe::App for PailuneApp {
         actions.extend(page);
         actions.extend(views::readme::show(ui.ctx(), self.mods.readme.as_ref()));
         actions.extend(views::confirm::show(ui.ctx(), self.confirm.as_ref()));
+        actions.extend(views::create_mod::show(ui.ctx(), &mut self.mods.create_mod));
         actions.extend(views::incoming::show(ui.ctx(), &self.nexus.incoming));
         let installed = self
             .nexus

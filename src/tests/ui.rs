@@ -210,3 +210,33 @@ fn mods_move_to_a_load_order_number() {
     )));
     assert_eq!(app.registry.mods[1].name, first);
 }
+
+#[test]
+fn creates_new_json_mod_with_metadata_and_opens_it() {
+    let fx = fixture();
+    let mut app = app(&fx);
+
+    // 1. Open prompt
+    app.dispatch(Action::Mod(ModAction::CreateModPrompt));
+    assert!(app.mods.create_mod.is_some());
+
+    // 2. Submit new mod creation
+    app.dispatch(Action::Mod(ModAction::CreateMod {
+        name: "Carry Capacity 500".into(),
+        author: "Khione".into(),
+        version: "1.2".into(),
+        description: "Increase max carry weight".into(),
+    }));
+
+    // 3. Prompt closes, mod is registered and selected
+    assert!(app.mods.create_mod.is_none());
+    assert_eq!(app.mods.selected.as_deref(), Some("Carry Capacity 500"));
+    assert!(app.registry.mods.iter().any(|m| m.name == "Carry Capacity 500"));
+
+    // 4. Staged file is valid format 3 JSON patch
+    let staged_file = fx.staging.join("Carry Capacity 500/Carry Capacity 500.field.json");
+    assert!(staged_file.is_file());
+    let text = fs::read_to_string(&staged_file).unwrap();
+    let json = crate::patch::document::check(&text).expect("valid json mod");
+    assert_eq!(json.title, "Carry Capacity 500");
+}

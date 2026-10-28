@@ -21,7 +21,7 @@ Move a line between columns when its status changes.
   "Equip All Armor"; needs the full ItemInfo layout first — *L*
 - [ ] A-01 compressed type-1 `.pac` meshes (2 914 in the game): decode for reading and patching — *M*
 
-- [ ] B-16 JSON mod creation (D-13): new mod → data browser → change from the browser → check
+- [ ] B-16 JSON mod creation (steps 2–6): data browser → change from the browser → check
   against the game → test loop → package (roadmap phase 15) — *L*
 - [ ] B-17 ASI mod creation (D-13), after B-16: research + decision record first, then templates,
   build/deploy, debug loop, packaging — *L*
@@ -45,6 +45,9 @@ Move a line between columns when its status changes.
 
 ## Done
 
+- [x] B-16 JSON mod creation (step 1: new JSON mod wizard): *Create mod* modal asks for title,
+  author, version, description; stages an empty format-3 JSON mod with `modinfo`; selects and opens
+  it in Pailune's JSON editor (`ui/views/create_mod.rs`, `ui/actions/mods.rs`).
 - [x] A-01 format 3.1 (phase 1: predicate matching by `match`): `Intent.matches` evaluates field
   predicates across candidate records (scalars, string, numeric tolerances, array IN-matching)
   and applies changes across all matching records; `value::decode` extracts typed fields

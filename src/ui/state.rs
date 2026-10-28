@@ -53,6 +53,28 @@ pub struct ModsState {
     /// An imported mod list whose missing mods are still being installed;
     /// re-applied after each finished download.
     pub list_import: Option<ListImport>,
+    /// Dialog state when creating a new JSON mod.
+    pub create_mod: Option<CreateModDraft>,
+}
+
+/// Draft fields for creating a new JSON mod in staging.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CreateModDraft {
+    pub name: String,
+    pub author: String,
+    pub version: String,
+    pub description: String,
+}
+
+impl Default for CreateModDraft {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            author: String::new(),
+            version: "1.0".into(),
+            description: String::new(),
+        }
+    }
 }
 
 /// An imported mod list and the mods it names that are not installed.

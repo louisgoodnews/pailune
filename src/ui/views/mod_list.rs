@@ -100,6 +100,12 @@ fn toolbar(ui: &mut egui::Ui) -> Vec<Action> {
                 Action::Mod(ModAction::ImportFiles),
             ),
             (
+                ui.button("✨ Create mod…")
+                    .on_hover_text("Start a new JSON mod in staging and edit it here")
+                    .clicked(),
+                Action::Mod(ModAction::CreateModPrompt),
+            ),
+            (
                 ui.button("⟳ Rescan")
                     .on_hover_text("Look for changes in the staging folder (F5)")
                     .clicked(),
@@ -149,6 +155,7 @@ pub fn show(ui: &mut egui::Ui, app: &mut PailuneApp) -> Vec<Action> {
             ui.add_space(6.0);
             clicked([
                 (theme::filled_button(ui, "📦 Import archives / files…", accent()).clicked(), Action::Mod(ModAction::ImportFiles)),
+                (ui.button("✨ Create new mod…").clicked(), Action::Mod(ModAction::CreateModPrompt)),
                 (ui.button("🌐 Find mods on Nexus").clicked(), Action::SwitchTab(crate::ui::Tab::Nexus)),
                 (ui.button("❓ Getting started").clicked(), Action::Guide(crate::ui::guide::GuideAction::Open(crate::ui::guide::GuidePage::GettingStarted))),
             ])
