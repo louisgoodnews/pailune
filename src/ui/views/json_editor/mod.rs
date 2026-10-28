@@ -20,10 +20,16 @@ struct Draft {
     base: String,
     text: String,
     raw: bool,
+    checked_text: String,
+    dry_run: Option<crate::patch::dry_run::ModDryRun>,
 }
 
 /// One line about the document: what it changes, or why Apply would fail.
-fn summary(ui: &mut egui::Ui, checked: &Result<JsonMod, String>) {
+fn summary(
+    ui: &mut egui::Ui,
+    checked: &Result<JsonMod, String>,
+    dry_run: Option<&crate::patch::dry_run::ModDryRun>,
+) {
     match checked {
         Ok(json) => {
             let bytes: usize = json.patches.iter().map(|p| p.changes.len()).sum();
@@ -40,6 +46,30 @@ fn summary(ui: &mut egui::Ui, checked: &Result<JsonMod, String>) {
                 ))
                 .color(success()),
             );
+            if let Some(dr) = dry_run {
+                if dr.failed > 0 {
+                    ui.label(
+                        RichText::new(format!(
+                            "✖ Dry run: {} failed, {} verified against game files",
+                            dr.failed, dr.passed
+                        ))
+                        .color(danger()),
+                    );
+                } else if dr.total > 0 && dr.passed == dr.total {
+                    ui.label(
+                        RichText::new(format!(
+                            "✔ Dry run: all {} change(s) verified against game files",
+                            dr.total
+                        ))
+                        .color(success()),
+                    );
+                } else if dr.total > 0 && dr.passed == 0 && dr.failed == 0 {
+                    ui.label(
+                        RichText::new("— Dry run: game files not found in installation")
+                            .color(muted()),
+                    );
+                }
+            }
         }
         Err(err) => drop(ui.label(RichText::new(format!("✖ {err}")).color(danger()))),
     }
@@ -97,7 +127,13 @@ fn buttons(
 
 /// One JSON file: summary, table or raw text, and the buttons. The file is
 /// read only while its section is open; a mod's only file starts open.
-fn editor(ui: &mut egui::Ui, path: &Path, rel: &Path, only: bool) -> Option<Action> {
+fn editor(
+    ui: &mut egui::Ui,
+    path: &Path,
+    rel: &Path,
+    only: bool,
+    game_dir: Option<&Path>,
+) -> Option<Action> {
     let id = egui::Id::unique(("pailune_json", path));
     let mut action = None;
     egui::CollapsingHeader::new(rel.display().to_string())
@@ -118,10 +154,19 @@ fn editor(ui: &mut egui::Ui, path: &Path, rel: &Path, only: bool) -> Option<Acti
                 );
             }
             let checked = document::check(&draft.text);
-            summary(ui, &checked);
+            if draft.text != draft.checked_text {
+                draft.checked_text = draft.text.clone();
+                draft.dry_run = match (&checked, game_dir) {
+                    (Ok(json), Some(dir)) => Some(crate::patch::dry_run::check_mod(dir, json)),
+                    _ => None,
+                };
+            }
+            summary(ui, &checked, draft.dry_run.as_ref());
             action = buttons(ui, &mut draft, &saved, checked.is_ok(), path);
             match (&checked, draft.raw) {
-                (Ok(json), false) => changes::show(ui, id, &mut draft.text, json),
+                (Ok(json), false) => {
+                    changes::show(ui, id, &mut draft.text, json, draft.dry_run.as_ref())
+                }
                 (Err(_), false) => drop(ui.label(
                     RichText::new("Fix the error in “Raw JSON” to see the changes.").color(muted()),
                 )),
@@ -161,6 +206,10 @@ pub fn show(
         return Vec::new();
     }
     let root = app.paths.staging.join(&entry.name);
+    let game_dir = match app.game {
+        crate::steam::GameStatus::Ready => Some(app.info.game_dir.as_path()),
+        _ => None,
+    };
     ui.separator();
     ui.label(RichText::new("JSON patches").strong());
     ui.label(
@@ -169,6 +218,6 @@ pub fn show(
     );
     files
         .iter()
-        .filter_map(|rel| editor(ui, &root.join(rel), rel, files.len() == 1))
+        .filter_map(|rel| editor(ui, &root.join(rel), rel, files.len() == 1, game_dir))
         .collect()
 }

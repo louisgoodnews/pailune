@@ -22,6 +22,7 @@ pub struct TableSummary {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DecodedField {
     pub name: String,
+    pub offset: usize,
     pub shape: String,
     pub meaning: String,
     pub value: String,
@@ -73,8 +74,8 @@ pub fn list_tables(game_dir: &Path) -> Result<Vec<TableSummary>> {
     Ok(summaries)
 }
 
-/// Reads the header and body for a table from 0008, and parses its records.
-pub fn read_table(game_dir: &Path, stem: &str) -> Result<(Vec<Record>, Vec<u8>)> {
+/// Reads the unparsed header and body bytes for a table from archive group 0008.
+pub fn read_table_raw(game_dir: &Path, stem: &str) -> Result<(Vec<u8>, Vec<u8>)> {
     let group_dir = game_dir.join("0008");
     let pamt_path = group_dir.join("0.pamt");
     let pamt_bytes = fs::read(&pamt_path)
@@ -95,7 +96,12 @@ pub fn read_table(game_dir: &Path, stem: &str) -> Result<(Vec<Record>, Vec<u8>)>
 
     let body_bytes = extract::extract(&group_dir, &body_path, body_record)?;
     let header_bytes = extract::extract(&group_dir, &header_path, header_record)?;
+    Ok((header_bytes, body_bytes))
+}
 
+/// Reads the header and body for a table from 0008, and parses its records.
+pub fn read_table(game_dir: &Path, stem: &str) -> Result<(Vec<Record>, Vec<u8>)> {
+    let (header_bytes, body_bytes) = read_table_raw(game_dir, stem)?;
     let recs = records(&header_bytes, &body_bytes)?;
     Ok((recs, body_bytes))
 }
@@ -123,6 +129,7 @@ pub fn inspect_record(stem: &str, record: &Record, body: &[u8]) -> InspectedReco
                             .unwrap_or_else(|_| crate::patch::document::hex(field_bytes));
                         fields.push(DecodedField {
                             name: field.name.clone(),
+                            offset: start,
                             shape: field.shape.clone(),
                             meaning: field.meaning.clone(),
                             value: val_str,

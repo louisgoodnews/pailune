@@ -28,13 +28,13 @@ fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
 
 /// Where a patch's changes start: the signature's end (if any) and the
 /// table's record anchors. `None` when the signature is missing.
-struct Frame {
-    base: usize,
-    anchors: Option<HashMap<String, usize>>,
+pub(crate) struct Frame {
+    pub(crate) base: usize,
+    pub(crate) anchors: Option<HashMap<String, usize>>,
 }
 
 impl Frame {
-    fn of(data: &[u8], patch: &FilePatch, header: Option<&[u8]>) -> Option<Self> {
+    pub(crate) fn of(data: &[u8], patch: &FilePatch, header: Option<&[u8]>) -> Option<Self> {
         let base = match &patch.signature {
             Some(sig) => find(data, sig)? + sig.len(),
             None => 0,
@@ -46,7 +46,7 @@ impl Frame {
     }
 
     /// Absolute offset of a change.
-    fn position(&self, change: &Change) -> Option<usize> {
+    pub(crate) fn position(&self, change: &Change) -> Option<usize> {
         match &change.anchor {
             Anchor::Offset(o) => usize::try_from(*o)
                 .ok()

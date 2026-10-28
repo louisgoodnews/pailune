@@ -174,6 +174,20 @@ pub enum DataBrowserAction {
     SelectTable(String),
     SelectRecord(u64),
     RefreshTables,
+    SetTargetMod(String),
+    StartFieldEdit(super::state::ActiveFieldEdit),
+    CancelFieldEdit,
+    AddChangeToMod {
+        mod_name: String,
+        table_stem: String,
+        record_name: String,
+        record_key: u64,
+        field_name: Option<String>,
+        new_value: String,
+        is_raw: bool,
+        rel_offset: usize,
+        original_hex: String,
+    },
 }
 
 /// Portable mod list intents (B-12).

@@ -12,7 +12,7 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 |:---:|:---|:---|:---:|:---|
 | **P1** | **A-01** | **Format 3.1 Table Patches (Phase 1 `match` done; Phase 2 nested fields)** | **L** (phased) | Resolves active warnings and failed patch applications seen on popular mods (*Character Creator*). |
 | **P1** | **A-01** | **In-Game Test Batch 1 (Tests 2–4 Verification)** | **Owner** | Completes validation of table overlay patching in game (hunting, drops, coin crates). |
-| **P2** | **B-16** | **JSON Mod Creation: Change from Browser & Dry Run (Steps 3–4)** | **S–M** | Completes interactive patch generation and verification directly against installed game data. |
+| **P2** | **B-16** | **JSON Mod Creation: Test Loop & Nexus Packaging (Steps 5–6)** | **M** | Enables rapid in-editor test loop (apply & rebase) and one-click packaging for Nexus upload. |
 | **P3** | **B-18** | **Pailune Modding SDK (Scaffolding, Libs, Markdown Docs, Export)** | **L** (Phase 16) | Project generator via CLI/MCP and GUI for new ASI & JSON projects; bundles libs, docs, and mod export. |
 | **P4** | **A-01** | **Compressed Type-1 `.pac` Meshes** | **M** | Decodes the remaining 2,914 compressed meshes in the archives for complete inspection & patching. |
 | **P4** | **B-07** | **Variable-Length Save Editing (Step 4)** | **L** | Extends the verified fixed-size save editor to add/remove inventory items and dynamic lists. |
@@ -47,15 +47,15 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 
 ### Tier 2: Strategic Feature Driver — Phase 15 Modding Workbench (P2)
 
-#### 3. B-16 (Steps 3 & 4) — Change Creator from Data Browser & Game Dry-Run Verification
-* **Status:** In progress (Steps 1 & 2 completed).
-* **Size:** *S–M*.
+#### 3. B-16 (Steps 5 & 6) — Test Loop & Nexus Packaging
+* **Status:** Steps 1–4 completed (`CreateMod` wizard, Data Browser, interactive change injection, dry-run verification against installed game data); Steps 5 & 6 open.
+* **Size:** *M*.
 * **Rationale:**
-  * Allows a mod author browsing table records to select a verified field, input a modified value, and automatically generate a format-3 intent with matching original bytes into their active JSON mod.
-  * Dry-run checks against the installed game files to guarantee that patches apply cleanly without collisions.
+  * Enables mod authors to test their created JSON mods immediately from the editor (enable, Apply, launch) and re-check / rebase offsets following game updates.
+  * Provides one-click zip packaging with auto-generated `modinfo`, readme, and version bumping ready for Nexus Mods upload.
 * **Target Areas:**
-  * [`src/ui/views/data_browser.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/ui/views/data_browser.rs): Context action to inject a field modification into the active JSON mod.
-  * [`src/patch/apply_safety.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/patch/apply_safety.rs): Dry-run validation against installed tables.
+  * [`src/ui/views/json_editor/mod.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/ui/views/json_editor/mod.rs): In-editor test & deploy controls.
+  * `src/ui/actions/package.rs`: Archive packaging and metadata generation.
 
 ---
 

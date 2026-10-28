@@ -167,4 +167,20 @@ pub struct DataBrowserState {
     pub inspected: Option<crate::tables::browser::InspectedRecord>,
     pub error: Option<String>,
     pub loaded: bool,
+    /// Destination mod for injecting edits from the browser.
+    pub target_mod: Option<String>,
+    /// Field edit draft currently open in the inspector.
+    pub active_edit: Option<ActiveFieldEdit>,
+}
+
+/// An edit draft being prepared in the Data Browser inspector.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ActiveFieldEdit {
+    pub field_name: String,
+    pub field_type: String,
+    pub original_value: String,
+    pub new_value: String,
+    pub is_raw: bool,
+    pub rel_offset: usize,
+    pub original_hex: String,
 }

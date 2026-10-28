@@ -15,12 +15,14 @@ mod state;
 mod theme;
 mod views;
 
+#[allow(unused_imports)]
 pub use intent::{
     Action, BackupAction, Confirm, DataBrowserAction, DeployAction, ModAction, ModListAction,
     NexusAction, ProfileAction, SetupAction, Tab,
 };
 pub use state::{
-    DataBrowserState, Incoming, JobState, JobView, LogState, ModsState, NexusState, ProfilesState,
+    ActiveFieldEdit, DataBrowserState, Incoming, JobState, JobView, LogState, ModsState,
+    NexusState, ProfilesState,
 };
 
 use crate::backup::BackupStatus;

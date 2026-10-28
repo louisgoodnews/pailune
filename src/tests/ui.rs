@@ -287,3 +287,125 @@ fn data_browser_tab_and_record_inspection() {
     assert_eq!(inspected.fields[1].name, "_increasePrice");
     assert_eq!(inspected.fields[1].value, "1500");
 }
+
+#[test]
+fn inject_change_from_browser_into_mod() {
+    use crate::ui::DataBrowserAction;
+
+    let fx = fixture();
+    let mut app = app(&fx);
+
+    // 1. Start an edit on a field
+    let edit = crate::ui::ActiveFieldEdit {
+        field_name: "_increasePrice".into(),
+        field_type: "u64".into(),
+        original_value: "1500".into(),
+        new_value: "9999".into(),
+        is_raw: false,
+        rel_offset: 1,
+        original_hex: "dc05000000000000".into(),
+    };
+    app.dispatch(Action::DataBrowser(DataBrowserAction::StartFieldEdit(edit)));
+    assert!(app.data_browser.active_edit.is_some());
+
+    // 2. Dispatch AddChangeToMod
+    app.dispatch(Action::DataBrowser(DataBrowserAction::AddChangeToMod {
+        mod_name: "BountyBoost".into(),
+        table_stem: "wantedinfo".into(),
+        record_name: "target_01".into(),
+        record_key: 0x0601,
+        field_name: Some("_increasePrice".into()),
+        new_value: "9999".into(),
+        is_raw: false,
+        rel_offset: 1,
+        original_hex: "dc05000000000000".into(),
+    }));
+
+    // 3. Edit should be closed and mod selected
+    assert!(app.data_browser.active_edit.is_none());
+    assert_eq!(app.mods.selected.as_deref(), Some("BountyBoost"));
+
+    // 4. Staging file should contain the injected format-3 intent
+    let file = fx.staging.join("BountyBoost").join("BountyBoost.field.json");
+    assert!(file.exists());
+    let text = std::fs::read_to_string(&file).expect("read file");
+    let json = crate::patch::document::check(&text).expect("valid format 3 mod");
+    assert_eq!(json.patches.len(), 1);
+    assert_eq!(json.patches[0].fields.len(), 1);
+    let intent = &json.patches[0].fields[0];
+    assert_eq!(intent.field.as_deref(), Some("_increasePrice"));
+    assert_eq!(intent.new, serde_json::json!(9999));
+    assert_eq!(intent.entry.as_deref(), Some("target_01"));
+    assert_eq!(intent.key, Some(0x0601));
+}
+
+#[test]
+fn dry_run_verifies_intents_and_detects_errors() {
+    use crate::patch::dry_run::{DryRunStatus, check_patch_data};
+    use crate::patch::FilePatch;
+    use crate::tables::format3::Intent;
+
+    let key = 0x0601u16;
+    let price = 1500u64;
+
+    // Body: key (u16) | u32 name_len | name | payload
+    let name = "target_01";
+    let mut payload = Vec::new();
+    payload.push(0); // _isBlocked (false)
+    payload.extend_from_slice(&price.to_le_bytes()); // _increasePrice
+    payload.push(1);
+
+    let body = [
+        &key.to_le_bytes()[..],
+        &(name.len() as u32).to_le_bytes(),
+        name.as_bytes(),
+        &payload,
+    ]
+    .concat();
+
+    // WantedInfo header index: 1 record, key_size = 2, offset = 0
+    let header = [
+        &1u16.to_le_bytes()[..],
+        &key.to_le_bytes(),
+        &0u32.to_le_bytes(),
+    ]
+    .concat();
+
+    let valid_patch = FilePatch {
+        game_file: "gamedata/binarystaticinfo__/bin/wantedinfo.staticinfobody".into(),
+        signature: None,
+        changes: Vec::new(),
+        fields: vec![Intent {
+            entry: Some("target_01".into()),
+            key: Some(key as u64),
+            field: Some("_increasePrice".into()),
+            op: "set".into(),
+            new: serde_json::json!(9999),
+            old: None,
+            matches: None,
+        }],
+    };
+
+    let res = check_patch_data(&valid_patch, Some(&header), &body, true);
+    assert_eq!(res.intents.len(), 1);
+    assert_eq!(res.intents[0], DryRunStatus::Verified);
+
+    let invalid_patch = FilePatch {
+        game_file: "gamedata/binarystaticinfo__/bin/wantedinfo.staticinfobody".into(),
+        signature: None,
+        changes: Vec::new(),
+        fields: vec![Intent {
+            entry: Some("target_01".into()),
+            key: Some(key as u64),
+            field: Some("_nonExistentField".into()),
+            op: "set".into(),
+            new: serde_json::json!(123),
+            old: None,
+            matches: None,
+        }],
+    };
+
+    let res_err = check_patch_data(&invalid_patch, Some(&header), &body, true);
+    assert_eq!(res_err.intents.len(), 1);
+    assert!(matches!(res_err.intents[0], DryRunStatus::Failed(_)));
+}

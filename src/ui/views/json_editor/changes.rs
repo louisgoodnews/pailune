@@ -3,11 +3,33 @@
 //! field's new value. Every edit rewrites the draft text at once.
 
 use crate::patch::document::{self, Slot};
+use crate::patch::dry_run::DryRunStatus;
 use crate::patch::{Anchor, Change, Edit, JsonMod};
 use crate::tables::format3::Intent;
-use crate::ui::theme::{danger, muted};
+use crate::ui::theme::{danger, muted, success};
 use eframe::egui::{self, RichText, TextStyle};
 use serde_json::Value;
+
+/// Renders a verification status icon for dry-run checks.
+fn status_icon(ui: &mut egui::Ui, status: Option<&DryRunStatus>) {
+    match status {
+        Some(DryRunStatus::Verified) => {
+            ui.label(RichText::new("✔").color(success()).strong())
+                .on_hover_text("Verified: matches installed game data");
+        }
+        Some(DryRunStatus::Failed(err)) => {
+            ui.label(RichText::new("✖").color(danger()).strong())
+                .on_hover_text(format!("Dry run failed: {err}"));
+        }
+        Some(DryRunStatus::Skipped(reason)) => {
+            ui.label(RichText::new("—").color(muted()))
+                .on_hover_text(format!("Dry run skipped: {reason}"));
+        }
+        None => {
+            ui.label(RichText::new("—").color(muted()));
+        }
+    }
+}
 
 /// A text cell that keeps what is typed while it has focus, so half-typed
 /// values (`-`, an odd hex digit) are not replaced by the stored value.
@@ -75,7 +97,15 @@ fn write_number(ui: &mut egui::Ui, text: &mut String, slot: Slot, typed: &str, l
 
 /// One byte-patch row: what and where, the original value, the new value
 /// as a number (when the bytes are one) and as hex.
-fn change_row(ui: &mut egui::Ui, id: egui::Id, text: &mut String, slot: Slot, change: &Change) {
+fn change_row(
+    ui: &mut egui::Ui,
+    id: egui::Id,
+    text: &mut String,
+    slot: Slot,
+    change: &Change,
+    status: Option<&DryRunStatus>,
+) {
+    status_icon(ui, status);
     let (original, patched) = match &change.edit {
         Edit::Replace { original, patched } => (original.as_deref(), patched),
         Edit::Insert { bytes } => (None, bytes),
@@ -111,7 +141,15 @@ fn change_row(ui: &mut egui::Ui, id: egui::Id, text: &mut String, slot: Slot, ch
 }
 
 /// One format-3 row: the new value is JSON (number, `true`, "text").
-fn intent_row(ui: &mut egui::Ui, id: egui::Id, text: &mut String, slot: Slot, intent: &Intent) {
+fn intent_row(
+    ui: &mut egui::Ui,
+    id: egui::Id,
+    text: &mut String,
+    slot: Slot,
+    intent: &Intent,
+    status: Option<&DryRunStatus>,
+) {
+    status_icon(ui, status);
     let record = intent
         .entry
         .clone()
@@ -137,14 +175,21 @@ fn intent_row(ui: &mut egui::Ui, id: egui::Id, text: &mut String, slot: Slot, in
 }
 
 /// The table for every game file the mod patches.
-pub fn show(ui: &mut egui::Ui, id: egui::Id, text: &mut String, json: &JsonMod) {
+pub fn show(
+    ui: &mut egui::Ui,
+    id: egui::Id,
+    text: &mut String,
+    json: &JsonMod,
+    dry_run: Option<&crate::patch::dry_run::ModDryRun>,
+) {
     for (p, patch) in json.patches.iter().enumerate() {
+        let pdr = dry_run.and_then(|dr| dr.patches.get(p));
         ui.label(RichText::new(&patch.game_file).monospace().strong());
         egui::Grid::new(id.with(("grid", p)))
             .striped(true)
-            .num_columns(3)
+            .num_columns(4)
             .show(ui, |ui| {
-                ["Change", "Original", "New"]
+                ["Status", "Change", "Original", "New"]
                     .into_iter()
                     .for_each(|h| drop(ui.label(RichText::new(h).color(muted()))));
                 ui.end_row();
@@ -153,14 +198,16 @@ pub fn show(ui: &mut egui::Ui, id: egui::Id, text: &mut String, json: &JsonMod) 
                         patch: p,
                         change: c,
                     };
-                    change_row(ui, id.with((p, c)), text, slot, change);
+                    let status = pdr.and_then(|d| d.changes.get(c));
+                    change_row(ui, id.with((p, c)), text, slot, change, status);
                 });
                 patch.fields.iter().enumerate().for_each(|(i, intent)| {
                     let slot = Slot::Intent {
                         target: p,
                         intent: i,
                     };
-                    intent_row(ui, id.with((p, "f", i)), text, slot, intent);
+                    let status = pdr.and_then(|d| d.intents.get(i));
+                    intent_row(ui, id.with((p, "f", i)), text, slot, intent, status);
                 });
             });
         ui.add_space(6.0);

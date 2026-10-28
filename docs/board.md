@@ -21,8 +21,7 @@ Move a line between columns when its status changes.
   "Equip All Armor"; needs the full ItemInfo layout first — *L*
 - [ ] A-01 compressed type-1 `.pac` meshes (2 914 in the game): decode for reading and patching — *M*
 
-- [ ] B-16 JSON mod creation (steps 3–6): change from the browser → check against the game →
-  test loop → package (roadmap phase 15) — *L*
+- [ ] B-16 JSON mod creation (steps 5–6): test loop (apply & rebase) → package for Nexus (roadmap phase 15) — *M*
 - [ ] B-18 Pailune Modding SDK (roadmap phase 16): project generator via CLI/MCP and GUI for
   new ASI or JSON projects; scaffolding at target path with name/description; bundled libraries
   and Markdown docs; export pipeline to Crimson Desert mod — *L*
@@ -49,6 +48,16 @@ Move a line between columns when its status changes.
 - [ ] A-21 (rest) Register Pailune with Nexus (AUP) before a public release
 
 ## Done
+
+- [x] B-16 JSON mod creation (step 4: check against the game / dry run): live verification of format-2
+  byte patches and format-3 field intents against installed game data; checks table record/field
+  presence, original byte matches, table length preservation, and overlaps; rendered per-change with
+  pass/fail indicators and explanatory tooltips in the JSON editor (`src/patch/dry_run.rs`,
+  `src/ui/views/json_editor/`).
+- [x] B-16 JSON mod creation (step 3: change from the browser): interactive field inspector edit
+  panel allowing authors to pick proven fields or raw payload bytes, specify modified values, and
+  inject/stage format-3 intents or format-2 changes into selected JSON mods (`src/ui/views/data_browser.rs`,
+  `src/ui/actions/data_browser.rs`).
 
 - [x] B-16 JSON mod creation (step 2: game data browser): dedicated *Data Browser* tab with 3-pane
   layout (tables with layout badges, record search by name or key, field inspector with decoded

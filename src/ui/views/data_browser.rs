@@ -169,7 +169,7 @@ pub fn show(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
                 ui.heading("Inspector");
                 ui.separator();
                 match &app.data_browser.inspected {
-                    Some(rec) => render_inspector(ui, rec),
+                    Some(rec) => actions.extend(render_inspector(ui, app, rec)),
                     None => {
                         ui.label(
                             RichText::new("Select a record to inspect its values.").color(muted()),
@@ -183,7 +183,8 @@ pub fn show(ui: &mut egui::Ui, app: &PailuneApp) -> Vec<Action> {
     actions
 }
 
-fn render_inspector(ui: &mut egui::Ui, rec: &InspectedRecord) {
+fn render_inspector(ui: &mut egui::Ui, app: &PailuneApp, rec: &InspectedRecord) -> Vec<Action> {
+    let mut actions = Vec::new();
     ui.label(
         RichText::new(format!("Record: {}", rec.name))
             .size(16.0)
@@ -200,6 +201,155 @@ fn render_inspector(ui: &mut egui::Ui, rec: &InspectedRecord) {
     );
     ui.add_space(8.0);
 
+    let available_mods: Vec<String> = app.registry.mods.iter().map(|m| m.name.clone()).collect();
+    let current_target = app
+        .data_browser
+        .target_mod
+        .clone()
+        .or_else(|| app.mods.selected.clone())
+        .or_else(|| available_mods.first().cloned())
+        .unwrap_or_default();
+
+    ui.horizontal(|ui| {
+        ui.label(RichText::new("Target Mod:").strong());
+        let label = if current_target.is_empty() {
+            "Select a mod…"
+        } else {
+            &current_target
+        };
+        egui::ComboBox::from_id_salt("db_inspector_target_mod")
+            .selected_text(label)
+            .show_ui(ui, |ui| {
+                for m in &available_mods {
+                    let is_cur = *m == current_target;
+                    if ui.selectable_label(is_cur, m).clicked() {
+                        actions.push(Action::DataBrowser(DataBrowserAction::SetTargetMod(
+                            m.clone(),
+                        )));
+                    }
+                }
+            });
+        if ui
+            .button("+ New Mod")
+            .on_hover_text("Create a new JSON mod in staging")
+            .clicked()
+        {
+            actions.push(Action::Mod(crate::ui::ModAction::CreateModPrompt));
+        }
+    });
+    ui.add_space(8.0);
+
+    // Active edit panel
+    if let Some(ref edit) = app.data_browser.active_edit {
+        egui::Frame::group(ui.style()).show(ui, |ui| {
+            ui.horizontal(|ui| {
+                if edit.is_raw {
+                    ui.label(RichText::new("✏ Raw Byte Patch").strong().color(accent()));
+                } else {
+                    ui.label(
+                        RichText::new(format!("✏ Modify field: {}", edit.field_name))
+                            .strong()
+                            .color(accent()),
+                    );
+                    ui.label(
+                        RichText::new(format!("({})", edit.field_type))
+                            .small()
+                            .color(muted()),
+                    );
+                }
+            });
+            if !edit.is_raw {
+                ui.horizontal(|ui| {
+                    ui.label("Current value:");
+                    ui.monospace(&edit.original_value);
+                });
+            }
+            let mut new_val = edit.new_value.clone();
+            let mut rel_off_str = edit.rel_offset.to_string();
+            let mut orig_hex_str = edit.original_hex.clone();
+
+            if edit.is_raw {
+                ui.horizontal(|ui| {
+                    ui.label("Relative offset:");
+                    ui.add(egui::TextEdit::singleline(&mut rel_off_str).desired_width(80.0));
+                });
+                ui.horizontal(|ui| {
+                    ui.label("Original hex:");
+                    ui.add(egui::TextEdit::singleline(&mut orig_hex_str).desired_width(160.0));
+                });
+                ui.horizontal(|ui| {
+                    ui.label("New hex:");
+                    ui.add(egui::TextEdit::singleline(&mut new_val).desired_width(160.0));
+                });
+            } else {
+                ui.horizontal(|ui| {
+                    ui.label("New value:");
+                    ui.add(egui::TextEdit::singleline(&mut new_val).desired_width(180.0));
+                });
+            }
+
+            ui.horizontal(|ui| {
+                let can_add = !current_target.is_empty() && !new_val.trim().is_empty();
+                let add_btn = egui::Button::new(
+                    RichText::new("💾 Add change to mod")
+                        .strong()
+                        .color(egui::Color32::WHITE),
+                )
+                .fill(accent());
+
+                if ui.add_enabled(can_add, add_btn).clicked() {
+                    let parsed_offset =
+                        if rel_off_str.starts_with("0x") || rel_off_str.starts_with("0X") {
+                            usize::from_str_radix(
+                                rel_off_str
+                                    .trim_start_matches("0x")
+                                    .trim_start_matches("0X"),
+                                16,
+                            )
+                            .unwrap_or(0)
+                        } else {
+                            rel_off_str.parse().unwrap_or(0)
+                        };
+                    let stem = app
+                        .data_browser
+                        .selected_table
+                        .clone()
+                        .unwrap_or_default();
+                    actions.push(Action::DataBrowser(DataBrowserAction::AddChangeToMod {
+                        mod_name: current_target.clone(),
+                        table_stem: stem,
+                        record_name: rec.name.clone(),
+                        record_key: rec.key,
+                        field_name: if edit.is_raw {
+                            None
+                        } else {
+                            Some(edit.field_name.clone())
+                        },
+                        new_value: new_val,
+                        is_raw: edit.is_raw,
+                        rel_offset: parsed_offset,
+                        original_hex: orig_hex_str,
+                    }));
+                }
+                if ui.button("Cancel").clicked() {
+                    actions.push(Action::DataBrowser(DataBrowserAction::CancelFieldEdit));
+                }
+                if !current_target.is_empty()
+                    && ui
+                        .button("🔍 Open in Editor")
+                        .on_hover_text("Open target mod in JSON editor")
+                        .clicked()
+                {
+                    actions.push(Action::Mod(crate::ui::ModAction::Select(
+                        current_target.clone(),
+                    )));
+                    actions.push(Action::SwitchTab(crate::ui::Tab::Mods));
+                }
+            });
+        });
+        ui.add_space(8.0);
+    }
+
     if !rec.fields.is_empty() {
         ui.label(RichText::new("Verified Fields").strong());
         egui::ScrollArea::vertical()
@@ -208,9 +358,10 @@ fn render_inspector(ui: &mut egui::Ui, rec: &InspectedRecord) {
                 TableBuilder::new(ui)
                     .id_salt("fields_table")
                     .striped(true)
-                    .column(Column::initial(130.0).resizable(true))
-                    .column(Column::initial(80.0).resizable(true))
+                    .column(Column::initial(120.0).resizable(true))
+                    .column(Column::initial(70.0).resizable(true))
                     .column(Column::remainder())
+                    .column(Column::initial(65.0))
                     .header(20.0, |mut header| {
                         header.col(|ui| {
                             ui.strong("Field");
@@ -221,10 +372,13 @@ fn render_inspector(ui: &mut egui::Ui, rec: &InspectedRecord) {
                         header.col(|ui| {
                             ui.strong("Value");
                         });
+                        header.col(|ui| {
+                            ui.strong("Action");
+                        });
                     })
                     .body(|mut body| {
                         for f in &rec.fields {
-                            body.row(18.0, |mut row| {
+                            body.row(20.0, |mut row| {
                                 row.col(|ui| {
                                     ui.label(RichText::new(&f.name).strong());
                                 });
@@ -233,6 +387,28 @@ fn render_inspector(ui: &mut egui::Ui, rec: &InspectedRecord) {
                                 });
                                 row.col(|ui| {
                                     ui.label(RichText::new(&f.value).color(accent()));
+                                });
+                                row.col(|ui| {
+                                    if f.editable
+                                        && ui
+                                            .button("✏ Edit")
+                                            .on_hover_text("Modify this field and add to mod")
+                                            .clicked()
+                                    {
+                                        actions.push(Action::DataBrowser(
+                                            DataBrowserAction::StartFieldEdit(
+                                                crate::ui::ActiveFieldEdit {
+                                                    field_name: f.name.clone(),
+                                                    field_type: f.meaning.clone(),
+                                                    original_value: f.value.clone(),
+                                                    new_value: f.value.clone(),
+                                                    is_raw: false,
+                                                    rel_offset: f.offset,
+                                                    original_hex: f.raw_hex.clone(),
+                                                },
+                                            ),
+                                        ));
+                                    }
                                 });
                             });
                         }
@@ -251,6 +427,26 @@ fn render_inspector(ui: &mut egui::Ui, rec: &InspectedRecord) {
         .id_salt("raw_payload_collapsing")
         .default_open(rec.fields.is_empty())
         .show(ui, |ui| {
+            ui.horizontal(|ui| {
+                if ui
+                    .button("✏ Add byte patch")
+                    .on_hover_text("Create a raw byte replacement on this record")
+                    .clicked()
+                {
+                    actions.push(Action::DataBrowser(DataBrowserAction::StartFieldEdit(
+                        crate::ui::ActiveFieldEdit {
+                            field_name: "Raw Bytes".into(),
+                            field_type: "hex".into(),
+                            original_value: String::new(),
+                            new_value: String::new(),
+                            is_raw: true,
+                            rel_offset: 0,
+                            original_hex: String::new(),
+                        },
+                    )));
+                }
+            });
+            ui.add_space(4.0);
             egui::ScrollArea::vertical()
                 .id_salt("raw_hex_scroll")
                 .max_height(200.0)
@@ -263,5 +459,7 @@ fn render_inspector(ui: &mut egui::Ui, rec: &InspectedRecord) {
                     );
                 });
         });
+
+    actions
 }
 

@@ -198,7 +198,7 @@ impl PailuneApp {
     }
 
     /// Selects a mod and loads its details.
-    fn select(&mut self, name: String) -> Result<()> {
+    pub(crate) fn select(&mut self, name: String) -> Result<()> {
         let details = info::details(
             &self.paths.staging.join(&name),
             self.variant_of(&name).as_deref(),
