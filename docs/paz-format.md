@@ -1,8 +1,7 @@
 # Crimson Desert archive formats and community mod formats: implementation spec for Pailune
 
-Status: research document, written 2026-10-25 against the user's install
-(`/mnt/nvme0n1/nvme0n1p1/louisgoodnews/steamapps/common/Crimson Desert`,
-`meta/0.paver` = version **2.3.2**). It is meant to be enough to implement
+Status: research document, written 2026-10-25 against the game's installation
+(Crimson Desert Steam release, `meta/0.paver` = version **2.3.2**). It is meant to be enough to implement
 Pailune's own overlay archive group, so mods stop depending on loose files.
 The game ignores loose files.
 

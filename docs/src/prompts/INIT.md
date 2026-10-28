@@ -4,8 +4,8 @@ You are tasked with building a native Linux mod manager named **Pailune** (named
 
 ## Initial Interaction Requirement
 Upon startup and before generating the core implementation, you must **explicitly ask the user** to provide:
-1. The full path to their *Crimson Desert* installation (or Steam library / Proton prefix). -> /mnt/nvme0n1/nvme0n1p1/louisgoodnews/steamapps/common/"Crimson Desert"
-2. Their Steam ID (if required for path resolution or configuration). -> 3321460
+1. The full path to their *Crimson Desert* installation (or Steam library / Proton prefix).
+2. Their Steam ID (if required for path resolution or configuration).
 
 Wait for the user's input regarding these paths before finalizing the setup script generation.
 

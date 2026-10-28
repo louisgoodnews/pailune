@@ -29,45 +29,45 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 * **Status:** Completed & verified with automated tests.
 * **Size:** *M*.
 * **Implementation Summary:**
-  * Implemented interactive node graph canvas in [`src/ui/views/creator.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/ui/views/creator.rs) with background grid, smooth panning and mouse-wheel zooming (`zoom` with clamped range [0.5, 2.0]).
+  * Implemented interactive node graph canvas in [`src/ui/views/creator.rs`](../src/ui/views/creator.rs) with background grid, smooth panning and mouse-wheel zooming (`zoom` with clamped range [0.5, 2.0]).
   * Built styled node cards with category-coded header badges (`Source`, `Operator`, `Action`, `Target`), inline parameter inputs, and drag handle.
   * Designed typed sockets with color-coding (`ItemRef`, `DropTableRef`, `Number`, `Boolean`, `Text`) and click-to-connect / right-click-cancel interaction.
   * Implemented cubic bezier spline wire rendering connecting output sockets to input sockets with horizontal tangent smoothing.
   * Implemented real-time live diff preview panel showing table targets and format-3 intents before deployment.
   * Integrated starter template loader (*Mega Stacks*, *Hunting & Animal Yields*, *Crate Coin Rewards*) and dynamic node spawning menu.
-  * Added "Apply & Deploy" and "Export to ZIP" action pipeline in [`src/ui/actions/creator.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/ui/actions/creator.rs).
-  * Added comprehensive UI integration tests in [`src/tests/ui.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tests/ui.rs) (full suite: 187 passed, 0 failed, 26 ignored).
+  * Added "Apply & Deploy" and "Export to ZIP" action pipeline in [`src/ui/actions/creator.rs`](../src/ui/actions/creator.rs).
+  * Added comprehensive UI integration tests in [`src/tests/ui.rs`](../src/tests/ui.rs) (full suite: 187 passed, 0 failed, 26 ignored).
 
 #### Visual-1 — Core Node Graph Engine & Compiler
 * **Status:** Completed & verified with automated tests.
 * **Size:** *M*.
 * **Implementation Summary:**
-  * Implemented core graph data structures in [`src/visual/graph.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/visual/graph.rs) (`Graph`, `Node`, `Socket`, `Connection`, `NodeType`, `SocketType`, `NodeCategory`).
+  * Implemented core graph data structures in [`src/visual/graph.rs`](../src/visual/graph.rs) (`Graph`, `Node`, `Socket`, `Connection`, `NodeType`, `SocketType`, `NodeCategory`).
   * Enforced socket type compatibility (`ItemRef`, `DropTableRef`, `Number`, `Boolean`, `Text`) and single-input constraints.
   * Implemented topological sorting with Kahn's algorithm and cycle detection for deterministic rule evaluation.
-  * Implemented deterministic compiler in [`src/visual/compiler.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/visual/compiler.rs) compiling visual source/math/action graphs into verified format-3 table patches (`iteminfo.pabgb`, `dropsetinfo.pabgb`, `wantedinfo.pabgb`).
-  * Created starter templates in [`src/visual/templates.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/visual/templates.rs) (*Mega Stacks*, *Hunting & Animal Yields*, *Crate Coin Rewards*).
+  * Implemented deterministic compiler in [`src/visual/compiler.rs`](../src/visual/compiler.rs) compiling visual source/math/action graphs into verified format-3 table patches (`iteminfo.pabgb`, `dropsetinfo.pabgb`, `wantedinfo.pabgb`).
+  * Created starter templates in [`src/visual/templates.rs`](../src/visual/templates.rs) (*Mega Stacks*, *Hunting & Animal Yields*, *Crate Coin Rewards*).
   * Implemented staging pipeline writing `modinfo.json`, `graph.json`, `<name>.field.json`, and generated `README.md`.
-  * Verified with 7 unit tests in [`src/visual/tests.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/visual/tests.rs) (full suite: 184 passed, 0 failed, 26 ignored).
+  * Verified with 7 unit tests in [`src/visual/tests.rs`](../src/visual/tests.rs) (full suite: 184 passed, 0 failed, 26 ignored).
 
 #### Linux Release Packaging (AppImage & Tarball)
 * **Status:** Completed & verified.
 * **Size:** *S*.
 * **Implementation Summary:**
-  * Created automated Linux release distribution pipeline in [`packaging/dist.sh`](file:///home/louisgoodnews/Dokumente/pailune/packaging/dist.sh).
+  * Created automated Linux release distribution pipeline in [`packaging/dist.sh`](../packaging/dist.sh).
   * Generates stripped release distribution tarball (`target/dist/pailune-v0.1.0-x86_64-unknown-linux-gnu.tar.gz`) containing binary, licenses, README, and desktop assets, along with `SHA256SUMS`.
-  * Updated [`packaging/appimage.sh`](file:///home/louisgoodnews/Dokumente/pailune/packaging/appimage.sh) to stage `Pailune.AppDir` with 256x256 high-resolution icon conversion via `rsvg-convert` and `.DirIcon` link, and builds standalone `.AppImage` when `appimagetool` is available.
-  * Enhanced [`packaging/install.sh`](file:///home/louisgoodnews/Dokumente/pailune/packaging/install.sh) with dual-mode installation (installs from either release tarball or git repo to `~/.local/bin`, `~/.local/share/applications`, and `~/.local/share/icons`).
-  * Unified packaging assets under Pailune naming: [`packaging/pailune.desktop`](file:///home/louisgoodnews/Dokumente/pailune/packaging/pailune.desktop) with `MimeType=x-scheme-handler/nxm;`, [`packaging/pailune.svg`](file:///home/louisgoodnews/Dokumente/pailune/packaging/pailune.svg), and [`packaging/pailune.appdata.xml`](file:///home/louisgoodnews/Dokumente/pailune/packaging/pailune.appdata.xml).
+  * Updated [`packaging/appimage.sh`](../packaging/appimage.sh) to stage `Pailune.AppDir` with 256x256 high-resolution icon conversion via `rsvg-convert` and `.DirIcon` link, and builds standalone `.AppImage` when `appimagetool` is available.
+  * Enhanced [`packaging/install.sh`](../packaging/install.sh) with dual-mode installation (installs from either release tarball or git repo to `~/.local/bin`, `~/.local/share/applications`, and `~/.local/share/icons`).
+  * Unified packaging assets under Pailune naming: [`packaging/pailune.desktop`](../packaging/pailune.desktop) with `MimeType=x-scheme-handler/nxm;`, [`packaging/pailune.svg`](../packaging/pailune.svg), and [`packaging/pailune.appdata.xml`](../packaging/pailune.appdata.xml).
 
 #### A-01 — Table Schema Expansion (DropSetInfo)
 * **Status:** Completed & verified with automated tests.
 * **Size:** *M*.
 * **Implementation Summary:**
-  * Added `DropSetInfo` (`dropsetinfo`) to shipped [`data/table-layouts.json`](file:///home/louisgoodnews/Dokumente/pailune/data/table-layouts.json) with verified 14-byte header (`_isBlocked`, `_headerPadding`) and 64-byte `_dropInfoList` struct list.
+  * Added `DropSetInfo` (`dropsetinfo`) to shipped [`data/table-layouts.json`](../data/table-layouts.json) with verified 14-byte header (`_isBlocked`, `_headerPadding`) and 64-byte `_dropInfoList` struct list.
   * Mapped proven subfields: `_entryType` (u8), `_itemKey` (u32 ref), `_dropRate` (u32, 1,000,000 = 100%), `_minDropCount` (u64), and `_maxDropCount` (u64).
-  * Implemented structured `list:struct` and `struct` decoding in [`src/tables/value.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/value.rs) for human-readable JSON output in the Game Data Browser.
-  * Verified format-3 intent resolution (both indexed `_dropInfoList[0]` and wildcard `_dropInfoList[*]`) in [`src/tables/tests.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/tests.rs).
+  * Implemented structured `list:struct` and `struct` decoding in [`src/tables/value.rs`](../src/tables/value.rs) for human-readable JSON output in the Game Data Browser.
+  * Verified format-3 intent resolution (both indexed `_dropInfoList[0]` and wildcard `_dropInfoList[*]`) in [`src/tables/tests.rs`](../src/tables/tests.rs).
 
 #### Phase 17 — Pre-Release Polish: GUI Redesign & Final Code Refactoring
 * **Status:** Completed & verified with automated tests.
@@ -85,7 +85,7 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 * **Status:** Completed & verified with automated tests.
 * **Size:** *Research / M*.
 * **Implementation Summary:**
-  * Produced architecture research ([`docs/research/asi-mods.md`](file:///home/louisgoodnews/Dokumente/pailune/docs/research/asi-mods.md)) and architecture decision record ([`D-15`](file:///home/louisgoodnews/Dokumente/pailune/docs/decisions.md)) covering the Ultimate ASI Loader proxy DLL contract, threading rules avoiding Windows loader locks, pattern scanning, and MinGW static CRT linking for cross-compiling Windows x64 DLLs from Linux.
+  * Produced architecture research ([`docs/research/asi-mods.md`](research/asi-mods.md)) and architecture decision record ([`D-15`](decisions.md)) covering the Ultimate ASI Loader proxy DLL contract, threading rules avoiding Windows loader locks, pattern scanning, and MinGW static CRT linking for cross-compiling Windows x64 DLLs from Linux.
   * Extended SDK project generator to support both Rust `cdylib` and C++ MinGW projects (`Makefile`, `src/main.cpp`) with built-in IDA-style byte pattern scanning (`find_pattern` / `FindPattern`) and memory patch helpers (`patch_memory` / `PatchMemory`).
   * Implemented build runner (`crate::sdk::build_project`) and staging pipeline (`crate::sdk::stage_built_project`) executing native builds and staging directly into `~/.local/share/pailune/staging/<name>/bin64/`.
   * Implemented debug loop log reader (`crate::sdk::read_plugin_log`) tailing `<name>.log` from `bin64/`.
@@ -155,15 +155,15 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
 * **Rationale:**
   * Formal API agreement with Nexus Mods prior to public general release.
 * **Target Areas:**
-  * [`src/tables/format3.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/format3.rs): Implement predicate matching logic for `Intent::matches`.
-  * [`src/tables/mod.rs`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/mod.rs): Extend layout resolution to evaluate sub-records and nested array offsets.
+  * [`src/tables/format3.rs`](../src/tables/format3.rs): Implement predicate matching logic for `Intent::matches`.
+  * [`src/tables/mod.rs`](../src/tables/mod.rs): Extend layout resolution to evaluate sub-records and nested array offsets.
 
 #### 2. Owner Task — In-Game Test Batch 1 (Tests 2–4 Verification)
 * **Status:** Owner column in `board.md` (Test 1 Arrow Stacks confirmed; tests 2–4 pending).
 * **Size:** Owner validation.
 * **Rationale:**
   * Re-verifies in-game that the per-table archive group architecture correctly injects multi-table modifications without engine side-effects.
-  * Validates hunting drops, drop rates, and crate coin rewards defined in [`local/test-mods/TESTING.md`](file:///home/louisgoodnews/Dokumente/pailune/local/test-mods/TESTING.md).
+  * Validates hunting drops, drop rates, and crate coin rewards defined in [`local/test-mods/TESTING.md`](../local/test-mods/TESTING.md).
 
 ---
 
@@ -176,8 +176,8 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
   * Pailune already possesses deep archive introspection, class layout definitions (`data/table-layouts.json`), and binary decoders.
   * Exposing a read-only browser for game data tables allows creators to explore vanilla game variables without external unpackers, transforming Pailune from a mod manager into an integrated workbench.
 * **Target Areas:**
-  * [`src/ui/views/`](file:///home/louisgoodnews/Dokumente/pailune/src/ui/views/): New browser view displaying records, field names, types, and formatted values.
-  * [`src/tables/`](file:///home/louisgoodnews/Dokumente/pailune/src/tables/): High-level table reader API suitable for UI pagination and searching.
+  * [`src/ui/views/`](../src/ui/views/): New browser view displaying records, field names, types, and formatted values.
+  * [`src/tables/`](../src/tables/): High-level table reader API suitable for UI pagination and searching.
 
 #### 4. B-16 (Steps 3 & 4) — Change Creator & Game Dry-Run Verification
 * **Status:** Roadmap Phase 15.
@@ -196,7 +196,7 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
   * Approximately 2,914 3D meshes in game archives use a type-1 compression container.
   * Decoding these meshes completes the archive extraction engine and enables future model/mesh swapping and inspection tools.
 * **Target Areas:**
-  * [`src/paz/`](file:///home/louisgoodnews/Dokumente/pailune/src/paz/): Add decompression routines for type-1 mesh payloads.
+  * [`src/paz/`](../src/paz/): Add decompression routines for type-1 mesh payloads.
 
 #### 6. B-07 (Step 4) — Variable-Length Save Editing
 * **Size:** *L*.
@@ -204,7 +204,7 @@ Prioritization follows the project's guiding principle: **compatibility and bloc
   * Step 3 (fixed-size value editing like money/experience) is complete and verified in memory on all saves.
   * Full save editing requires modifying array sizes and inserting/deleting records, which demands a body writer capable of updating chunk lengths and the container table of contents.
 * **Target Areas:**
-  * [`src/savefile/`](file:///home/louisgoodnews/Dokumente/pailune/src/savefile/): Body writer and schema recalculator.
+  * [`src/savefile/`](../src/savefile/): Body writer and schema recalculator.
 
 ---
 

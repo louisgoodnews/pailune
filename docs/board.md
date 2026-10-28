@@ -209,7 +209,7 @@ Move a line between columns when its status changes.
 - [x] B-15 *Move to number* in the details panel (`MoveTo::Position`, 1-based, clamped), Enter or
   *Move*; guide topic and user guide updated.
 - [x] B-09/B-10/B-11 `CONTRIBUTING.md` (setup, conventions, checks, commits, game-data rules,
-  license), `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1, contact louisgoodnews95@gmail.com),
+  license), `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1),
   GitHub issue forms (bug report, feature request; blank issues off) and a PR template.
 - [x] B-08 decision: Windows and macOS are goals — vision updated, open decision D-11 for the
   per-platform deployment method.
